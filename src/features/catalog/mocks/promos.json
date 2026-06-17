@@ -1,0 +1,26 @@
+[
+  {
+    "id": "promo-1",
+    "title": "Free delivery",
+    "subtitle": "On orders over $35 this week",
+    "code": "RUSHFREE",
+    "gradient": ["#D4543C", "#8B3A32"],
+    "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80"
+  },
+  {
+    "id": "promo-2",
+    "title": "20% off",
+    "subtitle": "First order with code WELCOME20",
+    "code": "WELCOME20",
+    "gradient": ["#C9A962", "#8B6914"],
+    "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80"
+  },
+  {
+    "id": "promo-3",
+    "title": "Premium picks",
+    "subtitle": "Curated chef selections near you",
+    "code": "PREMIUM",
+    "gradient": ["#1C1C1E", "#3D3D42"],
+    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80"
+  }
+]

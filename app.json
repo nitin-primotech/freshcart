@@ -8,7 +8,8 @@
     "scheme": "foodrush",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.anonymous.foodRush"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +18,13 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.anonymous.foodRush",
+      "androidStatusBar": {
+        "translucent": true,
+        "backgroundColor": "#00000000"
+      }
     },
     "web": {
       "output": "static",
@@ -26,9 +33,15 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "foodRush uses your location to show nearby restaurants and delivery times."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FAF8F5",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

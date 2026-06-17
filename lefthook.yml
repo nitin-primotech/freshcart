@@ -1,0 +1,64 @@
+commit-msg:
+  jobs:
+    - name: conventional-commit
+      run: |
+        msg=$(cat {1})
+        pattern="^(feat|fix|chore|refactor|docs|style|sync|test|ci|perf|build|revert)(\(.+\))?: .{1,72}$"
+        if ! echo "$msg" | grep -qE "$pattern"; then
+          echo ""
+          echo "✗  Invalid commit message."
+          echo ""
+          echo "   Format:  <type>(<scope>): <short description>"
+          echo "   Max:     72 characters after the type prefix"
+          echo ""
+          echo "   Types:"
+          echo "     feat      New feature"
+          echo "     fix       Bug fix"
+          echo "     chore     Maintenance, deps, config"
+          echo "     refactor  Code change, no feature or fix"
+          echo "     docs      Documentation only"
+          echo "     style     Formatting, no logic change"
+          echo "     test      Adding or updating tests"
+          echo "     ci        CI/CD pipeline changes"
+          echo "     perf      Performance improvement"
+          echo "     build     Build system changes"
+          echo "     revert    Revert a previous commit"
+          echo ""
+          echo "   Examples:"
+          echo "     feat: add login screen"
+          echo "     fix: status bar not translucent on android"
+          echo "     chore: update expo sdk to 55"
+          echo "     refactor(auth): simplify token refresh logic"
+          echo "     ci: add lefthook pre-commit checks"
+          echo ""
+          exit 1
+        fi
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: lint
+      run: bun run lint
+      fail_text: |
+
+        ✗  Linting errors detected.
+
+        Your code has linting issues that must be fixed before committing.
+        Run the following to auto-fix what's possible:
+
+            bun run check
+
+        Then review any remaining errors manually and try again.
+
+    - name: format
+      run: bun biome format .
+      fail_text: |
+
+        ✗  Code is not formatted.
+
+        Your code does not match the project formatting rules (80 char line width).
+        Run the following to format all files:
+
+            bun run format
+
+        Then stage the changes and commit again.

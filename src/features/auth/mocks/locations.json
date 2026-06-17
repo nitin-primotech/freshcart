@@ -1,0 +1,72 @@
+[
+  {
+    "id": "loc-1",
+    "title": "West Village",
+    "subtitle": "New York, NY, United States",
+    "line1": "14th St · Station Plaza",
+    "line2": "New York, NY 10011"
+  },
+  {
+    "id": "loc-2",
+    "title": "J. P. Nagar",
+    "subtitle": "Bengaluru, Karnataka, India",
+    "line1": "J. P. Nagar",
+    "line2": "Bengaluru, Karnataka, India"
+  },
+  {
+    "id": "loc-3",
+    "title": "J P Nagar Phase 5",
+    "subtitle": "J. P. Nagar, Bengaluru, Karnataka, India",
+    "line1": "Phase 5, J. P. Nagar",
+    "line2": "Bengaluru, Karnataka, India"
+  },
+  {
+    "id": "loc-4",
+    "title": "J P Nagar 7th Phase",
+    "subtitle": "Bengaluru, Karnataka, India",
+    "line1": "7th Phase, J. P. Nagar",
+    "line2": "Bengaluru, Karnataka, India"
+  },
+  {
+    "id": "loc-5",
+    "title": "J P Nagar",
+    "subtitle": "Kuppalur, Karnataka, India",
+    "line1": "Kuppalur",
+    "line2": "Karnataka, India"
+  },
+  {
+    "id": "loc-6",
+    "title": "J P Nagar Metro Station",
+    "subtitle": "Kanakapura Main Road, J. P. Nagar, Bengaluru, Karnataka, India",
+    "line1": "Kanakapura Main Road",
+    "line2": "J. P. Nagar, Bengaluru, Karnataka, India"
+  },
+  {
+    "id": "loc-7",
+    "title": "Chelsea",
+    "subtitle": "Manhattan, New York, United States",
+    "line1": "8th Ave · Chelsea Market",
+    "line2": "New York, NY 10011"
+  },
+  {
+    "id": "loc-8",
+    "title": "SoHo",
+    "subtitle": "Manhattan, New York, United States",
+    "line1": "Spring St · Broadway",
+    "line2": "New York, NY 10012"
+  },
+  {
+    "id": "loc-9",
+    "title": "Upper East Side",
+    "subtitle": "Manhattan, New York, United States",
+    "line1": "Madison Ave · 72nd St",
+    "line2": "New York, NY 10021"
+  },
+  {
+    "id": "loc-10",
+    "title": "Williamsburg",
+    "subtitle": "Brooklyn, New York, United States",
+    "line1": "Bedford Ave · North 7th",
+    "line2": "Brooklyn, NY 11249"
+  }
+]
