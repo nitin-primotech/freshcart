@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
     gap: spacing.lg,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.xxxl + spacing.lg,
   },
   row: {
     flexDirection: 'row',

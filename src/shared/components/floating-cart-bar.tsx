@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
-  FadeInDown,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -13,13 +12,13 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
 import { hapticCartOpen, hapticPressIn } from '@/shared/haptics/feedback';
 import {
-  clearLastAdded,
   openCartSheet,
   selectCartItemCount,
   selectCartSubtotal,
+  selectLastAdded,
   useCartStore,
 } from '@/store/cart.store';
-import { colors, shadows } from '@/theme/colors';
+import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { floatingCartBottomOffset } from '@/theme/tab-bar';
 
@@ -27,37 +26,40 @@ export function FloatingCartBar() {
   const insets = useSafeAreaInsets();
   const itemCount = useCartStore(selectCartItemCount);
   const subtotal = useCartStore(selectCartSubtotal);
-  const lastAdded = useCartStore((s) => s.lastAddedItemId);
+  const lastAdded = useCartStore(selectLastAdded);
   const pulse = useSharedValue(1);
+  const badgePulse = useSharedValue(1);
 
   useEffect(() => {
     if (!lastAdded) return;
     pulse.value = withSequence(
-      withSpring(1.08, { damping: 8 }),
-      withSpring(1, { damping: 12 }),
+      withSpring(1.03, { damping: 14, stiffness: 260 }),
+      withSpring(1, { damping: 16, stiffness: 220 }),
     );
-    clearLastAdded();
-  }, [lastAdded, pulse]);
+    badgePulse.value = withSequence(
+      withSpring(1.2, { damping: 12, stiffness: 280 }),
+      withSpring(1, { damping: 14, stiffness: 240 }),
+    );
+  }, [lastAdded?.id, pulse, badgePulse]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
   }));
 
+  const badgeStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: badgePulse.value }],
+  }));
+
   if (itemCount === 0) return null;
 
-  async function handlePress() {
+  function handlePress() {
     hapticPressIn();
     hapticCartOpen();
-    pulse.value = withSequence(
-      withSpring(1.04, { damping: 8 }),
-      withSpring(1, { damping: 12 }),
-    );
     openCartSheet();
   }
 
   return (
     <Animated.View
-      entering={FadeInDown.springify().damping(16)}
       style={[
         styles.wrapper,
         { bottom: floatingCartBottomOffset(insets.bottom) },
@@ -67,14 +69,14 @@ export function FloatingCartBar() {
       <Pressable
         onPress={handlePress}
         onPressIn={hapticPressIn}
-        style={[styles.bar, shadows.float]}
+        style={styles.bar}
       >
         <View style={styles.left}>
-          <View style={styles.badge}>
+          <Animated.View style={[styles.badge, badgeStyle]}>
             <PremiumText variant="label" color={colors.textInverse}>
               {itemCount}
             </PremiumText>
-          </View>
+          </Animated.View>
           <PremiumText variant="bodyMedium" color={colors.textInverse}>
             View cart
           </PremiumText>
@@ -110,7 +112,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderCurve: 'continuous',
-    overflow: 'hidden',
+    boxShadow: '0 8px 28px rgba(212, 84, 60, 0.35)',
   },
   left: {
     flexDirection: 'row',
@@ -130,9 +132,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-  },
-  chevron: {
-    width: 14,
-    height: 14,
   },
 });

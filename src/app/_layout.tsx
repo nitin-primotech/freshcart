@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { RootProvider } from '@/providers/root-provider';
 import { CartBottomSheet } from '@/shared/components/cart-bottom-sheet';
+import { CartDropAnimation } from '@/shared/components/cart-drop-animation';
 import { FloatingCartBar } from '@/shared/components/floating-cart-bar';
 import { preloadAppHaptics } from '@/shared/haptics/feedback';
 import {
@@ -30,6 +31,10 @@ export default function RootLayout() {
   const [showCartChrome, setShowCartChrome] = useState(false);
   const inAuth = segments[0] === '(auth)';
   const onLocation = segments[0] === 'location';
+  const hideCartRoute =
+    segments[0] === 'checkout' ||
+    segments[0] === 'order-success' ||
+    segments[0] === 'order';
 
   useEffect(() => {
     preloadAppHaptics();
@@ -43,7 +48,13 @@ export default function RootLayout() {
   }, [loaded]);
 
   useEffect(() => {
-    if (inAuth || onLocation || !isAuthenticated || !onboardingComplete) {
+    if (
+      inAuth ||
+      onLocation ||
+      hideCartRoute ||
+      !isAuthenticated ||
+      !onboardingComplete
+    ) {
       setShowCartChrome(false);
       return;
     }
@@ -51,7 +62,7 @@ export default function RootLayout() {
       setShowCartChrome(true);
     });
     return () => cancelAnimationFrame(handle);
-  }, [inAuth, onLocation, isAuthenticated, onboardingComplete]);
+  }, [inAuth, onLocation, hideCartRoute, isAuthenticated, onboardingComplete]);
 
   if (!loaded) {
     return null;
@@ -64,6 +75,8 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
             freezeOnBlur: true,
+            headerBackTitle: 'Back',
+            headerBackButtonDisplayMode: 'minimal',
           }}
         >
           <Stack.Screen name="index" options={{ animation: 'none' }} />
@@ -73,7 +86,12 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="(tabs)"
-            options={{ animation: 'fade', animationTypeForReplace: 'push' }}
+            options={{
+              title: 'Home',
+              animation: 'fade',
+              animationTypeForReplace: 'push',
+              headerShown: false,
+            }}
           />
           <Stack.Screen
             name="location"
@@ -93,8 +111,7 @@ export default function RootLayout() {
             options={{
               headerShown: true,
               title: 'Checkout',
-              headerBackTitle: 'Back',
-              animation: 'slide_from_bottom',
+              animation: 'slide_from_right',
             }}
           />
           <Stack.Screen
@@ -115,6 +132,7 @@ export default function RootLayout() {
         </Stack>
         {showCartChrome ? (
           <>
+            <CartDropAnimation />
             <FloatingCartBar />
             <CartBottomSheet />
           </>

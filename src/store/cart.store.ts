@@ -5,16 +5,21 @@ import type {
   MenuItem,
 } from '@/features/catalog/types/catalog.types';
 
+type LastAddedItem = {
+  id: string;
+  image: string;
+};
+
 type CartState = {
   items: CartItem[];
   isSheetOpen: boolean;
-  lastAddedItemId: string | null;
+  lastAdded: LastAddedItem | null;
 };
 
 const initialState: CartState = {
   items: [],
   isSheetOpen: false,
-  lastAddedItemId: null,
+  lastAdded: null,
 };
 
 export const useCartStore = create<CartState>(() => initialState);
@@ -32,7 +37,7 @@ export function addToCart(
   if (items.length > 0 && items[0].restaurantId !== restaurantId) {
     useCartStore.setState({
       items: [{ item, quantity: 1, restaurantId, restaurantName }],
-      lastAddedItemId: item.id,
+      lastAdded: { id: item.id, image: item.image },
     });
     return;
   }
@@ -44,14 +49,14 @@ export function addToCart(
           ? { ...i, quantity: i.quantity + 1 }
           : i,
       ),
-      lastAddedItemId: item.id,
+      lastAdded: { id: item.id, image: item.image },
     });
     return;
   }
 
   useCartStore.setState({
     items: [...items, { item, quantity: 1, restaurantId, restaurantName }],
-    lastAddedItemId: item.id,
+    lastAdded: { id: item.id, image: item.image },
   });
 }
 
@@ -85,8 +90,10 @@ export function closeCartSheet() {
 }
 
 export function clearLastAdded() {
-  useCartStore.setState({ lastAddedItemId: null });
+  useCartStore.setState({ lastAdded: null });
 }
+
+export const selectLastAdded = (s: CartState) => s.lastAdded;
 
 export const selectCartItems = (s: CartState) => s.items;
 export const selectCartItemCount = (s: CartState) =>
