@@ -4,118 +4,89 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
 import { selectAddress, useAppStore } from '@/store/app.store';
-import { selectUserPhone, useAuthStore } from '@/store/auth.store';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 
 export function HomeHeader() {
   const router = useRouter();
   const address = useAppStore(selectAddress);
-  const phone = useAuthStore(selectUserPhone);
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.topRow}>
+      <Pressable
+        style={styles.location}
+        onPress={() => router.push('/location')}
+        accessibilityRole="button"
+        accessibilityLabel={`Delivery location, ${address.label}`}
+      >
+        <AppSymbol name="location.fill" size={18} tintColor={colors.primary} />
+        <PremiumText
+          variant="h3"
+          color={colors.textPrimary}
+          numberOfLines={1}
+          style={styles.locationLabel}
+        >
+          {address.label}
+        </PremiumText>
+        <AppSymbol
+          name="chevron.down"
+          size={11}
+          tintColor={colors.textSecondary}
+        />
+      </Pressable>
+
+      <Link href="/(tabs)/profile" asChild>
         <Pressable
-          style={styles.location}
-          onPress={() => router.push('/location')}
+          style={styles.bell}
           accessibilityRole="button"
-          accessibilityLabel={`Delivery location, ${address.label}`}
+          accessibilityLabel="Notifications and profile"
         >
           <AppSymbol
-            name="location.fill"
-            size={22}
-            tintColor={colors.primary}
+            name="bell.fill"
+            size={20}
+            tintColor={colors.textPrimary}
           />
-          <View style={styles.locationText}>
-            <View style={styles.locationTitle}>
-              <PremiumText variant="h3" color={colors.textPrimary}>
-                {address.label}
-              </PremiumText>
-              <AppSymbol
-                name="chevron.down"
-                size={14}
-                tintColor={colors.textPrimary}
-              />
-            </View>
-            <PremiumText
-              variant="bodySmall"
-              color={colors.textSecondary}
-              numberOfLines={1}
-            >
-              {address.line1}
-            </PremiumText>
-          </View>
+          <View style={styles.notifDot} />
         </Pressable>
-        <Link href="/(tabs)/profile" asChild>
-          <Pressable style={styles.avatar} accessibilityRole="button">
-            <AppSymbol
-              name="person.fill"
-              size={22}
-              tintColor={colors.primary}
-            />
-          </Pressable>
-        </Link>
-      </View>
-      {phone ? (
-        <View style={styles.sessionPill}>
-          <PremiumText variant="overline" color={colors.textSecondary}>
-            Signed in
-          </PremiumText>
-          <PremiumText variant="captionMedium" color={colors.textPrimary}>
-            +91 {phone.slice(0, 3)} ••• {phone.slice(-4)}
-          </PremiumText>
-        </View>
-      ) : null}
+      </Link>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.sm,
-  },
-  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    minHeight: 44,
+    marginBottom: spacing.sm,
   },
   location: {
     flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
-    alignItems: 'center',
+    marginRight: spacing.md,
   },
-  locationText: {
-    flex: 1,
-    gap: spacing.xxs,
+  locationLabel: {
+    flexShrink: 1,
   },
-  locationTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  avatar: {
+  bell: {
     width: 44,
     height: 44,
-    borderRadius: radius.full,
-    backgroundColor: colors.textInverse,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-    borderCurve: 'continuous',
   },
-  sessionPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.backgroundMuted,
+  notifDot: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 7,
+    height: 7,
     borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.primary,
+    borderWidth: 1.5,
+    borderColor: colors.background,
   },
 });

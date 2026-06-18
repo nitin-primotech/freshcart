@@ -3,17 +3,18 @@ import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
+  fetchCategories,
   fetchPromos,
   fetchRestaurants,
 } from '@/features/catalog/api/catalog.api';
 import type { Restaurant } from '@/features/catalog/types/catalog.types';
 import { FilterPills } from '@/features/home/components/filter-pills';
-import { HeroBanner } from '@/features/home/components/hero-banner';
+import { FoodCategoryStrip } from '@/features/home/components/food-category-strip';
 import { HomeHeader } from '@/features/home/components/home-header';
-import { HomeSearchBar } from '@/features/home/components/home-search-bar';
-import { OfferStrip } from '@/features/home/components/offer-strip';
+import { OfferCarousel } from '@/features/home/components/offer-carousel';
+import { RecommendedSection } from '@/features/home/components/recommended-section';
 import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-card';
-import { ServiceGrid } from '@/features/home/components/service-grid';
+import { getRecommendedDishes } from '@/features/home/utils/get-recommended-dishes';
 import {
   getPersonalizedRestaurants,
   getPersonalizedSectionTitle,
@@ -26,7 +27,8 @@ import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { selectPreferences, useAppStore } from '@/store/app.store';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { screenTopPadding } from '@/theme/screen-edge';
+import { spacing } from '@/theme/spacing';
 import { tabBarContentPadding } from '@/theme/tab-bar';
 
 function filterRestaurants(
@@ -58,6 +60,7 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const preferences = useAppStore(selectPreferences);
   const [filterId, setFilterId] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const cardWidth = useCarouselItemWidth({
     visibleCount: 2,
     peek: 0.14,
@@ -66,27 +69,49 @@ export function HomeScreen() {
   });
 
   const promosQuery = useSimulatedQuery((signal) => fetchPromos(signal), []);
+  const categoriesQuery = useSimulatedQuery(
+    (signal) => fetchCategories(signal),
+    [],
+  );
   const restaurantsQuery = useSimulatedQuery(
     (signal) => fetchRestaurants(signal),
     [],
   );
 
   const isLoading =
-    promosQuery.status === 'loading' || restaurantsQuery.status === 'loading';
+    promosQuery.status === 'loading' ||
+    categoriesQuery.status === 'loading' ||
+    restaurantsQuery.status === 'loading';
   const hasError =
-    promosQuery.status === 'error' || restaurantsQuery.status === 'error';
+    promosQuery.status === 'error' ||
+    categoriesQuery.status === 'error' ||
+    restaurantsQuery.status === 'error';
 
   const onRefresh = useCallback(() => {
     promosQuery.refetch();
+    categoriesQuery.refetch();
     restaurantsQuery.refetch();
-  }, [promosQuery, restaurantsQuery]);
+  }, [promosQuery, categoriesQuery, restaurantsQuery]);
 
-  const refreshing = promosQuery.isRefreshing || restaurantsQuery.isRefreshing;
+  const refreshing =
+    promosQuery.isRefreshing ||
+    categoriesQuery.isRefreshing ||
+    restaurantsQuery.isRefreshing;
 
   const restaurants = filterRestaurants(restaurantsQuery.data ?? [], filterId);
-  const personalized = getPersonalizedRestaurants(restaurants, preferences);
+  const filteredRestaurants = categoryId
+    ? restaurants.filter((r) => r.categoryIds.includes(categoryId))
+    : restaurants;
+  const personalized = getPersonalizedRestaurants(
+    filteredRestaurants,
+    preferences,
+  );
   const personalizedTitle = getPersonalizedSectionTitle(preferences);
   const exploreRestaurants = [...personalized].reverse();
+  const recommendedDishes = getRecommendedDishes(
+    restaurantsQuery.data ?? [],
+    8,
+  );
 
   const bottomPad = tabBarContentPadding(insets.bottom);
 
@@ -106,15 +131,24 @@ export function HomeScreen() {
           />
         }
       >
-        <View style={[styles.header, { paddingTop: insets.top + spacing.lg }]}>
+        <View
+          style={[styles.header, { paddingTop: screenTopPadding(spacing.xs) }]}
+        >
           <HomeHeader />
-          <ServiceGrid />
-          <HomeSearchBar />
-          <OfferStrip promos={promosQuery.data} />
+          <OfferCarousel promos={promosQuery.data} />
         </View>
 
         <View style={styles.body}>
-          <HeroBanner promo={promosQuery.data?.[0]} />
+          {categoriesQuery.data ? (
+            <FoodCategoryStrip
+              categories={categoriesQuery.data}
+              selectedId={categoryId}
+              onSelect={setCategoryId}
+            />
+          ) : null}
+          {!isLoading && !hasError ? (
+            <RecommendedSection dishes={recommendedDishes} />
+          ) : null}
           <FilterPills activeId={filterId} onSelect={setFilterId} />
 
           {isLoading ? <HomeSkeleton cardWidth={cardWidth} /> : null}
@@ -187,19 +221,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingBottom: spacing.xl,
-    borderBottomLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.background,
   },
   body: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    marginTop: -spacing.lg,
-    paddingTop: spacing.xl,
-    boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.12)',
-    borderCurve: 'continuous',
+    paddingTop: spacing.sm,
   },
   sectionTitle: {
     paddingHorizontal: spacing.lg,

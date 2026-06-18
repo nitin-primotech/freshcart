@@ -79,13 +79,16 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
   },
   tileActive: {
-    backgroundColor: colors.accentMuted,
-    boxShadow: '0 8px 28px rgba(0, 0, 0, 0.22)',
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    boxShadow: '0 4px 20px rgba(212, 84, 60, 0.12)',
   },
   tileInactive: {
-    backgroundColor: colors.backgroundMuted,
+    backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border,
+    boxShadow: '0 2px 12px rgba(28, 28, 30, 0.05)',
   },
   badge: {
     position: 'absolute',

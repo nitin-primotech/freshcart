@@ -22,5 +22,21 @@
     "code": "PREMIUM",
     "gradient": ["#1C1C1E", "#3D3D42"],
     "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80"
+  },
+  {
+    "id": "promo-4",
+    "title": "Weekend special",
+    "subtitle": "Flat 30% off tonight",
+    "code": "WEEKEND",
+    "gradient": ["#D4543C", "#8B3A32"],
+    "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80"
+  },
+  {
+    "id": "promo-5",
+    "title": "New user deal",
+    "subtitle": "Extra $10 off your first order",
+    "code": "NEW10",
+    "gradient": ["#C9A962", "#8B6914"],
+    "image": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80"
   }
 ]
