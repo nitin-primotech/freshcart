@@ -25,6 +25,7 @@ import { PremiumText } from '@/shared/components/premium-text';
 import { Shimmer } from '@/shared/components/shimmer';
 import { hapticSelection } from '@/shared/haptics/feedback';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
+import { formTextInputProps } from '@/shared/utils/keyboard';
 import {
   addRecentSearch,
   selectRecentSearches,
@@ -103,6 +104,7 @@ export function SearchScreen() {
       <AppStatusBar style="dark" />
       <ScrollView
         style={styles.screen}
+        automaticallyAdjustKeyboardInsets
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
@@ -136,6 +138,7 @@ export function SearchScreen() {
             placeholderTextColor={colors.textTertiary}
             style={styles.input}
             returnKeyType="search"
+            {...formTextInputProps}
           />
           {query.length > 0 ? (
             <Pressable onPress={() => setQuery('')}>

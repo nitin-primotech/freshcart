@@ -1,6 +1,13 @@
 import { type Href, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  FlatList,
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   getCurrentLocationSuggestion,
@@ -10,6 +17,8 @@ import type { LocationSuggestion } from '@/features/auth/types/location.types';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
+import { formTextInputProps } from '@/shared/utils/keyboard';
 import { setDeliveryAddressFromSuggestion } from '@/store/app.store';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
@@ -61,13 +70,7 @@ export function LocationSearchScreen({
       <AppStatusBar style="dark" />
       <View style={[styles.content, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.header}>
-          <Pressable onPress={handleBack} hitSlop={12} style={styles.back}>
-            <AppSymbol
-              name="chevron.left"
-              size={22}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
+          <ScreenBackButton onPress={handleBack} />
           <PremiumText variant="h2" style={styles.title}>
             {isOnboarding
               ? 'Enter your area or apartment name'
@@ -94,7 +97,9 @@ export function LocationSearchScreen({
             style={styles.searchInput}
             autoCorrect={false}
             autoCapitalize="words"
-            returnKeyType="search"
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
+            {...formTextInputProps}
           />
           {query.length > 0 ? (
             <Pressable onPress={() => setQuery('')} hitSlop={8}>
@@ -214,9 +219,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
-  back: {
-    alignSelf: 'flex-start',
-  },
   title: {
     lineHeight: 32,
   },
@@ -228,7 +230,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     marginBottom: spacing.lg,
     backgroundColor: colors.backgroundMuted,
   },
@@ -237,7 +239,7 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     fontFamily: fonts.medium,
     color: colors.textPrimary,
-    paddingVertical: spacing.xs,
+    paddingVertical: 0,
   },
   actionRow: {
     flexDirection: 'row',

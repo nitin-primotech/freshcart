@@ -1,9 +1,12 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
+import {
+  SCREEN_BACK_BUTTON_SIZE,
+  ScreenBackButton,
+} from '@/shared/components/screen-back-button';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 
@@ -14,19 +17,9 @@ export default function PrivacyScreen() {
   return (
     <View style={styles.root}>
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.back}
-          hitSlop={12}
-        >
-          <AppSymbol
-            name="chevron.left"
-            size={22}
-            tintColor={colors.textPrimary}
-          />
-        </Pressable>
+        <ScreenBackButton onPress={() => router.back()} />
         <PremiumText variant="h3">Privacy Policy</PremiumText>
-        <View style={styles.back} />
+        <View style={styles.backSpacer} />
       </View>
 
       <ScrollView
@@ -153,9 +146,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  back: {
-    width: 40,
-    alignItems: 'center',
+  backSpacer: {
+    width: SCREEN_BACK_BUTTON_SIZE,
   },
   scroll: {
     flex: 1,

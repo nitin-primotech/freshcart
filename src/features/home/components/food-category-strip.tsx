@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { Category } from '@/features/catalog/types/catalog.types';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
 import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
@@ -53,6 +54,15 @@ export function FoodCategoryStrip({
                   contentFit="cover"
                   transition={200}
                 />
+                {active ? (
+                  <View style={styles.checkBadge}>
+                    <AppSymbol
+                      name="checkmark.circle.fill"
+                      size={24}
+                      tintColor={colors.primary}
+                    />
+                  </View>
+                ) : null}
               </View>
               <PremiumText
                 variant="captionMedium"
@@ -98,6 +108,14 @@ const styles = StyleSheet.create({
   circleActive: {
     borderColor: colors.primary,
     borderWidth: 2,
+  },
+  checkBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.full,
+    padding: 1,
   },
   image: {
     width: '100%',

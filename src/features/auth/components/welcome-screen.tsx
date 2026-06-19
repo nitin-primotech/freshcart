@@ -43,17 +43,9 @@ export function WelcomeScreen() {
             />
           </View>
           <PremiumText variant="h2" color={colors.textInverse}>
-            foodRush
+            Food Rush
           </PremiumText>
         </View>
-        <Pressable
-          onPress={() => router.push('/(auth)/phone')}
-          style={styles.skipBtn}
-        >
-          <PremiumText variant="captionMedium" color={colors.textInverse}>
-            Log in
-          </PremiumText>
-        </Pressable>
       </View>
 
       <View style={styles.cards}>
@@ -72,6 +64,7 @@ export function WelcomeScreen() {
               source={{ uri }}
               style={styles.cardImage}
               contentFit="cover"
+              transition={200}
             />
           </Animated.View>
         ))}
@@ -83,7 +76,7 @@ export function WelcomeScreen() {
           color={colors.textInverse}
           style={styles.tagline}
         >
-          One app for food, grocery, dining & more — in minutes
+          Restaurant food, rushed to your door
         </PremiumText>
       </Animated.View>
 
@@ -146,32 +139,42 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
   cards: {
+    alignSelf: 'center',
+    width: 300,
     height: 220,
     marginTop: spacing.xxl,
     marginBottom: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'visible',
   },
   card: {
     position: 'absolute',
-    width: 120,
-    height: 170,
+    width: 118,
+    height: 168,
     borderRadius: radius.lg,
     overflow: 'hidden',
     borderWidth: 3,
     borderColor: colors.textInverse,
     borderCurve: 'continuous',
+    backgroundColor: colors.backgroundMuted,
   },
   cardLeft: {
-    transform: [{ rotate: '-12deg' }, { translateX: -70 }],
+    left: 0,
+    top: spacing.lg,
+    zIndex: 1,
+    transform: [{ rotate: '-14deg' }],
   },
   cardCenter: {
+    left: 80,
+    top: 0,
     width: 140,
     height: 190,
-    zIndex: 2,
+    zIndex: 3,
   },
   cardRight: {
-    transform: [{ rotate: '12deg' }, { translateX: 70 }],
+    right: 0,
+    top: spacing.lg,
+    zIndex: 2,
+    transform: [{ rotate: '14deg' }],
   },
   cardImage: {
     width: '100%',

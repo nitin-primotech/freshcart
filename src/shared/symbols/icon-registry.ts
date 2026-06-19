@@ -39,6 +39,7 @@ export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
   bicycle: icon('bicycle', 'pedal_bike'),
   'map.fill': icon('map.fill', 'map'),
   'checkmark.circle.fill': icon('checkmark.circle.fill', 'check_circle'),
+  checkmark: icon('checkmark', 'check'),
   'flame.fill': icon('flame.fill', 'local_fire_department'),
   'house.fill': icon('house.fill', 'home'),
   'creditcard.fill': icon('creditcard.fill', 'credit_card'),

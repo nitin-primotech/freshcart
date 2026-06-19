@@ -106,7 +106,7 @@ export function PhoneLoginScreen() {
             color={colors.textInverse}
             style={styles.heroText}
           >
-            One app for food, grocery, dining & more in minutes!
+            Restaurant food, rushed to your door
           </PremiumText>
           <View style={styles.heroImages}>
             <Image

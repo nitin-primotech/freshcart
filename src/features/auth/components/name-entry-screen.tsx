@@ -244,6 +244,6 @@ const styles = StyleSheet.create({
     ...typography.h3,
     fontFamily: fonts.medium,
     color: colors.textPrimary,
-    paddingVertical: spacing.xs,
+    // paddingVertical: spacing.xs,
   },
 });

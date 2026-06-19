@@ -106,10 +106,10 @@ export function PersonalizationScreen() {
                 />
                 <View style={styles.cuisineOverlay} />
                 {active ? (
-                  <View style={styles.check}>
+                  <View style={styles.checkBadge}>
                     <AppSymbol
-                      name="checkmark"
-                      size={12}
+                      name="checkmark.circle.fill"
+                      size={28}
                       tintColor={colors.textInverse}
                     />
                   </View>
@@ -230,16 +230,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  check: {
+  checkBadge: {
     position: 'absolute',
     top: spacing.sm,
     right: spacing.sm,
-    width: 22,
-    height: 22,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   dietaryRow: {
     flexDirection: 'row',
