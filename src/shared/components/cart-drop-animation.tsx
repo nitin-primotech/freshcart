@@ -9,7 +9,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import {
+  CART_THUMB_SIZE,
+  cartThumbStackWidth,
+} from '@/shared/components/cart-thumb-stack';
 import {
   clearLastAdded,
   selectLastAdded,
@@ -19,18 +22,20 @@ import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { floatingCartBottomOffset } from '@/theme/tab-bar';
 
-const DROP_SIZE = 52;
-const BADGE_OFFSET = spacing.lg + 14;
+const DROP_SIZE = 44;
 
 export function CartDropAnimation() {
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const lastAdded = useCartStore(selectLastAdded);
   const progress = useSharedValue(0);
 
   const cartBarCenterY =
-    height - floatingCartBottomOffset(insets.bottom) - spacing.md - 22;
-  const startY = height * 0.32;
+    height - floatingCartBottomOffset(insets.bottom) - spacing.sm - 28;
+  const stackW = cartThumbStackWidth(3);
+  const cartBarTargetX = width / 2 - stackW / 2 + CART_THUMB_SIZE / 2;
+  const startY = height * 0.34;
+  const startX = width * 0.72;
 
   useEffect(() => {
     if (!lastAdded) return;
@@ -39,8 +44,8 @@ export function CartDropAnimation() {
     progress.value = withTiming(
       1,
       {
-        duration: 560,
-        easing: Easing.in(Easing.cubic),
+        duration: 620,
+        easing: Easing.out(Easing.cubic),
       },
       (finished) => {
         if (finished) {
@@ -48,20 +53,21 @@ export function CartDropAnimation() {
         }
       },
     );
-  }, [lastAdded?.id, progress]);
+  }, [lastAdded?.lineKey]);
 
   const dropStyle = useAnimatedStyle(() => {
     const t = Math.min(progress.value, 1);
+    const x = startX + (cartBarTargetX - startX) * t;
     const y = startY + (cartBarCenterY - startY) * t;
 
     return {
       position: 'absolute',
-      left: BADGE_OFFSET - DROP_SIZE / 2,
+      left: x - DROP_SIZE / 2,
       top: y - DROP_SIZE / 2,
       width: DROP_SIZE,
       height: DROP_SIZE,
-      transform: [{ scale: 1 - t * 0.42 }, { rotate: `${(1 - t) * -12}deg` }],
-      opacity: t < 0.92 ? 1 : 1 - (t - 0.92) / 0.08,
+      transform: [{ scale: 1 - t * 0.28 }, { rotate: `${(1 - t) * -16}deg` }],
+      opacity: t < 0.9 ? 1 : 1 - (t - 0.9) / 0.1,
     };
   });
 
@@ -82,7 +88,7 @@ export function CartDropAnimation() {
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 200,
   },
   drop: {

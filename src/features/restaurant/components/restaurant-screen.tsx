@@ -3,28 +3,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, {
-  FadeIn,
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchRestaurantById } from '@/features/catalog/api/catalog.api';
 import type { MenuItem } from '@/features/catalog/types/catalog.types';
+import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ErrorState } from '@/shared/components/error-state';
-import { PremiumButton } from '@/shared/components/premium-button';
 import { PremiumText } from '@/shared/components/premium-text';
 import { Shimmer } from '@/shared/components/shimmer';
 import { hapticAddToCart, hapticPressIn } from '@/shared/haptics/feedback';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import {
   addToCart,
-  openCartSheet,
   selectCartItemCount,
+  selectCartLineQuantity,
+  updateCartQuantity,
   useCartStore,
 } from '@/store/cart.store';
 import { colors, screens, shadows } from '@/theme/colors';
@@ -39,22 +35,26 @@ function MenuItemRow({
   restaurantId: string;
   restaurantName: string;
 }) {
-  const scale = useSharedValue(1);
+  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  async function handleAdd() {
-    hapticPressIn();
+  function handleAdd() {
     hapticAddToCart();
-    scale.value = withSequence(
-      withSpring(1.15, { damping: 6 }),
-      withSpring(1, { damping: 10 }),
-    );
     addToCart(item, restaurantId, restaurantName);
-    openCartSheet();
+  }
+
+  function handleIncrease() {
+    hapticAddToCart();
+    if (quantity === 0) {
+      addToCart(item, restaurantId, restaurantName);
+      return;
+    }
+    updateCartQuantity(item.id, quantity + 1);
+  }
+
+  function handleDecrease() {
+    hapticPressIn();
+    updateCartQuantity(item.id, quantity - 1);
   }
 
   return (
@@ -83,46 +83,117 @@ function MenuItemRow({
             </View>
           ) : null}
         </View>
-        <View>
+        <View style={styles.menuImageWrap}>
           <Image source={{ uri: item.image }} style={styles.menuImage} />
-          <Animated.View style={[styles.addBtn, animStyle]}>
-            <Pressable
-              onPress={handleAdd}
-              onPressIn={hapticPressIn}
-              style={styles.addBtnInner}
-            >
-              <AppSymbol name="plus" size={16} tintColor={colors.textInverse} />
-            </Pressable>
-          </Animated.View>
+          <View style={styles.menuAction}>
+            <AnimatedCartAction
+              quantity={quantity}
+              onAdd={handleAdd}
+              onIncrease={handleIncrease}
+              onDecrease={handleDecrease}
+              itemLabel={item.name}
+              compact
+            />
+          </View>
         </View>
       </Pressable>
 
-      <Modal visible={sheetOpen} transparent animationType="fade">
-        <Pressable
-          style={styles.sheetBackdrop}
-          onPress={() => setSheetOpen(false)}
-        />
-        <Animated.View entering={FadeIn.duration(250)} style={styles.itemSheet}>
-          <Image source={{ uri: item.image }} style={styles.sheetImage} />
-          <PremiumText variant="h2">{item.name}</PremiumText>
-          <PremiumText variant="body" color={colors.textSecondary}>
-            {item.description}
-          </PremiumText>
-          {item.calories ? (
-            <PremiumText variant="caption" color={colors.textTertiary}>
-              {item.calories} cal
-            </PremiumText>
-          ) : null}
-          <PremiumButton
-            label="Add to cart"
-            onPress={() => {
-              handleAdd();
-              setSheetOpen(false);
-            }}
-          />
-        </Animated.View>
-      </Modal>
+      <ItemDetailSheet
+        item={item}
+        restaurantId={restaurantId}
+        restaurantName={restaurantName}
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+      />
     </>
+  );
+}
+
+function ItemDetailSheet({
+  item,
+  restaurantId,
+  restaurantName,
+  visible,
+  onClose,
+}: {
+  item: MenuItem;
+  restaurantId: string;
+  restaurantName: string;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
+
+  function handleIncrease() {
+    hapticAddToCart();
+    if (quantity === 0) {
+      addToCart(item, restaurantId, restaurantName);
+      return;
+    }
+    updateCartQuantity(item.id, quantity + 1);
+  }
+
+  function handleDecrease() {
+    hapticPressIn();
+    updateCartQuantity(item.id, quantity - 1);
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
+      <Animated.View
+        entering={FadeInDown.duration(320).springify().damping(20)}
+        style={[
+          styles.itemSheet,
+          { paddingBottom: insets.bottom + spacing.sm },
+        ]}
+      >
+        <Pressable style={styles.sheetClose} onPress={onClose} hitSlop={12}>
+          <AppSymbol
+            name="xmark.circle.fill"
+            size={28}
+            tintColor={colors.textTertiary}
+          />
+        </Pressable>
+        <Animated.View entering={FadeIn.duration(280)}>
+          <Image source={{ uri: item.image }} style={styles.sheetImage} />
+        </Animated.View>
+        <PremiumText variant="h2">{item.name}</PremiumText>
+        <PremiumText variant="body" color={colors.textSecondary}>
+          {item.description}
+        </PremiumText>
+        {item.calories ? (
+          <PremiumText variant="caption" color={colors.textTertiary}>
+            {item.calories} cal
+          </PremiumText>
+        ) : null}
+
+        <View style={styles.sheetFooter}>
+          <View style={styles.priceBlock}>
+            <PremiumText variant="caption" color={colors.textSecondary}>
+              1 unit
+            </PremiumText>
+            <PremiumText variant="price" color={colors.textPrimary}>
+              ${item.price.toFixed(2)}
+            </PremiumText>
+            <PremiumText variant="caption" color={colors.textTertiary}>
+              Inclusive of all taxes
+            </PremiumText>
+          </View>
+          <AnimatedCartAction
+            quantity={quantity}
+            onAdd={() => {
+              hapticAddToCart();
+              addToCart(item, restaurantId, restaurantName);
+            }}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            itemLabel={item.name}
+          />
+        </View>
+      </Animated.View>
+    </Modal>
   );
 }
 
@@ -284,10 +355,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xxs,
   },
-  statIcon: {
-    width: 18,
-    height: 18,
-  },
   section: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
@@ -319,28 +386,29 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: radius.full,
   },
+  menuImageWrap: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+  },
   menuImage: {
     width: 100,
     height: 100,
     borderRadius: radius.md,
   },
-  addBtn: {
-    position: 'absolute',
-    bottom: -8,
-    right: -8,
+  menuAction: {
+    minHeight: 40,
+    justifyContent: 'center',
   },
-  addBtnInner: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
+  addBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.float,
-  },
-  addIcon: {
-    width: 16,
-    height: 16,
+    borderCurve: 'continuous',
+    boxShadow: '0 4px 14px rgba(212, 84, 60, 0.32)',
   },
   sheetBackdrop: {
     flex: 1,
@@ -354,13 +422,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundElevated,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
     gap: spacing.md,
     borderCurve: 'continuous',
+  },
+  sheetClose: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    zIndex: 2,
   },
   sheetImage: {
     width: '100%',
     height: 200,
     borderRadius: radius.lg,
+  },
+  sheetFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    marginTop: spacing.xs,
+  },
+  priceBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  sheetAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderCurve: 'continuous',
   },
 });

@@ -3,10 +3,16 @@ import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
+import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
-import { hapticPrimaryAction } from '@/shared/haptics/feedback';
-import { addToCart } from '@/store/cart.store';
+import { hapticAddToCart } from '@/shared/haptics/feedback';
+import {
+  addToCart,
+  selectCartLineQuantity,
+  updateCartQuantity,
+  useCartStore,
+} from '@/store/cart.store';
 import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 
@@ -21,10 +27,23 @@ function formatPrice(price: number): string {
 
 export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
   const { item, restaurantId, restaurantName, rating } = dish;
+  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
   function handleAdd() {
-    hapticPrimaryAction();
     addToCart(item, restaurantId, restaurantName);
+  }
+
+  function handleIncrease() {
+    hapticAddToCart();
+    if (quantity === 0) {
+      addToCart(item, restaurantId, restaurantName);
+      return;
+    }
+    updateCartQuantity(item.id, quantity + 1);
+  }
+
+  function handleDecrease() {
+    updateCartQuantity(item.id, quantity - 1);
   }
 
   return (
@@ -40,15 +59,15 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
             />
           </Pressable>
         </Link>
-        <Pressable
-          style={styles.addBtn}
-          onPress={handleAdd}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={`Add ${item.name} to cart`}
-        >
-          <AppSymbol name="plus" size={16} tintColor={colors.textInverse} />
-        </Pressable>
+        <View style={styles.actionWrap}>
+          <AnimatedCartAction
+            quantity={quantity}
+            onAdd={handleAdd}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            itemLabel={item.name}
+          />
+        </View>
       </View>
 
       <View style={styles.titleRow}>
@@ -106,17 +125,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  addBtn: {
+  actionWrap: {
     position: 'absolute',
-    top: spacing.sm,
+    bottom: spacing.sm,
     right: spacing.sm,
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderCurve: 'continuous',
   },
   titleRow: {
     flexDirection: 'row',
