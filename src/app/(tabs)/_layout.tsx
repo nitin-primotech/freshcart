@@ -7,7 +7,6 @@ import {
   selectHydrationStatus as selectAppHydrationStatus,
   selectHasConfirmedAddress,
   selectOnboardingComplete,
-  selectOnboardingStep,
   selectUserName,
   useAppStore,
 } from '@/store/app.store';
@@ -23,7 +22,6 @@ export default function TabsLayout() {
   const appHydration = useAppStore(selectAppHydrationStatus);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const onboardingComplete = useAppStore(selectOnboardingComplete);
-  const onboardingStep = useAppStore(selectOnboardingStep);
   const userName = useAppStore(selectUserName);
   const hasConfirmedAddress = useAppStore(selectHasConfirmedAddress);
 
@@ -34,7 +32,6 @@ export default function TabsLayout() {
     const href = getOnboardingHref({
       isAuthenticated,
       onboardingComplete,
-      onboardingStep,
       userName,
       hasConfirmedAddress,
     });
@@ -44,7 +41,6 @@ export default function TabsLayout() {
     appHydration,
     isAuthenticated,
     onboardingComplete,
-    onboardingStep,
     userName,
     hasConfirmedAddress,
     router,

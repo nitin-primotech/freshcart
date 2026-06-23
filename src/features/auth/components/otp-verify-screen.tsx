@@ -1,82 +1,56 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import {
   InteractionManager,
   Keyboard,
-  KeyboardAvoidingView,
   Pressable,
-  ScrollView,
-  StyleSheet,
+  Text,
   TextInput,
   View,
 } from 'react-native';
 import Animated, { useSharedValue } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
+import { AuthOnboardingShell } from '@/features/auth/components/auth-onboarding-shell';
 import type { OtpDigitStatus } from '@/features/auth/components/verification-code/animated-code-number';
 import { useAnimatedShake } from '@/features/auth/components/verification-code/use-animated-shake';
 import { VerificationCode } from '@/features/auth/components/verification-code/verification-code';
+import { OTP_ONBOARDING_COPY } from '@/features/auth/constants/auth-onboarding.constants';
+import { authScreenStyles } from '@/features/auth/constants/auth-screen.styles';
 import {
-  TOKEN_TTL_MS,
+  requestOtp,
   verifyOtpAndCreateSession,
 } from '@/features/auth/services/auth.service';
-import { AppSymbol } from '@/shared/components/app-symbol';
-import { PremiumButton } from '@/shared/components/premium-button';
-import { PremiumText } from '@/shared/components/premium-text';
+import { formatIndianPhone } from '@/features/auth/utils/format-indian-phone';
 import {
+  formTextInputProps,
   keyboardAppearance,
-  keyboardAvoidingBehavior,
 } from '@/shared/utils/keyboard';
 import { setAuthSession } from '@/store/auth.store';
-import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
 
 const OTP_LENGTH = 4;
 const CORRECT_OTP = 1234;
-const SESSION_TTL_LABEL =
-  TOKEN_TTL_MS >= 60 * 60 * 1000
-    ? `${TOKEN_TTL_MS / (60 * 60 * 1000)} hours`
-    : `${TOKEN_TTL_MS / (60 * 1000)} minutes`;
 
 export function OtpVerifyScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const [code, setCode] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showToast, setShowToast] = useState(true);
+  const [isResending, setIsResending] = useState(false);
 
   const verificationStatus = useSharedValue<OtpDigitStatus>('inProgress');
   const invisibleInputRef = useRef<TextInput>(null);
   const { shake, rShakeStyle } = useAnimatedShake();
 
-  const masked = phone ? `+1 ${phone.slice(0, 3)}•••${phone.slice(-4)}` : '';
+  const masked = phone ? formatIndianPhone(phone) : '';
   const codeString = code.join('');
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowToast(false), 4000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      const focusTimer = setTimeout(
-        () => invisibleInputRef.current?.focus(),
-        300,
-      );
-      return () => {
-        clearTimeout(focusTimer);
-        invisibleInputRef.current?.blur();
-      };
-    }, []),
-  );
+  const canVerify = codeString.length === OTP_LENGTH && !isLoading;
 
   const resetCode = useCallback(() => {
     setTimeout(() => {
       verificationStatus.value = 'inProgress';
       setCode([]);
       invisibleInputRef.current?.clear();
-      invisibleInputRef.current?.focus();
     }, 1000);
   }, [verificationStatus]);
 
@@ -92,10 +66,7 @@ export function OtpVerifyScreen() {
     setIsLoading(true);
 
     try {
-      const session = await verifyOtpAndCreateSession(
-        phone,
-        CORRECT_OTP.toString(),
-      );
+      const session = await verifyOtpAndCreateSession(phone, codeString);
       await setAuthSession(session);
       Keyboard.dismiss();
       InteractionManager.runAfterInteractions(() => {
@@ -107,7 +78,24 @@ export function OtpVerifyScreen() {
       resetCode();
       setIsLoading(false);
     }
-  }, [phone, isLoading, resetCode, router, shake, verificationStatus]);
+  }, [
+    phone,
+    codeString,
+    isLoading,
+    resetCode,
+    router,
+    shake,
+    verificationStatus,
+  ]);
+
+  const handleVerifyPress = useCallback(() => {
+    if (codeString.length !== OTP_LENGTH || isLoading) return;
+    if (codeString === CORRECT_OTP.toString()) {
+      void onCorrectCode();
+      return;
+    }
+    onWrongCode();
+  }, [codeString, isLoading, onCorrectCode, onWrongCode]);
 
   function handleTextChange(text: string) {
     if (isLoading) return;
@@ -118,166 +106,82 @@ export function OtpVerifyScreen() {
     verificationStatus.value = 'inProgress';
   }
 
-  function handleVerifyPress() {
-    if (codeString === CORRECT_OTP.toString()) {
-      void onCorrectCode();
-      return;
-    }
-    if (codeString.length === OTP_LENGTH) {
-      onWrongCode();
+  async function handleResend() {
+    if (!phone || isResending) return;
+    setIsResending(true);
+    try {
+      await requestOtp(phone);
+      resetCode();
+    } finally {
+      setIsResending(false);
     }
   }
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={keyboardAvoidingBehavior}
-        keyboardVerticalOffset={0}
+    <AuthOnboardingShell
+      copy={OTP_ONBOARDING_COPY}
+      onBack={() => router.back()}
+    >
+      <View style={authScreenStyles.formHeader}>
+        <Text style={authScreenStyles.title}>Enter OTP</Text>
+        <Text style={authScreenStyles.subtitle}>
+          Code sent to{' '}
+          <Text style={authScreenStyles.phoneHighlight}>{masked}</Text>
+        </Text>
+      </View>
+
+      <Pressable
+        onPress={() => invisibleInputRef.current?.focus()}
+        accessibilityRole="button"
+        accessibilityLabel="OTP input"
       >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={StyleSheet.flatten([
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + spacing.lg },
-          ])}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          showsVerticalScrollIndicator={false}
-        >
-          <Pressable
-            onPress={() => router.back()}
-            style={styles.back}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppSymbol
-              name="chevron.left"
-              size={22}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
+        <Animated.View style={[authScreenStyles.codeWrap, rShakeStyle]}>
+          <VerificationCode
+            code={code}
+            maxLength={OTP_LENGTH}
+            status={verificationStatus}
+          />
+        </Animated.View>
+      </Pressable>
 
-          <View style={styles.content}>
-            <PremiumText variant="h1">Verify OTP</PremiumText>
-            <PremiumText variant="body" color={colors.textSecondary}>
-              Code sent to {masked}
-            </PremiumText>
+      <AuthContinueButton
+        label={isLoading ? 'Verifying…' : 'Verify & continue'}
+        onPress={handleVerifyPress}
+        disabled={!canVerify}
+        loading={isLoading}
+        tone="primary"
+      />
 
-            <Animated.View
-              style={[styles.codeWrap, rShakeStyle]}
-              onTouchEnd={() => invisibleInputRef.current?.focus()}
-            >
-              <VerificationCode
-                code={code}
-                maxLength={OTP_LENGTH}
-                status={verificationStatus}
-              />
-            </Animated.View>
+      <Pressable
+        onPress={() => void handleResend()}
+        hitSlop={8}
+        style={authScreenStyles.resendRow}
+        accessibilityRole="button"
+        accessibilityLabel="Resend OTP"
+      >
+        <Text style={authScreenStyles.resendText}>
+          Didn&apos;t get it?{' '}
+          <Text style={authScreenStyles.resendLink}>
+            {isResending ? 'Sending…' : 'Resend'}
+          </Text>
+        </Text>
+      </Pressable>
 
-            <PremiumText variant="caption" color={colors.textTertiary}>
-              Tap the boxes to enter your code
-            </PremiumText>
-          </View>
-
-          <View style={styles.footer}>
-            <PremiumText
-              variant="caption"
-              color={colors.textTertiary}
-              style={styles.hint}
-            >
-              Session stays active for {SESSION_TTL_LABEL} after login.
-            </PremiumText>
-            <PremiumButton
-              label={isLoading ? 'Verifying…' : 'Verify & continue'}
-              onPress={handleVerifyPress}
-              disabled={codeString.length < OTP_LENGTH || isLoading}
-            />
-          </View>
-        </ScrollView>
-
-        <TextInput
-          ref={invisibleInputRef}
-          value={codeString}
-          onChangeText={handleTextChange}
-          keyboardType="number-pad"
-          keyboardAppearance={keyboardAppearance}
-          maxLength={OTP_LENGTH}
-          textContentType="oneTimeCode"
-          autoComplete="one-time-code"
-          caretHidden
-          style={styles.invisibleInput}
-          accessibilityLabel="OTP input"
-          blurOnSubmit
-        />
-
-        {showToast ? (
-          <View
-            style={StyleSheet.flatten([
-              styles.toast,
-              { bottom: insets.bottom + spacing.xxxl },
-            ])}
-          >
-            <AppSymbol
-              name="info.circle.fill"
-              size={18}
-              tintColor={colors.textInverse}
-            />
-            <PremiumText variant="captionMedium" color={colors.textInverse}>
-              Your OTP is {CORRECT_OTP}
-            </PremiumText>
-          </View>
-        ) : null}
-      </KeyboardAvoidingView>
-    </View>
+      <TextInput
+        ref={invisibleInputRef}
+        value={codeString}
+        onChangeText={handleTextChange}
+        keyboardType="number-pad"
+        keyboardAppearance={keyboardAppearance}
+        maxLength={OTP_LENGTH}
+        textContentType="oneTimeCode"
+        autoComplete="one-time-code"
+        caretHidden
+        style={authScreenStyles.invisibleInput}
+        accessibilityLabel="OTP input"
+        blurOnSubmit={false}
+        {...formTextInputProps}
+      />
+    </AuthOnboardingShell>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.backgroundElevated,
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  back: {
-    marginBottom: spacing.xl,
-  },
-  content: {
-    gap: spacing.lg,
-  },
-  codeWrap: {
-    marginVertical: spacing.md,
-    width: '100%',
-  },
-  footer: {
-    marginTop: 'auto',
-    gap: spacing.md,
-    paddingTop: spacing.xxl,
-  },
-  hint: {
-    textAlign: 'center',
-  },
-  invisibleInput: {
-    position: 'absolute',
-    opacity: 0,
-    width: 1,
-    height: 1,
-  },
-  toast: {
-    position: 'absolute',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.textPrimary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 999,
-  },
-});

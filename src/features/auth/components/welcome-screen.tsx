@@ -1,217 +1,360 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { type Href, useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PremiumText } from '@/shared/components/premium-text';
-import { setOnboardingStep } from '@/store/app.store';
-import { colors, gradients } from '@/theme/colors';
+import {
+  WELCOME_FEATURES,
+  WELCOME_GALLERY,
+} from '@/features/auth/constants/welcome.constants';
+import { AppSymbol } from '@/shared/components/app-symbol';
+import { hapticPressIn, hapticPrimaryAction } from '@/shared/haptics/feedback';
+import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 
-const STATS = [
-  { value: '2M+', label: 'Happy foodies' },
-  { value: '50K+', label: 'Orders daily' },
-  { value: '120+', label: 'Cities served' },
-] as const;
+function SpeedLines() {
+  return (
+    <View style={styles.speedLines} pointerEvents="none">
+      {[0, 1, 2].map((index) => (
+        <View
+          key={`speed-${index}`}
+          style={[styles.speedLine, { opacity: 1 - index * 0.22 }]}
+        />
+      ))}
+    </View>
+  );
+}
 
-const CARD_IMAGES = [
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
-  'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&q=80',
-  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80',
-];
+function LeafAccent({ side }: { side: 'left' | 'right' }) {
+  return (
+    <View
+      style={[
+        styles.leafAccent,
+        side === 'left' ? styles.leafLeft : styles.leafRight,
+      ]}
+      pointerEvents="none"
+    >
+      <AppSymbol name="leaf.fill" size={72} tintColor={colors.success} />
+    </View>
+  );
+}
+
+function FoodGallery() {
+  return (
+    <View style={styles.gallery}>
+      {WELCOME_GALLERY.map((card) => (
+        <View
+          key={card.layout}
+          style={[
+            styles.galleryCard,
+            card.layout === 'left' && styles.galleryCardLeft,
+            card.layout === 'center' && styles.galleryCardCenter,
+            card.layout === 'right' && styles.galleryCardRight,
+            { boxShadow: card.glow, transform: [{ rotate: card.rotate }] },
+          ]}
+        >
+          <View style={styles.galleryImageFrame}>
+            <Image
+              source={card.source}
+              style={styles.galleryImage}
+              contentFit="contain"
+            />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function FeaturePills() {
+  return (
+    <View style={styles.featureRow}>
+      {WELCOME_FEATURES.map((feature) => (
+        <View key={feature.label} style={styles.featurePill}>
+          <AppSymbol
+            name={feature.icon}
+            size={14}
+            tintColor={
+              feature.tint === 'success' ? colors.success : colors.primary
+            }
+          />
+          <Text style={styles.featureLabel} numberOfLines={2}>
+            {feature.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  function handleGetStarted() {
+    hapticPrimaryAction();
+    router.push('/(auth)/phone' as Href);
+  }
+
   return (
-    <LinearGradient
-      colors={gradients.primary.colors}
-      start={gradients.primary.start}
-      end={gradients.primary.end}
-      style={styles.root}
-    >
-      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-        <View style={styles.logoRow}>
-          <View style={styles.logoMark}>
-            <Image
-              source={require('@/assets/images/foodrushlogo.png')}
-              style={styles.logoImage}
-              contentFit="contain"
-            />
-          </View>
-          <PremiumText variant="h2" color={colors.textInverse}>
-            Food Rush
-          </PremiumText>
-        </View>
-      </View>
+    <View style={styles.root}>
+      <LeafAccent side="left" />
+      <LeafAccent side="right" />
 
-      <View style={styles.cards}>
-        {CARD_IMAGES.map((uri, i) => (
-          <Animated.View
-            key={uri}
-            entering={FadeInUp.delay(i * 120).duration(500)}
-            style={[
-              styles.card,
-              i === 0 && styles.cardLeft,
-              i === 1 && styles.cardCenter,
-              i === 2 && styles.cardRight,
-            ]}
-          >
-            <Image
-              source={{ uri }}
-              style={styles.cardImage}
-              contentFit="cover"
-              transition={200}
-            />
-          </Animated.View>
-        ))}
-      </View>
-
-      <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-        <PremiumText
-          variant="h1"
-          color={colors.textInverse}
-          style={styles.tagline}
-        >
-          Restaurant food, rushed to your door
-        </PremiumText>
-      </Animated.View>
-
-      <View style={styles.statsBox}>
-        {STATS.map((stat, i) => (
-          <View key={stat.label} style={styles.statCol}>
-            {i > 0 ? <View style={styles.statDivider} /> : null}
-            <PremiumText variant="h3" color={colors.textInverse}>
-              {stat.value}
-            </PremiumText>
-            <PremiumText variant="caption" color={colors.textInverse}>
-              {stat.label}
-            </PremiumText>
-          </View>
-        ))}
-      </View>
-
-      <Pressable
-        style={[styles.cta, { marginBottom: insets.bottom + spacing.lg }]}
-        onPress={() => {
-          setOnboardingStep('phone');
-          router.push('/(auth)/phone' as Href);
-        }}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: insets.top + spacing.md },
+        ]}
       >
-        <PremiumText variant="bodyMedium" color={colors.primary}>
-          Get started
-        </PremiumText>
-      </Pressable>
-    </LinearGradient>
+        <Image
+          source={require('@/assets/images/foodrushlogo.png')}
+          style={styles.logo}
+          contentFit="contain"
+        />
+
+        <View style={styles.headlineWrap}>
+          <Text style={styles.headline}>
+            Good food,{'\n'}
+            <Text style={styles.headlineAccent}>delivered fast</Text>
+          </Text>
+          <SpeedLines />
+        </View>
+
+        <Text style={styles.subheadline}>
+          Your favorite restaurant food, rushed to your door
+        </Text>
+
+        <FoodGallery />
+        <FeaturePills />
+      </ScrollView>
+
+      <View
+        style={[
+          styles.footer,
+          { paddingBottom: Math.max(insets.bottom, spacing.lg) },
+        ]}
+      >
+        <Pressable
+          onPress={handleGetStarted}
+          onPressIn={hapticPressIn}
+          style={styles.cta}
+          accessibilityRole="button"
+          accessibilityLabel="Get Started"
+        >
+          <Text style={styles.ctaLabel}>Get Started</Text>
+          <View style={styles.ctaArrow}>
+            <AppSymbol
+              name="chevron.right"
+              size={14}
+              tintColor={colors.primary}
+            />
+          </View>
+        </Pressable>
+
+        <Text style={styles.legal}>
+          By continuing, you agree to our{' '}
+          <Text
+            style={styles.legalLink}
+            onPress={() => router.push('/(auth)/terms')}
+          >
+            Terms of Service
+          </Text>{' '}
+          and{' '}
+          <Text
+            style={styles.legalLink}
+            onPress={() => router.push('/(auth)/privacy')}
+          >
+            Privacy Policy
+          </Text>
+        </Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: colors.background,
+  },
+  leafAccent: {
+    position: 'absolute',
+    top: spacing.xl,
+    opacity: 0.1,
+    zIndex: 0,
+  },
+  leafLeft: {
+    left: -spacing.lg,
+    transform: [{ rotate: '-24deg' }],
+  },
+  leafRight: {
+    right: -spacing.lg,
+    transform: [{ rotate: '24deg' }, { scaleX: -1 }],
+  },
+  scrollContent: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    alignItems: 'center',
+    gap: spacing.lg,
   },
-  topBar: {
+  logo: {
+    width: 96,
+    height: 96,
+  },
+  headlineWrap: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  logoMark: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
+    gap: spacing.xs,
+    maxWidth: '100%',
   },
-  logoImage: {
-    width: 52,
-    height: 52,
+  headline: {
+    fontFamily: fonts.display,
+    fontSize: 30,
+    lineHeight: 38,
+    color: colors.textPrimary,
+    textAlign: 'center',
   },
-  skipBtn: {
+  headlineAccent: {
+    color: colors.primary,
+  },
+  speedLines: {
+    marginTop: spacing.sm,
+    gap: 3,
+    transform: [{ rotate: '-28deg' }],
+  },
+  speedLine: {
+    width: 14,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+  },
+  subheadline: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSecondary,
+    textAlign: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    marginTop: -spacing.sm,
   },
-  cards: {
+  gallery: {
     alignSelf: 'center',
-    width: 300,
+    width: 320,
     height: 220,
-    marginTop: spacing.xxl,
-    marginBottom: spacing.xl,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
     overflow: 'visible',
   },
-  card: {
+  galleryCard: {
     position: 'absolute',
-    width: 118,
-    height: 168,
     borderRadius: radius.lg,
-    overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: colors.textInverse,
     borderCurve: 'continuous',
-    backgroundColor: colors.backgroundMuted,
+    backgroundColor: colors.backgroundElevated,
+    padding: spacing.xs,
+    boxShadow: '0 4px 16px rgba(28, 28, 30, 0.06)',
   },
-  cardLeft: {
+  galleryCardLeft: {
     left: 0,
     top: spacing.lg,
+    width: 118,
+    height: 162,
     zIndex: 1,
-    transform: [{ rotate: '-14deg' }],
   },
-  cardCenter: {
-    left: 80,
+  galleryCardCenter: {
+    left: 92,
     top: 0,
-    width: 140,
-    height: 190,
+    width: 136,
+    height: 188,
     zIndex: 3,
   },
-  cardRight: {
+  galleryCardRight: {
     right: 0,
     top: spacing.lg,
+    width: 118,
+    height: 162,
     zIndex: 2,
-    transform: [{ rotate: '14deg' }],
   },
-  cardImage: {
+  galleryImageFrame: {
+    flex: 1,
+    borderRadius: radius.sm,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
+    backgroundColor: colors.backgroundElevated,
+  },
+  galleryImage: {
     width: '100%',
     height: '100%',
   },
-  tagline: {
-    textAlign: 'center',
-    paddingHorizontal: spacing.md,
-    lineHeight: 34,
-  },
-  statsBox: {
+  featureRow: {
     flexDirection: 'row',
-    marginTop: spacing.xxl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(0,0,0,0.15)',
-    paddingVertical: spacing.lg,
+    gap: spacing.xs,
+    width: '100%',
   },
-  statCol: {
+  featurePill: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xxs,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.sm,
+    borderCurve: 'continuous',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    boxShadow: '0 4px 16px rgba(28, 28, 30, 0.06)',
   },
-  statDivider: {
-    position: 'absolute',
-    left: 0,
-    top: 8,
-    bottom: 8,
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+  featureLabel: {
+    flex: 1,
+    fontFamily: fonts.medium,
+    fontSize: 9,
+    lineHeight: 12,
+    color: colors.textPrimary,
+  },
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    gap: spacing.md,
+    backgroundColor: colors.background,
   },
   cta: {
-    marginTop: 'auto',
-    backgroundColor: colors.textInverse,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.md,
+    minHeight: 54,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    boxShadow: '0 8px 24px rgba(212, 84, 60, 0.28)',
+  },
+  ctaLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 17,
+    lineHeight: 22,
+    color: colors.textInverse,
+  },
+  ctaArrow: {
+    position: 'absolute',
+    right: spacing.sm,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.textInverse,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legal: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.sm,
+  },
+  legalLink: {
+    fontFamily: fonts.semibold,
+    color: colors.primary,
   },
 });

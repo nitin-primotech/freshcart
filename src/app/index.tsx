@@ -7,7 +7,6 @@ import {
   selectHydrationStatus as selectAppHydrationStatus,
   selectHasConfirmedAddress,
   selectOnboardingComplete,
-  selectOnboardingStep,
   selectUserName,
   useAppStore,
 } from '@/store/app.store';
@@ -24,7 +23,6 @@ export default function Index() {
   const appHydrationStatus = useAppStore(selectAppHydrationStatus);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const onboardingComplete = useAppStore(selectOnboardingComplete);
-  const onboardingStep = useAppStore(selectOnboardingStep);
   const userName = useAppStore(selectUserName);
   const hasConfirmedAddress = useAppStore(selectHasConfirmedAddress);
   const [splashDone, setSplashDone] = useState(false);
@@ -44,7 +42,6 @@ export default function Index() {
   const href = getOnboardingHref({
     isAuthenticated,
     onboardingComplete,
-    onboardingStep,
     userName,
     hasConfirmedAddress,
   });

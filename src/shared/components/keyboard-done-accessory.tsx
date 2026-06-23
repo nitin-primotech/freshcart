@@ -44,7 +44,7 @@ export function KeyboardDoneAccessory() {
   return (
     <InputAccessoryView
       nativeID={KEYBOARD_DONE_ACCESSORY_ID}
-      backgroundColor={colors.backgroundMuted}
+      backgroundColor={colors.backgroundElevated}
     >
       <KeyboardDoneToolbar />
     </InputAccessoryView>
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.backgroundMuted,
+    backgroundColor: colors.backgroundElevated,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
   },

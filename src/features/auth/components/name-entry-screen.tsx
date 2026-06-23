@@ -1,249 +1,94 @@
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { type Href, useRouter } from 'expo-router';
-import { useState } from 'react';
-import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRef, useState } from 'react';
+import { Keyboard, Pressable, Text, TextInput, View } from 'react-native';
 
+import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
+import { AuthOnboardingShell } from '@/features/auth/components/auth-onboarding-shell';
+import { NAME_ONBOARDING_COPY } from '@/features/auth/constants/auth-onboarding.constants';
+import { authScreenStyles } from '@/features/auth/constants/auth-screen.styles';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { PremiumButton } from '@/shared/components/premium-button';
-import { PremiumText } from '@/shared/components/premium-text';
-import { keyboardAvoidingBehavior } from '@/shared/utils/keyboard';
+import { formTextInputProps } from '@/shared/utils/keyboard';
 import { setUserName } from '@/store/app.store';
-import { colors, gradients } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
-import { fonts, typography } from '@/theme/typography';
+import { colors } from '@/theme/colors';
 
 export function NameEntryScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const inputRef = useRef<TextInput>(null);
   const [name, setName] = useState('');
-  const canContinue = name.trim().length >= 2;
+
+  const trimmed = name.trim();
+  const canContinue = trimmed.length >= 2;
 
   function handleContinue() {
     if (!canContinue) return;
     Keyboard.dismiss();
-    setUserName(name.trim());
+    setUserName(trimmed);
     router.replace('/location?onboarding=1' as Href);
   }
 
   return (
-    <View style={styles.root}>
-      <LinearGradient
-        colors={gradients.primary.colors}
-        style={StyleSheet.flatten([
-          styles.hero,
-          { paddingTop: insets.top + spacing.lg },
-        ])}
-      >
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.back}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
+    <AuthOnboardingShell
+      copy={NAME_ONBOARDING_COPY}
+      onBack={() => router.back()}
+    >
+      <View style={authScreenStyles.formHeader}>
+        <Text style={authScreenStyles.title}>What&apos;s your name?</Text>
+        <Text style={authScreenStyles.subtitle}>Add your name to continue</Text>
+      </View>
+
+      <View style={authScreenStyles.inputWrap}>
+        <View style={authScreenStyles.inputRow}>
           <AppSymbol
-            name="chevron.left"
-            size={22}
-            tintColor={colors.textInverse}
+            name="person.fill"
+            size={18}
+            tintColor={colors.textTertiary}
           />
-        </Pressable>
-        <View style={styles.heroLogo}>
-          <View style={styles.logoMark}>
-            <Image
-              source={require('@/assets/images/foodrushlogo.png')}
-              style={styles.logoImage}
-              contentFit="contain"
-            />
-          </View>
-        </View>
-        <PremiumText
-          variant="bodyMedium"
-          color={colors.textInverse}
-          style={styles.heroText}
-        >
-          One app for food, grocery, dining & more in minutes!
-        </PremiumText>
-        <View style={styles.heroImages}>
-          <Image
-            source="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&q=80"
-            style={styles.heroThumb}
-            contentFit="cover"
+          <TextInput
+            ref={inputRef}
+            value={name}
+            onChangeText={setName}
+            placeholder="Full name"
+            placeholderTextColor={colors.textTertiary}
+            style={authScreenStyles.input}
+            autoCapitalize="words"
+            autoCorrect={false}
+            textContentType="name"
+            autoComplete="name"
+            returnKeyType="done"
+            onSubmitEditing={handleContinue}
+            selectionColor={colors.primary}
+            {...formTextInputProps}
           />
-          <Image
-            source="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&q=80"
-            style={StyleSheet.flatten([
-              styles.heroThumb,
-              styles.heroThumbCenter,
-            ])}
-            contentFit="cover"
-          />
-          <Image
-            source="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80"
-            style={styles.heroThumb}
-            contentFit="cover"
-          />
-        </View>
-      </LinearGradient>
-
-      <KeyboardAvoidingView
-        behavior={keyboardAvoidingBehavior}
-        style={styles.sheetContainer}
-        keyboardVerticalOffset={0}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={StyleSheet.flatten([
-            styles.sheet,
-            { paddingBottom: insets.bottom + spacing.lg },
-          ])}
-        >
-          <PremiumText variant="h2" style={styles.title}>
-            What&apos;s your name?
-          </PremiumText>
-
-          <View style={styles.inputWrap}>
-            <PremiumText
-              variant="label"
-              color={colors.primary}
-              style={styles.floatingLabel}
+          {name.length > 0 ? (
+            <Pressable
+              onPress={() => setName('')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Clear name"
             >
-              Enter Full Name
-            </PremiumText>
-            <View style={styles.inputRow}>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="Sam Lee"
-                placeholderTextColor={colors.textTertiary}
-                style={styles.input}
-                autoCapitalize="words"
-                autoCorrect={false}
-                textContentType="name"
-                autoComplete="name"
-                returnKeyType="done"
-                onSubmitEditing={() => Keyboard.dismiss()}
+              <AppSymbol
+                name="xmark.circle.fill"
+                size={20}
+                tintColor={colors.textTertiary}
               />
-              {name.length > 0 ? (
-                <Pressable onPress={() => setName('')} hitSlop={8}>
-                  <AppSymbol
-                    name="xmark.circle.fill"
-                    size={22}
-                    tintColor={colors.textTertiary}
-                  />
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
 
-          <PremiumButton
-            label="Continue"
-            onPress={handleContinue}
-            disabled={!canContinue}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+      <AuthContinueButton
+        label="Continue"
+        onPress={handleContinue}
+        disabled={!canContinue}
+        tone="primary"
+      />
+
+      <View style={authScreenStyles.safeNote}>
+        <AppSymbol name="lock.fill" size={12} tintColor={colors.success} />
+        <Text style={authScreenStyles.safeText}>
+          Your details are safe with us
+        </Text>
+      </View>
+    </AuthOnboardingShell>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.backgroundElevated,
-  },
-  hero: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxxl,
-  },
-  back: {
-    marginBottom: spacing.md,
-  },
-  heroLogo: {
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  logoMark: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoImage: {
-    width: 72,
-    height: 72,
-  },
-  heroText: {
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  heroImages: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  heroThumb: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: colors.textInverse,
-  },
-  heroThumbCenter: {
-    width: 88,
-    height: 88,
-  },
-  sheetContainer: {
-    flex: 1,
-    marginTop: -spacing.xxl,
-  },
-  sheet: {
-    flexGrow: 1,
-    backgroundColor: colors.backgroundElevated,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    gap: spacing.xl,
-    borderCurve: 'continuous',
-  },
-  title: {
-    marginTop: spacing.sm,
-  },
-  inputWrap: {
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderRadius: radius.md,
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  floatingLabel: {
-    position: 'absolute',
-    top: -10,
-    left: spacing.md,
-    backgroundColor: colors.backgroundElevated,
-    paddingHorizontal: spacing.xxs,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    ...typography.h3,
-    fontFamily: fonts.medium,
-    color: colors.textPrimary,
-    // paddingVertical: spacing.xs,
-  },
-});
