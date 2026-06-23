@@ -51,7 +51,7 @@ export function HomeRestaurantCarousel({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
   },
   row: {
     paddingLeft: spacing.md,

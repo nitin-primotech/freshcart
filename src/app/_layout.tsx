@@ -116,6 +116,13 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="product/[restaurantId]/[itemId]"
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
             name="category/[id]"
             options={{
               headerShown: false,

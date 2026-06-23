@@ -3,6 +3,7 @@ import promosData from '@/features/catalog/mocks/promos.json';
 import restaurantsData from '@/features/catalog/mocks/restaurants.json';
 import type {
   Category,
+  MenuItem,
   Promo,
   Restaurant,
 } from '@/features/catalog/types/catalog.types';
@@ -42,6 +43,50 @@ export function fetchRestaurantById(id: string, signal?: AbortSignal) {
     return Promise.reject(new Error('Restaurant not found'));
   }
   return simulateRequest(restaurant, { delayMs: 800 });
+}
+
+export type MenuItemContext = {
+  restaurant: Restaurant;
+  item: MenuItem;
+  sectionTitle: string;
+};
+
+export function fetchMenuItemContext(
+  restaurantId: string,
+  itemId: string,
+  signal?: AbortSignal,
+) {
+  if (signal?.aborted) {
+    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+  }
+  const restaurant = restaurants.find((entry) => entry.id === restaurantId);
+  if (!restaurant) {
+    return Promise.reject(new Error('Restaurant not found'));
+  }
+
+  for (const section of restaurant.menu) {
+    const item = section.items.find((entry) => entry.id === itemId);
+    if (item) {
+      return simulateRequest(
+        { restaurant, item, sectionTitle: section.title },
+        { delayMs: 650 },
+      );
+    }
+  }
+
+  return Promise.reject(new Error('Product not found'));
+}
+
+export function getRelatedMenuItems(
+  restaurant: Restaurant,
+  itemId: string,
+  limit = 3,
+): MenuItem[] {
+  const items = restaurant.menu.flatMap((section) => section.items);
+  return items
+    .filter((entry) => entry.id !== itemId)
+    .sort((a, b) => Number(b.isPopular) - Number(a.isPopular))
+    .slice(0, limit);
 }
 
 export function searchRestaurants(query: string, signal?: AbortSignal) {

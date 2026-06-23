@@ -1,9 +1,13 @@
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-
+import {
+  deriveMrp,
+  formatInr,
+} from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { getTrendingFoodImage } from '@/features/home/utils/trending-food-images';
+import { productDetailPath } from '@/features/product/utils/product-path';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
 import {
@@ -23,7 +27,7 @@ type TopPicksProductCardProps = {
 };
 
 function formatPrice(price: number): string {
-  return `$${price.toFixed(2)}`;
+  return formatInr(price);
 }
 
 function formatWeight(calories?: number): string {
@@ -38,7 +42,7 @@ export function TopPicksProductCard({
 }: TopPicksProductCardProps) {
   const { item, restaurantId, restaurantName } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
-  const originalPrice = Math.round(item.price * 1.22 * 100) / 100;
+  const originalPrice = deriveMrp(item.price);
 
   function handleAdd() {
     hapticAddToCart();
@@ -61,7 +65,7 @@ export function TopPicksProductCard({
 
   return (
     <View style={[styles.card, { width }]}>
-      <Link href={`/restaurant/${restaurantId}`} asChild>
+      <Link href={productDetailPath(restaurantId, item.id)} asChild>
         <Pressable style={styles.imageWrap} accessibilityRole="link">
           <Image
             source={getTrendingFoodImage(imageIndex)}
@@ -73,15 +77,21 @@ export function TopPicksProductCard({
       </Link>
 
       <View style={styles.body}>
-        <Text style={styles.name} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.weight}>{formatWeight(item.calories)}</Text>
+        <Link href={productDetailPath(restaurantId, item.id)} asChild>
+          <Pressable accessibilityRole="link">
+            <Text style={styles.name} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text style={styles.weight}>{formatWeight(item.calories)}</Text>
 
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatPrice(item.price)}</Text>
-          <Text style={styles.originalPrice}>{formatPrice(originalPrice)}</Text>
-        </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.price}>{formatPrice(item.price)}</Text>
+              <Text style={styles.originalPrice}>
+                {formatPrice(originalPrice)}
+              </Text>
+            </View>
+          </Pressable>
+        </Link>
 
         {quantity === 0 ? (
           <Pressable

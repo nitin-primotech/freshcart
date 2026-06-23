@@ -23,6 +23,7 @@ export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
   heart: icon('heart', 'favorite'),
   'heart.fill': icon('heart.fill', 'favorite'),
   'star.fill': icon('star.fill', 'star'),
+  star: icon('star', 'star_border'),
   'fork.knife': icon('fork.knife', 'restaurant'),
   'cart.fill': icon('cart.fill', 'shopping_cart'),
   'takeoutbag.and.cup.and.straw.fill': icon(
@@ -72,6 +73,9 @@ export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
     'rectangle.portrait.and.arrow.right',
     'logout',
   ),
+  'square.and.arrow.up': icon('square.and.arrow.up', 'share'),
+  'arrow.2.circlepath': icon('arrow.2.circlepath', 'sync'),
+  'star.leadinghalf.filled': icon('star.leadinghalf.filled', 'star_half'),
 };
 
 export function resolveSymbol(name: string): CrossPlatformSymbol | null {

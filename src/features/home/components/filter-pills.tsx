@@ -6,7 +6,7 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 
 const FILTERS = [
-  { id: 'off', label: 'MIN $10 OFF', accent: true },
+  { id: 'off', label: 'MIN ₹100 OFF', accent: true },
   { id: 'fast', label: '10 MINS DELIVERY', accent: false },
 ] as const;
 
@@ -58,9 +58,8 @@ export function FilterPills({ activeId, onSelect }: FilterPillsProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
-    marginBottom: spacing.lg,
   },
   pill: {
     flex: 1,

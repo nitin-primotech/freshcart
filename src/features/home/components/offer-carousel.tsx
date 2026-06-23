@@ -205,7 +205,7 @@ export function OfferCarousel({ promos }: OfferCarouselProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.xs,
+    gap: spacing.xxs,
   },
   scroller: {
     height: SLIDE_HEIGHT,
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xxs,
   },
   dotTrack: {
     width: 18,

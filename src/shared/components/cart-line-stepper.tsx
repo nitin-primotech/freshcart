@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
@@ -10,8 +9,6 @@ type CartLineStepperProps = {
   onDecrease: () => void;
   onIncrease: () => void;
 };
-
-const LAYOUT = LinearTransition.springify().damping(20).stiffness(300);
 
 /** Compact outline stepper for cart rows — Swiggy-style inline control. */
 export function CartLineStepper({
@@ -30,14 +27,9 @@ export function CartLineStepper({
       >
         <AppSymbol name="minus" size={12} tintColor={colors.primary} />
       </Pressable>
-      <Animated.View
-        key={quantity}
-        entering={ZoomIn.springify().damping(18).stiffness(340).duration(160)}
-        layout={LAYOUT}
-        style={styles.qtyWrap}
-      >
+      <View style={styles.qtyWrap}>
         <Text style={styles.qty}>{quantity}</Text>
-      </Animated.View>
+      </View>
       <Pressable
         onPress={onIncrease}
         style={styles.btn}

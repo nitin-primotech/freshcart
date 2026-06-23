@@ -1,10 +1,5 @@
-import { Pressable, StyleSheet } from 'react-native';
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-  ZoomIn,
-} from 'react-native-reanimated';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { QuantityStepper } from '@/shared/components/quantity-stepper';
@@ -21,8 +16,6 @@ type AnimatedCartActionProps = {
   compact?: boolean;
 };
 
-const LAYOUT = LinearTransition.springify().damping(18).stiffness(260);
-
 export function AnimatedCartAction({
   quantity,
   onAdd,
@@ -34,7 +27,7 @@ export function AnimatedCartAction({
   const btnSize = compact ? 36 : 40;
 
   return (
-    <Animated.View layout={LAYOUT} style={styles.root}>
+    <View style={styles.root}>
       {quantity === 0 ? (
         <Animated.View
           entering={FadeIn.duration(180)}
@@ -55,7 +48,7 @@ export function AnimatedCartAction({
         </Animated.View>
       ) : (
         <Animated.View
-          entering={ZoomIn.springify().damping(16).stiffness(280)}
+          entering={FadeIn.duration(180)}
           exiting={FadeOut.duration(120)}
         >
           <QuantityStepper
@@ -73,7 +66,7 @@ export function AnimatedCartAction({
           />
         </Animated.View>
       )}
-    </Animated.View>
+    </View>
   );
 }
 

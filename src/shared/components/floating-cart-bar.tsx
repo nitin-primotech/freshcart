@@ -1,8 +1,7 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
-  FadeInUp,
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -25,7 +24,7 @@ import { spacing } from '@/theme/spacing';
 import { floatingCartBottomOffset } from '@/theme/tab-bar';
 import { fonts } from '@/theme/typography';
 
-const CART_BAR_ENTER = FadeInUp.springify().damping(18).stiffness(220);
+const CART_BAR_ENTER = FadeIn.duration(200);
 const BAR_WIDTH = '90%';
 
 export function FloatingCartBar() {
@@ -70,17 +69,6 @@ export function FloatingCartBar() {
       ]}
       pointerEvents="box-none"
     >
-      <LinearGradient
-        colors={[
-          'rgba(250, 248, 245, 0)',
-          'rgba(250, 248, 245, 0.88)',
-          colors.background,
-        ]}
-        locations={[0, 0.55, 1]}
-        style={styles.bottomScrim}
-        pointerEvents="none"
-      />
-
       <Pressable
         onPress={handlePress}
         onPressIn={hapticPressIn}
@@ -128,14 +116,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    zIndex: 100,
-  },
-  bottomScrim: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: -spacing.xl,
-    height: 120,
+    zIndex: 10,
   },
   bar: {
     width: BAR_WIDTH,

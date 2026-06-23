@@ -1,5 +1,4 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { LinearTransition, ZoomIn } from 'react-native-reanimated';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
@@ -13,8 +12,6 @@ type QuantityStepperProps = {
   minQuantity?: number;
   compact?: boolean;
 };
-
-const LAYOUT = LinearTransition.springify().damping(20).stiffness(280);
 
 export function QuantityStepper({
   quantity,
@@ -40,19 +37,13 @@ export function QuantityStepper({
       >
         <AppSymbol name="minus" size={16} tintColor={colors.textInverse} />
       </Pressable>
-      <Animated.View
-        key={quantity}
-        entering={ZoomIn.springify().damping(18).stiffness(320).duration(180)}
-        layout={LAYOUT}
+      <PremiumText
+        variant="bodyMedium"
+        color={colors.textInverse}
+        style={styles.qty}
       >
-        <PremiumText
-          variant="bodyMedium"
-          color={colors.textInverse}
-          style={styles.qty}
-        >
-          {quantity}
-        </PremiumText>
-      </Animated.View>
+        {quantity}
+      </PremiumText>
       <Pressable
         onPress={onIncrease}
         style={[styles.btn, { width: btnSize, height: btnSize }]}

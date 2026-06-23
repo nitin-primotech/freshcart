@@ -2,7 +2,9 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { formatInr } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
+import { productDetailPath } from '@/features/product/utils/product-path';
 import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
@@ -22,7 +24,7 @@ type RecommendedDishCardProps = {
 };
 
 function formatPrice(price: number): string {
-  return `$${price.toFixed(2)}`;
+  return formatInr(price);
 }
 
 export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
@@ -49,7 +51,7 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
   return (
     <View style={[styles.card, { width }]}>
       <View style={styles.imageWrap}>
-        <Link href={`/restaurant/${restaurantId}`} asChild>
+        <Link href={productDetailPath(restaurantId, item.id)} asChild>
           <Pressable style={styles.imagePress}>
             <Image
               source={{ uri: item.image }}
@@ -71,14 +73,18 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
       </View>
 
       <View style={styles.titleRow}>
-        <PremiumText
-          variant="bodyMedium"
-          color={colors.textPrimary}
-          numberOfLines={1}
-          style={styles.title}
-        >
-          {item.name}
-        </PremiumText>
+        <Link href={productDetailPath(restaurantId, item.id)} asChild>
+          <Pressable style={styles.titlePress}>
+            <PremiumText
+              variant="bodyMedium"
+              color={colors.textPrimary}
+              numberOfLines={1}
+              style={styles.title}
+            >
+              {item.name}
+            </PremiumText>
+          </Pressable>
+        </Link>
         <View style={styles.rating}>
           <AppSymbol name="star.fill" size={12} tintColor={colors.star} />
           <PremiumText variant="captionMedium" color={colors.textPrimary}>
@@ -138,6 +144,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxs,
   },
   title: {
+    flex: 1,
+  },
+  titlePress: {
     flex: 1,
   },
   rating: {

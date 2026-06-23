@@ -94,8 +94,7 @@ export function HomeBestOffers() {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
+    marginTop: spacing.md,
   },
   row: {
     paddingLeft: spacing.md,

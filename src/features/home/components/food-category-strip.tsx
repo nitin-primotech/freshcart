@@ -72,13 +72,11 @@ export function FoodCategoryStrip({ categories }: FoodCategoryStripProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
+    marginTop: spacing.md,
   },
   row: {
     paddingHorizontal: spacing.md,
     gap: ITEM_GAP,
-    paddingVertical: spacing.xs,
   },
   item: {
     alignItems: 'center',

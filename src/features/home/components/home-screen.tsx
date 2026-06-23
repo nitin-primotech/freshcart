@@ -124,8 +124,10 @@ export function HomeScreen() {
         }
       >
         <View style={styles.header}>
-          <HomeHeader />
-          <HomeSearchBar />
+          <View style={styles.headerTop}>
+            <HomeHeader />
+            <HomeSearchBar />
+          </View>
           <OfferCarousel promos={promosQuery.data} />
         </View>
 
@@ -137,9 +139,12 @@ export function HomeScreen() {
           {!isLoading && !hasError ? (
             <RecommendedSection dishes={topPicksDishes} />
           ) : null}
-          {!isLoading && !hasError ? <HomePopularBrands /> : null}
-
-          <FilterPills activeId={filterId} onSelect={setFilterId} />
+          {!isLoading && !hasError ? (
+            <View style={styles.brandsCluster}>
+              <HomePopularBrands />
+              <FilterPills activeId={filterId} onSelect={setFilterId} />
+            </View>
+          ) : null}
 
           {isLoading ? <HomeSkeleton /> : null}
           {!isLoading && !hasError && morePicksDishes.length > 0 ? (
@@ -162,14 +167,6 @@ export function HomeScreen() {
                 title={personalizedTitle}
                 restaurants={personalized}
               />
-
-              {!isLoading && !hasError && morePicksDishes.length > 0 ? (
-                <RecommendedSection
-                  title="Recommended picks"
-                  dishes={morePicksDishes}
-                  imageIndexOffset={6}
-                />
-              ) : null}
               <HomeRestaurantCarousel
                 title="Explore for you"
                 restaurants={exploreRestaurants}
@@ -193,10 +190,18 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.background,
+    gap: spacing.sm,
+    paddingBottom: spacing.xs,
+  },
+  headerTop: {
+    gap: spacing.md,
   },
   body: {
     backgroundColor: colors.background,
-    paddingTop: spacing.sm,
+  },
+  brandsCluster: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
   },
   skeleton: {
     paddingHorizontal: spacing.md,

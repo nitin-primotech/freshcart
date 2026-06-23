@@ -1,20 +1,23 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchRestaurantById } from '@/features/catalog/api/catalog.api';
 import type { MenuItem } from '@/features/catalog/types/catalog.types';
+import { productDetailPath } from '@/features/product/utils/product-path';
 import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ErrorState } from '@/shared/components/error-state';
 import { PremiumText } from '@/shared/components/premium-text';
 import { Shimmer } from '@/shared/components/shimmer';
-import { hapticAddToCart, hapticPressIn } from '@/shared/haptics/feedback';
+import {
+  hapticAddToCart,
+  hapticPressIn,
+  hapticSoftTap,
+} from '@/shared/haptics/feedback';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import {
   addToCart,
@@ -35,8 +38,8 @@ function MenuItemRow({
   restaurantId: string;
   restaurantName: string;
 }) {
+  const router = useRouter();
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   function handleAdd() {
     hapticAddToCart();
@@ -57,143 +60,49 @@ function MenuItemRow({
     updateCartQuantity(item.id, quantity - 1);
   }
 
-  return (
-    <>
-      <Pressable
-        onPress={() => setSheetOpen(true)}
-        style={[styles.menuRow, shadows.soft]}
-      >
-        <View style={styles.menuText}>
-          <PremiumText variant="bodyMedium">{item.name}</PremiumText>
-          <PremiumText
-            variant="caption"
-            color={colors.textSecondary}
-            numberOfLines={2}
-          >
-            {item.description}
-          </PremiumText>
-          <PremiumText variant="price" style={styles.price}>
-            ${item.price.toFixed(2)}
-          </PremiumText>
-          {item.isPopular ? (
-            <View style={styles.popular}>
-              <PremiumText variant="label" color={colors.primary}>
-                Popular
-              </PremiumText>
-            </View>
-          ) : null}
-        </View>
-        <View style={styles.menuImageWrap}>
-          <Image source={{ uri: item.image }} style={styles.menuImage} />
-          <View style={styles.menuAction}>
-            <AnimatedCartAction
-              quantity={quantity}
-              onAdd={handleAdd}
-              onIncrease={handleIncrease}
-              onDecrease={handleDecrease}
-              itemLabel={item.name}
-              compact
-            />
-          </View>
-        </View>
-      </Pressable>
-
-      <ItemDetailSheet
-        item={item}
-        restaurantId={restaurantId}
-        restaurantName={restaurantName}
-        visible={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-      />
-    </>
-  );
-}
-
-function ItemDetailSheet({
-  item,
-  restaurantId,
-  restaurantName,
-  visible,
-  onClose,
-}: {
-  item: MenuItem;
-  restaurantId: string;
-  restaurantName: string;
-  visible: boolean;
-  onClose: () => void;
-}) {
-  const insets = useSafeAreaInsets();
-  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
-
-  function handleIncrease() {
-    hapticAddToCart();
-    if (quantity === 0) {
-      addToCart(item, restaurantId, restaurantName);
-      return;
-    }
-    updateCartQuantity(item.id, quantity + 1);
-  }
-
-  function handleDecrease() {
-    hapticPressIn();
-    updateCartQuantity(item.id, quantity - 1);
+  function openProduct() {
+    hapticSoftTap();
+    router.push(productDetailPath(restaurantId, item.id));
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <Pressable style={styles.sheetBackdrop} onPress={onClose} />
-      <Animated.View
-        entering={FadeInDown.duration(320).springify().damping(20)}
-        style={[
-          styles.itemSheet,
-          { paddingBottom: insets.bottom + spacing.sm },
-        ]}
-      >
-        <Pressable style={styles.sheetClose} onPress={onClose} hitSlop={12}>
-          <AppSymbol
-            name="xmark.circle.fill"
-            size={28}
-            tintColor={colors.textTertiary}
-          />
-        </Pressable>
-        <Animated.View entering={FadeIn.duration(280)}>
-          <Image source={{ uri: item.image }} style={styles.sheetImage} />
-        </Animated.View>
-        <PremiumText variant="h2">{item.name}</PremiumText>
-        <PremiumText variant="body" color={colors.textSecondary}>
+    <View style={[styles.menuRow, shadows.soft]}>
+      <Pressable style={styles.menuText} onPress={openProduct}>
+        <PremiumText variant="bodyMedium">{item.name}</PremiumText>
+        <PremiumText
+          variant="caption"
+          color={colors.textSecondary}
+          numberOfLines={2}
+        >
           {item.description}
         </PremiumText>
-        {item.calories ? (
-          <PremiumText variant="caption" color={colors.textTertiary}>
-            {item.calories} cal
-          </PremiumText>
-        ) : null}
-
-        <View style={styles.sheetFooter}>
-          <View style={styles.priceBlock}>
-            <PremiumText variant="caption" color={colors.textSecondary}>
-              1 unit
-            </PremiumText>
-            <PremiumText variant="price" color={colors.textPrimary}>
-              ${item.price.toFixed(2)}
-            </PremiumText>
-            <PremiumText variant="caption" color={colors.textTertiary}>
-              Inclusive of all taxes
+        <PremiumText variant="price" style={styles.price}>
+          ₹{Math.round(item.price)}
+        </PremiumText>
+        {item.isPopular ? (
+          <View style={styles.popular}>
+            <PremiumText variant="label" color={colors.primary}>
+              Popular
             </PremiumText>
           </View>
+        ) : null}
+      </Pressable>
+      <View style={styles.menuImageWrap}>
+        <Pressable onPress={openProduct}>
+          <Image source={{ uri: item.image }} style={styles.menuImage} />
+        </Pressable>
+        <View style={styles.menuAction}>
           <AnimatedCartAction
             quantity={quantity}
-            onAdd={() => {
-              hapticAddToCart();
-              addToCart(item, restaurantId, restaurantName);
-            }}
+            onAdd={handleAdd}
             onIncrease={handleIncrease}
             onDecrease={handleDecrease}
             itemLabel={item.name}
+            compact
           />
         </View>
-      </Animated.View>
-    </Modal>
+      </View>
+    </View>
   );
 }
 
@@ -399,67 +308,5 @@ const styles = StyleSheet.create({
   menuAction: {
     minHeight: 40,
     justifyContent: 'center',
-  },
-  addBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderCurve: 'continuous',
-    boxShadow: '0 4px 14px rgba(212, 84, 60, 0.32)',
-  },
-  sheetBackdrop: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-  },
-  itemSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.backgroundElevated,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    gap: spacing.md,
-    borderCurve: 'continuous',
-  },
-  sheetClose: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    zIndex: 2,
-  },
-  sheetImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: radius.lg,
-  },
-  sheetFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    marginTop: spacing.xs,
-  },
-  priceBlock: {
-    flex: 1,
-    gap: 2,
-  },
-  sheetAddBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderCurve: 'continuous',
   },
 });

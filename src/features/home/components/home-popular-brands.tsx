@@ -13,7 +13,7 @@ export function HomePopularBrands() {
   const router = useRouter();
 
   return (
-    <View style={styles.wrap}>
+    <View>
       <HomeSectionHeader
         title="Popular Brands"
         onViewAll={() => router.push('/(tabs)/search')}
@@ -48,10 +48,6 @@ export function HomePopularBrands() {
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-  },
   row: {
     paddingHorizontal: spacing.md,
     gap: spacing.md,
@@ -69,10 +65,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.sm,
+    padding: spacing.md,
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: '88%',
+    height: '88%',
   },
 });

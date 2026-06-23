@@ -113,7 +113,6 @@ export function HomeHeader() {
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: colors.background,
-    paddingBottom: spacing.xxs,
   },
   row: {
     flexDirection: 'row',
