@@ -38,7 +38,7 @@ export function CartDropAnimation() {
   const startX = width * 0.72;
 
   useEffect(() => {
-    if (!lastAdded) return;
+    if (!lastAdded?.lineKey) return;
 
     progress.value = 0;
     progress.value = withTiming(
@@ -53,7 +53,7 @@ export function CartDropAnimation() {
         }
       },
     );
-  }, [lastAdded?.lineKey]);
+  }, [lastAdded?.lineKey, progress]);
 
   const dropStyle = useAnimatedStyle(() => {
     const t = Math.min(progress.value, 1);

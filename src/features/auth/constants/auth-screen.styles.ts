@@ -7,12 +7,11 @@ import { fonts } from '@/theme/typography';
 export const authScreenStyles = StyleSheet.create({
   formHeader: {
     gap: spacing.xs,
-    marginBottom: spacing.xxs,
   },
   title: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    lineHeight: 26,
+    lineHeight: 20,
     color: colors.textPrimary,
   },
   subtitle: {
@@ -31,8 +30,7 @@ export const authScreenStyles = StyleSheet.create({
     borderRadius: radius.md,
     borderCurve: 'continuous',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    minHeight: 52,
+    minHeight: 50,
     justifyContent: 'center',
     backgroundColor: colors.backgroundElevated,
   },
@@ -48,7 +46,7 @@ export const authScreenStyles = StyleSheet.create({
     minWidth: 0,
     fontFamily: fonts.medium,
     fontSize: 16,
-    lineHeight: 22,
+    lineHeight: 20,
     color: colors.textPrimary,
     paddingVertical: 0,
     backgroundColor: colors.backgroundElevated,
@@ -111,7 +109,7 @@ export const authScreenStyles = StyleSheet.create({
   },
   codeWrap: {
     width: '100%',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   sessionHint: {
     fontFamily: fonts.regular,

@@ -87,10 +87,7 @@ export function AuthOnboardingShell({
     <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
       <View style={styles.root}>
         {isKeyboardVisible ? (
-          <View
-            style={[styles.keyboardFill, { height: keyboardLift }]}
-            pointerEvents="none"
-          />
+          <View style={[styles.keyboardFill]} pointerEvents="none" />
         ) : null}
 
         <View style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}>
@@ -176,7 +173,7 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.md,
     gap: spacing.md,
   },
   backBtn: {
@@ -189,8 +186,8 @@ const styles = StyleSheet.create({
     marginBottom: -spacing.xs,
   },
   logo: {
-    width: 88,
-    height: 88,
+    width: 80,
+    height: 80,
   },
   headlineWrap: {
     flexDirection: 'row',
