@@ -17,6 +17,7 @@ import { hapticSelection } from '@/shared/haptics/feedback';
 import { savePersonalization, skipPersonalization } from '@/store/app.store';
 import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 
 export function PersonalizationScreen() {
   const router = useRouter();
@@ -62,34 +63,34 @@ export function PersonalizationScreen() {
       >
         <View style={styles.topRow}>
           <Pressable onPress={handleSkip} hitSlop={12} style={styles.skip}>
-            <PremiumText variant="bodyMedium" color={colors.textSecondary}>
+            <PremiumText
+              variant="caption"
+              color={colors.textSecondary}
+              style={styles.skipLabel}
+            >
               Skip
             </PremiumText>
           </Pressable>
         </View>
 
-        <PremiumText variant="overline" color={colors.primary}>
-          Personalise your feed
-        </PremiumText>
-        <PremiumText variant="h1">What do you love to eat?</PremiumText>
-        <PremiumText variant="body" color={colors.textSecondary}>
-          Pick a few favourites — we&apos;ll personalise your home feed. You can
-          change this anytime.
-        </PremiumText>
-
-        <View style={styles.offerBanner}>
-          <PremiumText variant="label" color={colors.primary}>
-            WELCOME OFFER
+        <View style={styles.headerBlock}>
+          <PremiumText
+            variant="overline"
+            color={colors.primary}
+            style={styles.eyebrow}
+          >
+            Personalise your feed
           </PremiumText>
-          <PremiumText variant="h3">₹100 off your first order</PremiumText>
-          <PremiumText variant="caption" color={colors.textSecondary}>
-            Pick favourites to unlock · 45 min left
+          <PremiumText style={styles.title}>
+            What do you love to eat?
+          </PremiumText>
+          <PremiumText style={styles.subtitle}>
+            Pick a few favourites — we&apos;ll personalise your home feed. You
+            can change this anytime.
           </PremiumText>
         </View>
 
-        <PremiumText variant="sectionTitle" style={styles.sectionLabel}>
-          Cuisines
-        </PremiumText>
+        <PremiumText style={styles.sectionLabel}>Cuisines</PremiumText>
         <View style={styles.cuisineGrid}>
           {CUISINE_OPTIONS.map((cuisine) => {
             const active = selectedCuisines.includes(cuisine.id);
@@ -126,7 +127,7 @@ export function PersonalizationScreen() {
           })}
         </View>
 
-        <PremiumText variant="sectionTitle" style={styles.sectionLabel}>
+        <PremiumText style={styles.sectionLabel}>
           Dietary preference
         </PremiumText>
         <View style={styles.dietaryRow}>
@@ -175,36 +176,76 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.lg,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: spacing.sm,
   },
   skip: {
     paddingVertical: spacing.xxs,
+  },
+  skipLabel: {
+    lineHeight: 20,
+  },
+  headerBlock: {
+    gap: spacing.sm,
+  },
+  eyebrow: {
+    fontSize: 14,
+    lineHeight: 18,
+    letterSpacing: 0.3,
+  },
+  title: {
+    fontFamily: fonts.display,
+    fontSize: 24,
+    lineHeight: 28,
+    color: colors.textPrimary,
+    maxWidth: '100%',
+  },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSecondary,
+    maxWidth: '96%',
   },
   offerBanner: {
     backgroundColor: colors.accentMuted,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    gap: spacing.xxs,
-    marginTop: spacing.sm,
+    gap: spacing.xs,
     borderCurve: 'continuous',
     ...shadows.soft,
   },
+  offerTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    lineHeight: 28,
+    color: colors.textPrimary,
+  },
+  offerSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSecondary,
+  },
   sectionLabel: {
-    marginTop: spacing.md,
+    fontFamily: fonts.displaySemi,
+    fontSize: 22,
+    lineHeight: 30,
+    color: colors.textPrimary,
+    marginTop: spacing.sm,
   },
   cuisineGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    justifyContent: 'space-between',
   },
   cuisineCard: {
-    width: '47%',
-    height: 100,
+    width: '48%',
+    height: 108,
     borderRadius: radius.lg,
     overflow: 'hidden',
     borderWidth: 2,

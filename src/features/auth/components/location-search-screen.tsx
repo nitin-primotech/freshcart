@@ -22,7 +22,7 @@ import { formTextInputProps } from '@/shared/utils/keyboard';
 import { setDeliveryAddressFromSuggestion } from '@/store/app.store';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
-import { fonts, typography } from '@/theme/typography';
+import { typography } from '@/theme/typography';
 
 type LocationSearchScreenProps = {
   flow?: 'onboarding' | 'change';
@@ -71,7 +71,7 @@ export function LocationSearchScreen({
       <View style={[styles.content, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.header}>
           <ScreenBackButton onPress={handleBack} />
-          <PremiumText variant="h2" style={styles.title}>
+          <PremiumText variant="h3">
             {isOnboarding
               ? 'Enter your area or apartment name'
               : 'Change delivery location'}
@@ -128,7 +128,7 @@ export function LocationSearchScreen({
           </View>
           {selectedLocation ? (
             <View style={styles.actionText}>
-              <PremiumText variant="bodyMedium" color={colors.textPrimary}>
+              <PremiumText variant="bodySmall" color={colors.textPrimary}>
                 {selectedLocation}
               </PremiumText>
               <PremiumText variant="caption" color={colors.textSecondary}>
@@ -137,7 +137,7 @@ export function LocationSearchScreen({
             </View>
           ) : (
             <PremiumText
-              variant="bodyMedium"
+              variant="bodySmall"
               color={colors.primary}
               style={styles.actionLabel}
             >
@@ -182,7 +182,7 @@ export function LocationSearchScreen({
                 />
               </View>
               <View style={styles.resultText}>
-                <PremiumText variant="bodyMedium">{item.title}</PremiumText>
+                <PremiumText variant="bodySmall">{item.title}</PremiumText>
                 <PremiumText
                   variant="caption"
                   color={colors.textSecondary}
@@ -195,7 +195,7 @@ export function LocationSearchScreen({
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <PremiumText variant="body" color={colors.textSecondary}>
+              <PremiumText variant="caption" color={colors.textSecondary}>
                 No locations found. Try a different search.
               </PremiumText>
             </View>
@@ -219,9 +219,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
-  title: {
-    lineHeight: 32,
-  },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -237,7 +234,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.bodyMedium,
-    fontFamily: fonts.medium,
     color: colors.textPrimary,
     paddingVertical: 0,
   },
