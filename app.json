@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.foodRush",
+      "bundleIdentifier": "com.dev.primotech.foodRush",
       "infoPlist": {
         "LSApplicationQueriesSchemes": ["tez", "phonepe", "paytmmp", "bhim"]
       }
@@ -23,7 +23,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.anonymous.foodRush",
+      "package": "com.dev.primotech.foodRush",
       "androidStatusBar": {
         "translucent": true,
         "backgroundColor": "#00000000"

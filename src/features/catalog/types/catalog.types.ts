@@ -64,7 +64,8 @@ export type OrderStatus =
   | 'confirmed'
   | 'preparing'
   | 'on_the_way'
-  | 'delivered';
+  | 'delivered'
+  | 'cancelled';
 
 export type Order = {
   id: string;

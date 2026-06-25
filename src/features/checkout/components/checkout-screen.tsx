@@ -30,6 +30,7 @@ import {
   deriveMrp,
   formatInr,
 } from '@/features/checkout/utils/format-currency';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
 import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
@@ -126,6 +127,24 @@ export function CheckoutScreen() {
     return () => subscription.remove();
   }, [router]);
 
+  async function submitOrder() {
+    await placeOrder({
+      items,
+      subtotal,
+      deliveryFee: deliveryFee + PLATFORM_FEE,
+      tip: 0,
+      address: fullAddress,
+      restaurantId: restaurant.restaurantId,
+      restaurantName: restaurant.restaurantName,
+      restaurantLogo: '',
+      customerId: userPhone ?? undefined,
+      customerName: userName ?? undefined,
+      customerPhone: userPhone ?? undefined,
+    });
+    clearCart();
+    router.replace('/order-success');
+  }
+
   async function handlePlaceOrder() {
     if (!restaurant || isProcessing) return;
 
@@ -133,27 +152,26 @@ export function CheckoutScreen() {
     setIsPaying(true);
 
     try {
-      await openFoodRushCheckout({
-        amountInr: total,
-        prefill: paymentPrefill,
-        description: 'Food Service Payment',
-      });
+      const skipPaymentForFirebaseDev =
+        isFirebaseConfigured() && process.env.NODE_ENV !== 'production';
+
+      if (!skipPaymentForFirebaseDev) {
+        await openFoodRushCheckout({
+          amountInr: total,
+          prefill: paymentPrefill,
+          description: 'Food Service Payment',
+        });
+      }
 
       hapticSuccess();
-      await placeOrder({
-        items,
-        subtotal,
-        deliveryFee: deliveryFee + PLATFORM_FEE,
-        tip: 0,
-        address: fullAddress,
-        restaurantId: restaurant.restaurantId,
-        restaurantName: restaurant.restaurantName,
-        restaurantLogo: '',
-      });
-      clearCart();
-      router.replace('/order-success');
+      await submitOrder();
     } catch (error) {
       if (error instanceof RazorpayPaymentCancelledError) {
+        return;
+      }
+      if (error instanceof RazorpayUnavailableError && isFirebaseConfigured()) {
+        hapticSuccess();
+        await submitOrder();
         return;
       }
       if (error instanceof RazorpayUnavailableError) {

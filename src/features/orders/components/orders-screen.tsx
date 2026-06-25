@@ -40,7 +40,7 @@ function filterOrdersByTab(orders: Order[], tab: OrderTabId): Order[] {
     case 'delivered':
       return orders.filter((o) => o.status === 'delivered');
     case 'cancelled':
-      return [];
+      return orders.filter((o) => o.status === 'cancelled');
   }
 }
 

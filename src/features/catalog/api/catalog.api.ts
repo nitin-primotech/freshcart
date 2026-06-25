@@ -7,15 +7,42 @@ import type {
   Promo,
   Restaurant,
 } from '@/features/catalog/types/catalog.types';
+import {
+  DEFAULT_MERCHANT_RESTAURANT_ID,
+  isFirebaseConfigured,
+} from '@/lib/firebase';
 import { simulateRequest } from '@/shared/utils/simulate-request';
+import {
+  selectCatalogCategories,
+  selectCatalogRestaurant,
+  useCatalogStore,
+  waitForCatalogReady,
+} from '@/store/catalog.store';
 
 const categories = categoriesData as Category[];
 const restaurants = restaurantsData as Restaurant[];
 const promos = promosData as Promo[];
 
+async function getLiveRestaurant(): Promise<Restaurant> {
+  await waitForCatalogReady();
+  const restaurant = useCatalogStore.getState().restaurant;
+  if (!restaurant) {
+    throw new Error('Menu is not available from Firebase yet.');
+  }
+  return restaurant;
+}
+
+async function getLiveCategories(): Promise<Category[]> {
+  await waitForCatalogReady();
+  return useCatalogStore.getState().categories;
+}
+
 export function fetchCategories(signal?: AbortSignal) {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
+  }
+  if (isFirebaseConfigured()) {
+    return getLiveCategories();
   }
   return simulateRequest(categories, { delayMs: 600 });
 }
@@ -31,16 +58,28 @@ export function fetchRestaurants(signal?: AbortSignal) {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
+  if (isFirebaseConfigured()) {
+    return getLiveRestaurant().then((restaurant) => [restaurant]);
+  }
   return simulateRequest(restaurants, { delayMs: 1000 });
 }
 
-export function fetchRestaurantById(id: string, signal?: AbortSignal) {
+export async function fetchRestaurantById(id: string, signal?: AbortSignal) {
   if (signal?.aborted) {
-    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    throw new DOMException('Aborted', 'AbortError');
   }
-  const restaurant = restaurants.find((r) => r.id === id);
+
+  if (isFirebaseConfigured()) {
+    const restaurant = await getLiveRestaurant();
+    if (restaurant.id !== id && id !== DEFAULT_MERCHANT_RESTAURANT_ID) {
+      throw new Error('Restaurant not found');
+    }
+    return restaurant;
+  }
+
+  const restaurant = restaurants.find((entry) => entry.id === id);
   if (!restaurant) {
-    return Promise.reject(new Error('Restaurant not found'));
+    throw new Error('Restaurant not found');
   }
   return simulateRequest(restaurant, { delayMs: 800 });
 }
@@ -51,22 +90,29 @@ export type MenuItemContext = {
   sectionTitle: string;
 };
 
-export function fetchMenuItemContext(
+export async function fetchMenuItemContext(
   restaurantId: string,
   itemId: string,
   signal?: AbortSignal,
 ) {
   if (signal?.aborted) {
-    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    throw new DOMException('Aborted', 'AbortError');
   }
-  const restaurant = restaurants.find((entry) => entry.id === restaurantId);
+
+  const restaurant = isFirebaseConfigured()
+    ? await getLiveRestaurant()
+    : restaurants.find((entry) => entry.id === restaurantId);
+
   if (!restaurant) {
-    return Promise.reject(new Error('Restaurant not found'));
+    throw new Error('Restaurant not found');
   }
 
   for (const section of restaurant.menu) {
     const item = section.items.find((entry) => entry.id === itemId);
     if (item) {
+      if (isFirebaseConfigured()) {
+        return { restaurant, item, sectionTitle: section.title };
+      }
       return simulateRequest(
         { restaurant, item, sectionTitle: section.title },
         { delayMs: 650 },
@@ -74,7 +120,7 @@ export function fetchMenuItemContext(
     }
   }
 
-  return Promise.reject(new Error('Product not found'));
+  throw new Error('Product not found');
 }
 
 export function getRelatedMenuItems(
@@ -89,40 +135,92 @@ export function getRelatedMenuItems(
     .slice(0, limit);
 }
 
-export function searchRestaurants(query: string, signal?: AbortSignal) {
+export async function searchRestaurants(query: string, signal?: AbortSignal) {
   if (signal?.aborted) {
-    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    throw new DOMException('Aborted', 'AbortError');
   }
+
+  const source = isFirebaseConfigured()
+    ? [await getLiveRestaurant()]
+    : restaurants;
+
   const normalized = query.trim().toLowerCase();
   const results = normalized
-    ? restaurants.filter(
-        (r) =>
-          r.name.toLowerCase().includes(normalized) ||
-          r.cuisine.toLowerCase().includes(normalized) ||
-          r.tagline.toLowerCase().includes(normalized),
+    ? source.filter(
+        (restaurant) =>
+          restaurant.name.toLowerCase().includes(normalized) ||
+          restaurant.cuisine.toLowerCase().includes(normalized) ||
+          restaurant.tagline.toLowerCase().includes(normalized) ||
+          restaurant.menu.some((section) =>
+            section.items.some(
+              (item) =>
+                item.name.toLowerCase().includes(normalized) ||
+                item.description.toLowerCase().includes(normalized),
+            ),
+          ),
       )
-    : restaurants;
+    : source;
+
+  if (isFirebaseConfigured()) {
+    return results;
+  }
   return simulateRequest(results, { delayMs: 700 });
 }
 
-export function fetchCategoryById(id: string, signal?: AbortSignal) {
+export async function fetchCategoryById(id: string, signal?: AbortSignal) {
   if (signal?.aborted) {
-    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    throw new DOMException('Aborted', 'AbortError');
   }
-  const category = categories.find((c) => c.id === id);
+
+  const source = isFirebaseConfigured()
+    ? useCatalogStore.getState().categories
+    : categories;
+
+  if (isFirebaseConfigured() && source.length === 0) {
+    await waitForCatalogReady();
+  }
+
+  const category = (
+    isFirebaseConfigured() ? useCatalogStore.getState().categories : categories
+  ).find((entry) => entry.id === id);
+
   if (!category) {
-    return Promise.reject(new Error('Category not found'));
+    throw new Error('Category not found');
+  }
+
+  if (isFirebaseConfigured()) {
+    return category;
   }
   return simulateRequest(category, { delayMs: 400 });
 }
 
-export function fetchRestaurantsByCategory(
+export async function fetchRestaurantsByCategory(
   categoryId: string,
   signal?: AbortSignal,
 ) {
   if (signal?.aborted) {
-    return Promise.reject(new DOMException('Aborted', 'AbortError'));
+    throw new DOMException('Aborted', 'AbortError');
   }
-  const results = restaurants.filter((r) => r.categoryIds.includes(categoryId));
+
+  const source = isFirebaseConfigured()
+    ? [await getLiveRestaurant()]
+    : restaurants;
+
+  const results = source.filter((restaurant) =>
+    restaurant.categoryIds.includes(categoryId),
+  );
+
+  if (isFirebaseConfigured()) {
+    return results;
+  }
   return simulateRequest(results, { delayMs: 850 });
 }
+
+export function getCatalogSnapshot() {
+  return {
+    restaurant: useCatalogStore.getState().restaurant,
+    categories: useCatalogStore.getState().categories,
+  };
+}
+
+export { selectCatalogCategories, selectCatalogRestaurant };
