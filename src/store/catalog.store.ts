@@ -10,6 +10,7 @@ import {
   mapInventoryToRestaurant,
   subscribeToInventory,
 } from '@/lib/firebase';
+import { collectInventoryProductImages } from '@/lib/firebase/catalog-images';
 import type { FirestoreMenuItem } from '@/lib/firebase/types';
 
 type CatalogState = {
@@ -17,6 +18,7 @@ type CatalogState = {
   items: FirestoreMenuItem[];
   restaurant: Restaurant | null;
   categories: Category[];
+  productImages: string[];
 };
 
 const initialState: CatalogState = {
@@ -24,6 +26,7 @@ const initialState: CatalogState = {
   items: [],
   restaurant: null,
   categories: [],
+  productImages: [],
 };
 
 export const useCatalogStore = create<CatalogState>(() => initialState);
@@ -53,6 +56,7 @@ export function startCatalogSync(): void {
       items,
       categories: mapInventoryToCategories(items),
       restaurant: mapInventoryToRestaurant(items),
+      productImages: collectInventoryProductImages(items),
       ready: true,
     });
     markCatalogReady();
@@ -79,3 +83,5 @@ export const selectCatalogRestaurant = (state: CatalogState) =>
   state.restaurant;
 export const selectCatalogCategories = (state: CatalogState) =>
   state.categories;
+export const selectCatalogProductImages = (state: CatalogState) =>
+  state.productImages;

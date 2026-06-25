@@ -25,6 +25,10 @@ export type FirestoreOrder = {
   updatedAt: number;
   deliveryCoords: [number, number];
   riderCoords?: [number, number];
+  riderName?: string;
+  riderPhone?: string;
+  riderOtp?: number;
+  riderAvatar?: string;
   prepTime?: number;
   prepStartedAt?: number;
 };
@@ -43,4 +47,13 @@ export type FirestoreMenuItem = {
   packagingCharge?: number;
   customisable?: boolean;
   backInStockTime?: number;
+};
+
+export type FirestoreMerchantStatus = 'online' | 'offline';
+
+export type FirestoreMerchant = {
+  id: string;
+  name: string;
+  status: FirestoreMerchantStatus;
+  updatedAt: number;
 };

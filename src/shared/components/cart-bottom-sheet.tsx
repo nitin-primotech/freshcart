@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CartItem } from '@/features/catalog/types/catalog.types';
+import { formatInr } from '@/features/checkout/utils/format-currency';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { CartLineStepper } from '@/shared/components/cart-line-stepper';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
@@ -52,10 +53,6 @@ function groupByRestaurant(items: CartItem[]): RestaurantGroup[] {
   return groups;
 }
 
-function formatPrice(amount: number) {
-  return `$${amount.toFixed(2)}`;
-}
-
 function CartLineRow({
   line,
   onAdjust,
@@ -77,12 +74,10 @@ function CartLineRow({
           <Text style={styles.lineName} numberOfLines={2}>
             {line.item.name}
           </Text>
-          <Text style={styles.linePrice}>{formatPrice(lineTotal)}</Text>
+          <Text style={styles.linePrice}>{formatInr(lineTotal)}</Text>
         </View>
         <View style={styles.lineBottom}>
-          <Text style={styles.lineEach}>
-            {formatPrice(line.item.price)} each
-          </Text>
+          <Text style={styles.lineEach}>{formatInr(line.item.price)} each</Text>
           <CartLineStepper
             quantity={line.quantity}
             onDecrease={() =>
@@ -174,7 +169,7 @@ export function CartBottomSheet() {
             <View style={styles.savingsPill}>
               <AppSymbol name="sparkles" size={12} tintColor={colors.success} />
               <Text style={styles.savingsText}>
-                You save {formatPrice(savings)} on this order
+                You save {formatInr(savings)} on this order
               </Text>
             </View>
           ) : null}
@@ -223,7 +218,7 @@ export function CartBottomSheet() {
           <View style={styles.footer}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>{formatPrice(subtotal)}</Text>
+              <Text style={styles.summaryValue}>{formatInr(subtotal)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryMuted}>Delivery fee</Text>
@@ -231,7 +226,7 @@ export function CartBottomSheet() {
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{formatPrice(subtotal)}</Text>
+              <Text style={styles.totalValue}>{formatInr(subtotal)}</Text>
             </View>
             <Pressable
               style={styles.checkoutBtn}

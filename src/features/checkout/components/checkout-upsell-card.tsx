@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
-
+import { formatInr } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
@@ -13,10 +13,6 @@ type CheckoutUpsellCardProps = {
   dish: RecommendedDish;
   width: number;
 };
-
-function formatPrice(price: number) {
-  return `$${price.toFixed(2)}`;
-}
 
 export function CheckoutUpsellCard({ dish, width }: CheckoutUpsellCardProps) {
   const { item, restaurantId, restaurantName } = dish;
@@ -44,7 +40,7 @@ export function CheckoutUpsellCard({ dish, width }: CheckoutUpsellCardProps) {
         </PremiumText>
         <View style={styles.footer}>
           <PremiumText variant="captionMedium" color={colors.textPrimary}>
-            {formatPrice(item.price)}
+            {formatInr(item.price)}
           </PremiumText>
           <Pressable
             onPress={handleAdd}

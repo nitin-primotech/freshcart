@@ -9,9 +9,12 @@ import type {
   FirestoreOrderStatus,
 } from '@/lib/firebase/types';
 
+const DELIVERY_BUFFER_MIN = 15;
+
 const APP_TO_FIRESTORE_STATUS: Record<OrderStatus, FirestoreOrderStatus> = {
   confirmed: 'placed',
   preparing: 'preparing',
+  ready: 'ready_for_pickup',
   on_the_way: 'dispatched',
   delivered: 'delivered',
   cancelled: 'rejected',
@@ -20,13 +23,14 @@ const APP_TO_FIRESTORE_STATUS: Record<OrderStatus, FirestoreOrderStatus> = {
 const FIRESTORE_TO_APP_STATUS: Record<FirestoreOrderStatus, OrderStatus> = {
   placed: 'confirmed',
   preparing: 'preparing',
-  ready_for_pickup: 'preparing',
+  ready_for_pickup: 'ready',
   dispatched: 'on_the_way',
   delivered: 'delivered',
   rejected: 'cancelled',
 };
 
-export const DEFAULT_DELIVERY_COORDS: [number, number] = [25.5941, 85.1376];
+export const DEFAULT_DELIVERY_COORDS: [number, number] = [12.9698, 77.75];
+export const RESTAURANT_COORDS: [number, number] = [12.9698, 77.75];
 
 export function mapAppStatusToFirestore(
   status: OrderStatus,
@@ -38,6 +42,24 @@ export function mapFirestoreStatusToApp(
   status: FirestoreOrderStatus,
 ): OrderStatus {
   return FIRESTORE_TO_APP_STATUS[status];
+}
+
+function computeEstimatedDelivery(order: FirestoreOrder): string {
+  const prepMins = order.prepTime ?? 40;
+  const prepStart = order.prepStartedAt ?? order.createdAt;
+  const prepEnd = prepStart + prepMins * 60 * 1000;
+
+  if (order.status === 'dispatched') {
+    const deliveryEta = Date.now() + DELIVERY_BUFFER_MIN * 60 * 1000;
+    return new Date(deliveryEta).toISOString();
+  }
+
+  if (order.status === 'delivered') {
+    return new Date(order.updatedAt).toISOString();
+  }
+
+  const eta = prepEnd + DELIVERY_BUFFER_MIN * 60 * 1000;
+  return new Date(eta).toISOString();
 }
 
 export function mapFirestoreOrderToApp(
@@ -64,6 +86,16 @@ export function mapFirestoreOrderToApp(
     },
   }));
 
+  const rider = order.riderName
+    ? {
+        name: order.riderName,
+        phone: order.riderPhone,
+        otp: order.riderOtp,
+        avatar: order.riderAvatar,
+        rating: 4.8,
+      }
+    : undefined;
+
   return {
     id: order.id,
     restaurantId: DEFAULT_MERCHANT_RESTAURANT_ID,
@@ -76,8 +108,17 @@ export function mapFirestoreOrderToApp(
     total: order.totalAmount,
     status: mapFirestoreStatusToApp(order.status),
     createdAt: new Date(order.createdAt).toISOString(),
-    estimatedDelivery: new Date(order.createdAt + 35 * 60 * 1000).toISOString(),
+    updatedAt: new Date(order.updatedAt).toISOString(),
+    estimatedDelivery: computeEstimatedDelivery(order),
     address: `${order.customerName} · ${order.customerPhone}`,
+    prepTime: order.prepTime,
+    prepStartedAt: order.prepStartedAt
+      ? new Date(order.prepStartedAt).toISOString()
+      : undefined,
+    rider,
+    riderCoords:
+      order.riderCoords ?? (order.riderName ? RESTAURANT_COORDS : undefined),
+    deliveryCoords: order.deliveryCoords,
   };
 }
 

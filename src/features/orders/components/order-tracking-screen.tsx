@@ -1,37 +1,40 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { Order } from '@/features/catalog/types/catalog.types';
+import type { Order, OrderRider } from '@/features/catalog/types/catalog.types';
 import { formatInr } from '@/features/checkout/utils/format-currency';
 import { OrderTrackingTimeline } from '@/features/orders/components/order-tracking-timeline';
+import { RiderLiveMap } from '@/features/orders/components/rider-live-map';
 import {
   countOrderItems,
+  formatCancelledOn,
   formatEstimatedWindow,
+  formatMinutesUntil,
   formatOrderId,
   formatPlacedOn,
   TRACKING_STATUS_BADGE,
 } from '@/features/orders/constants/orders.constants';
+import {
+  DEFAULT_DELIVERY_COORDS,
+  RESTAURANT_COORDS,
+} from '@/lib/firebase/order-mapper';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
-import {
-  advanceOrderStatus,
-  selectOrders,
-  useOrdersStore,
-} from '@/store/orders.store';
+import { selectOrders, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
-
-const DELIVERY_PARTNER = {
-  name: 'Rohit Kumar',
-  rating: 4.8,
-  avatar:
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-};
 
 function OrderSummaryCard({
   order,
@@ -45,6 +48,7 @@ function OrderSummaryCard({
   const statusUi = TRACKING_STATUS_BADGE[order.status];
   const heroImage = order.items[0]?.item.image ?? order.restaurantLogo;
   const itemCount = countOrderItems(order.items);
+  const minutesUntil = formatMinutesUntil(order.estimatedDelivery);
 
   return (
     <View style={styles.summaryCard}>
@@ -77,10 +81,28 @@ function OrderSummaryCard({
 
       <View style={styles.summaryFooter}>
         <View style={styles.etaBlock}>
-          <Text style={styles.etaLabel}>Estimated delivery</Text>
-          <Text style={styles.etaValue}>
-            {formatEstimatedWindow(order.estimatedDelivery)}
-          </Text>
+          {order.status === 'cancelled' ? (
+            <>
+              <Text style={styles.etaLabel}>Cancelled on</Text>
+              <Text style={[styles.etaValue, styles.cancelledValue]}>
+                {formatCancelledOn(order.updatedAt)}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.etaLabel}>Estimated delivery</Text>
+              <Text style={styles.etaValue}>
+                {formatEstimatedWindow(order.estimatedDelivery, {
+                  prepStartedAt: order.prepStartedAt,
+                  prepTime: order.prepTime,
+                  status: order.status,
+                })}
+              </Text>
+              {order.status !== 'delivered' ? (
+                <Text style={styles.etaMinutes}>{minutesUntil}</Text>
+              ) : null}
+            </>
+          )}
         </View>
         <Pressable
           onPress={onToggleDetails}
@@ -125,25 +147,48 @@ function OrderSummaryCard({
   );
 }
 
-function DeliveryPartnerCard() {
+function DeliveryPartnerCard({ rider }: { rider: OrderRider }) {
+  const handleCall = () => {
+    if (!rider.phone) return;
+    void Linking.openURL(`tel:${rider.phone}`);
+  };
+
   return (
     <View style={styles.partnerCard}>
-      <Image
-        source={{ uri: DELIVERY_PARTNER.avatar }}
-        style={styles.partnerAvatar}
-        contentFit="cover"
-      />
-      <View style={styles.partnerInfo}>
-        <Text style={styles.partnerName}>{DELIVERY_PARTNER.name}</Text>
-        <View style={styles.ratingBadge}>
-          <AppSymbol name="star.fill" size={9} tintColor={colors.star} />
-          <Text style={styles.ratingText}>{DELIVERY_PARTNER.rating}</Text>
+      {rider.avatar ? (
+        <Image
+          source={{ uri: rider.avatar }}
+          style={styles.partnerAvatar}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={[styles.partnerAvatar, styles.partnerAvatarFallback]}>
+          <AppSymbol
+            name="person.fill"
+            size={22}
+            tintColor={colors.textSecondary}
+          />
         </View>
+      )}
+      <View style={styles.partnerInfo}>
+        <Text style={styles.partnerName}>{rider.name}</Text>
+        {rider.rating ? (
+          <View style={styles.ratingBadge}>
+            <AppSymbol name="star.fill" size={9} tintColor={colors.star} />
+            <Text style={styles.ratingText}>{rider.rating}</Text>
+          </View>
+        ) : null}
+        {rider.otp ? (
+          <Text style={styles.otpText}>Handover OTP: {rider.otp}</Text>
+        ) : null}
       </View>
       <View style={styles.partnerActions}>
         <Pressable
           style={styles.partnerAction}
-          onPress={hapticSoftTap}
+          onPress={() => {
+            hapticSoftTap();
+            handleCall();
+          }}
           accessibilityRole="button"
           accessibilityLabel="Call delivery partner"
         >
@@ -151,21 +196,6 @@ function DeliveryPartnerCard() {
             <AppSymbol name="phone.fill" size={14} tintColor={colors.primary} />
           </View>
           <Text style={styles.partnerActionLabel}>Call</Text>
-        </Pressable>
-        <Pressable
-          style={styles.partnerAction}
-          onPress={hapticSoftTap}
-          accessibilityRole="button"
-          accessibilityLabel="Chat with delivery partner"
-        >
-          <View style={styles.partnerActionIcon}>
-            <AppSymbol
-              name="message.fill"
-              size={14}
-              tintColor={colors.primary}
-            />
-          </View>
-          <Text style={styles.partnerActionLabel}>Chat</Text>
         </Pressable>
       </View>
     </View>
@@ -180,14 +210,6 @@ export function OrderTrackingScreen() {
   const order = orders.find((o) => o.id === id);
   const [showDetails, setShowDetails] = useState(false);
 
-  useEffect(() => {
-    if (!order || order.status === 'delivered') return;
-    const timer = setInterval(() => {
-      advanceOrderStatus(order.id);
-    }, 8000);
-    return () => clearInterval(timer);
-  }, [order]);
-
   if (!order) {
     return (
       <View style={styles.center}>
@@ -197,7 +219,23 @@ export function OrderTrackingScreen() {
   }
 
   const showPartner =
-    order.status === 'on_the_way' || order.status === 'preparing';
+    Boolean(order.rider) &&
+    order.status !== 'delivered' &&
+    order.status !== 'cancelled';
+
+  const showLiveMap =
+    Boolean(order.rider) &&
+    order.status !== 'delivered' &&
+    order.status !== 'cancelled';
+
+  const deliveryCoords = order.deliveryCoords ?? DEFAULT_DELIVERY_COORDS;
+  const riderCoords = order.riderCoords ?? RESTAURANT_COORDS;
+  const mapStatus =
+    order.status === 'on_the_way'
+      ? 'on_the_way'
+      : order.status === 'ready'
+        ? 'ready'
+        : 'preparing';
 
   return (
     <View style={styles.root}>
@@ -250,15 +288,30 @@ export function OrderTrackingScreen() {
           }}
         />
 
+        {showLiveMap ? (
+          <RiderLiveMap
+            deliveryCoords={deliveryCoords}
+            riderCoords={riderCoords}
+            status={mapStatus}
+          />
+        ) : null}
+
         <Text style={styles.sectionTitle}>Order Status</Text>
         <View style={styles.timelineCard}>
           <OrderTrackingTimeline
             status={order.status}
-            createdAt={order.createdAt}
+            timestamps={{
+              createdAt: order.createdAt,
+              prepStartedAt: order.prepStartedAt,
+              prepTime: order.prepTime,
+              updatedAt: order.updatedAt,
+            }}
           />
         </View>
 
-        {showPartner ? <DeliveryPartnerCard /> : null}
+        {showPartner && order.rider ? (
+          <DeliveryPartnerCard rider={order.rider} />
+        ) : null}
 
         <Text style={styles.sectionTitle}>Delivery Details</Text>
         <View style={styles.addressCard}>
@@ -463,6 +516,15 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: colors.primary,
   },
+  cancelledValue: {
+    color: colors.danger,
+  },
+  etaMinutes: {
+    fontFamily: fonts.semibold,
+    fontSize: 10,
+    lineHeight: 13,
+    color: colors.textSecondary,
+  },
   viewDetailsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -555,6 +617,10 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     backgroundColor: colors.backgroundMuted,
   },
+  partnerAvatarFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   partnerInfo: {
     flex: 1,
     gap: 4,
@@ -580,6 +646,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 12,
     color: colors.textPrimary,
+  },
+  otpText: {
+    fontFamily: fonts.medium,
+    fontSize: 10,
+    lineHeight: 13,
+    color: colors.textSecondary,
   },
   partnerActions: {
     flexDirection: 'row',

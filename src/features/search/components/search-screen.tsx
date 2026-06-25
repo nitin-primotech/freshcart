@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -79,6 +79,7 @@ function applyBrowseFilters(
 
 export function SearchScreen() {
   const router = useRouter();
+  const { q } = useLocalSearchParams<{ q?: string | string[] }>();
   const insets = useSafeAreaInsets();
   const recent = useAppStore(selectRecentSearches);
   const [query, setQuery] = useState('');
@@ -86,6 +87,15 @@ export function SearchScreen() {
     'top_rated',
   );
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const incoming = Array.isArray(q) ? q[0] : q;
+    if (!incoming?.trim()) {
+      return;
+    }
+    setQuery(incoming);
+    addRecentSearch(incoming);
+  }, [q]);
 
   const categoriesQuery = useSimulatedQuery(
     (signal) => fetchCategories(signal),

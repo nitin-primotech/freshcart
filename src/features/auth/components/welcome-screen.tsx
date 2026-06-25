@@ -5,10 +5,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   WELCOME_FEATURES,
-  WELCOME_GALLERY,
+  WELCOME_GALLERY_LAYOUT,
 } from '@/features/auth/constants/welcome.constants';
+import { pickProductImageAt } from '@/lib/firebase/catalog-images';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticPressIn, hapticPrimaryAction } from '@/shared/haptics/feedback';
+import {
+  selectCatalogProductImages,
+  useCatalogStore,
+} from '@/store/catalog.store';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -41,9 +47,19 @@ function LeafAccent({ side }: { side: 'left' | 'right' }) {
 }
 
 function FoodGallery() {
+  const productImages = useCatalogStore(selectCatalogProductImages);
+  const cards = WELCOME_GALLERY_LAYOUT.map((card, index) => ({
+    ...card,
+    imageUri: pickProductImageAt(productImages, index),
+  })).filter((card) => isHttpImageUrl(card.imageUri));
+
+  if (cards.length === 0) {
+    return null;
+  }
+
   return (
     <View style={styles.gallery}>
-      {WELCOME_GALLERY.map((card) => (
+      {cards.map((card) => (
         <View
           key={card.layout}
           style={[
@@ -56,9 +72,9 @@ function FoodGallery() {
         >
           <View style={styles.galleryImageFrame}>
             <Image
-              source={card.source}
+              source={{ uri: card.imageUri }}
               style={styles.galleryImage}
-              contentFit="contain"
+              contentFit="cover"
             />
           </View>
         </View>

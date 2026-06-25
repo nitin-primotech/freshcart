@@ -42,7 +42,7 @@ export function HomeHeader() {
   const cartCount = useCartStore(selectCartItemCount);
 
   return (
-    <View style={[styles.wrap, { paddingTop: spacing.xs }]}>
+    <View style={styles.wrap}>
       <View style={styles.row}>
         <Pressable
           style={styles.location}

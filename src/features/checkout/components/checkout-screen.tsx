@@ -32,6 +32,7 @@ import {
 } from '@/features/checkout/utils/format-currency';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
 import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
 import { selectUserPhone, useAuthStore } from '@/store/auth.store';
@@ -45,6 +46,11 @@ import {
   updateCartQuantity,
   useCartStore,
 } from '@/store/cart.store';
+import {
+  selectMerchantIsOnline,
+  selectMerchantReady,
+  useMerchantStore,
+} from '@/store/merchant.store';
 import {
   placeOrder,
   selectIsPlacing,
@@ -74,12 +80,15 @@ export function CheckoutScreen() {
   const userName = useAppStore(selectUserName);
   const userPhone = useAuthStore(selectUserPhone);
   const isPlacing = useOrdersStore(selectIsPlacing);
+  const merchantReady = useMerchantStore(selectMerchantReady);
+  const merchantIsOnline = useMerchantStore(selectMerchantIsOnline);
   const [isPaying, setIsPaying] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const [paymentId, setPaymentId] = useState('upi');
 
   const isProcessing = isPlacing || isPaying;
+  const merchantOffline = merchantReady && !merchantIsOnline;
 
   const itemCount = items.reduce((sum, line) => sum + line.quantity, 0);
 
@@ -147,6 +156,14 @@ export function CheckoutScreen() {
 
   async function handlePlaceOrder() {
     if (!restaurant || isProcessing) return;
+
+    if (merchantOffline) {
+      Alert.alert(
+        'Restaurant offline',
+        'This restaurant is not accepting orders right now. Please try again later.',
+      );
+      return;
+    }
 
     setPaymentError(null);
     setIsPaying(true);
@@ -221,6 +238,7 @@ export function CheckoutScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: spacing.xl }]}
       >
+        <MerchantOfflineBanner />
         <CheckoutSavingsBanner
           savings={displaySavings}
           subtotal={subtotal}
@@ -402,7 +420,7 @@ export function CheckoutScreen() {
         total={total}
         savings={displaySavings}
         isPlacing={isProcessing}
-        disabled={items.length === 0 || isProcessing}
+        disabled={items.length === 0 || isProcessing || merchantOffline}
         onPlaceOrder={handlePlaceOrder}
         onViewPriceDetails={scrollToPriceDetails}
       />

@@ -6,6 +6,7 @@ import type {
   Restaurant,
 } from '@/features/catalog/types/catalog.types';
 import { countRestaurantsForCategory } from '@/features/search/utils/search-suggestions';
+import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors } from '@/theme/colors';
@@ -45,7 +46,7 @@ export function SearchCuisineCarousel({
           >
             <View style={styles.imageWrap}>
               <Image
-                source={{ uri: category.image }}
+                source={{ uri: resolveCategoryImageUri(category.image) }}
                 style={styles.image}
                 contentFit="cover"
               />

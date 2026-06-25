@@ -18,6 +18,7 @@ type LastAddedItem = {
 type CartState = {
   items: CartItem[];
   isSheetOpen: boolean;
+  isEmptyPromptOpen: boolean;
   lastAdded: LastAddedItem | null;
   /** Up to 3 unique cart lines for floating preview, oldest → newest. */
   previewLineKeys: string[];
@@ -29,6 +30,7 @@ type CartState = {
 const initialState: CartState = {
   items: [],
   isSheetOpen: false,
+  isEmptyPromptOpen: false,
   lastAdded: null,
   previewLineKeys: [],
   checkoutOrigin: null,
@@ -128,6 +130,7 @@ export function removeFromCart(itemId: string, restaurantId?: string) {
         (line) => cartLineKey(line.restaurantId, line.item.id) === key,
       ),
     ),
+    ...(nextItems.length === 0 ? { isSheetOpen: false } : {}),
   });
 }
 
@@ -136,11 +139,20 @@ export function clearCart() {
 }
 
 export function openCartSheet() {
-  useCartStore.setState({ isSheetOpen: true });
+  const { items } = useCartStore.getState();
+  if (items.length === 0) {
+    useCartStore.setState({ isEmptyPromptOpen: true, isSheetOpen: false });
+    return;
+  }
+  useCartStore.setState({ isSheetOpen: true, isEmptyPromptOpen: false });
 }
 
 export function closeCartSheet() {
   useCartStore.setState({ isSheetOpen: false });
+}
+
+export function closeEmptyCartPrompt() {
+  useCartStore.setState({ isEmptyPromptOpen: false });
 }
 
 /** Call right before router.push('/checkout') — avoids home flash + restores cart on back. */
@@ -170,7 +182,7 @@ export function handleCheckoutBack(router: {
     router.replace(checkoutOrigin as Href);
   }
 
-  if (reopenCartOnCheckoutBack) {
+  if (reopenCartOnCheckoutBack && useCartStore.getState().items.length > 0) {
     setTimeout(() => {
       openCartSheet();
     }, 320);
@@ -191,6 +203,7 @@ export const selectCartSubtotal = (s: CartState) =>
 export const selectCartRestaurantId = (s: CartState) =>
   s.items.length > 0 ? s.items[0].restaurantId : null;
 export const selectIsSheetOpen = (s: CartState) => s.isSheetOpen;
+export const selectIsEmptyPromptOpen = (s: CartState) => s.isEmptyPromptOpen;
 
 type CartPreviewThumb = {
   id: string;

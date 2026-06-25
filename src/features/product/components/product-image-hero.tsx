@@ -20,17 +20,22 @@ const STAGE_HEIGHT = 248;
 const H_PAD = spacing.lg;
 
 type ProductImageHeroProps = {
-  itemId: string;
+  primaryImage: string;
+  relatedImages: string[];
   discountPercent?: number;
 };
 
 export function ProductImageHero({
-  itemId,
+  primaryImage,
+  relatedImages,
   discountPercent = 0,
 }: ProductImageHeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const stageWidth = Dimensions.get('window').width - H_PAD * 2;
-  const images = useMemo(() => getProductGalleryImages(itemId, 3), [itemId]);
+  const images = useMemo(
+    () => getProductGalleryImages(primaryImage, relatedImages, 3),
+    [primaryImage, relatedImages],
+  );
 
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const index = Math.round(event.nativeEvent.contentOffset.x / stageWidth);
@@ -50,29 +55,31 @@ export function ProductImageHero({
         <View style={styles.glow} />
         <View style={styles.pedestal} />
 
-        <ScrollView
-          horizontal
-          pagingEnabled
-          nestedScrollEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={handleScroll}
-          decelerationRate="fast"
-          contentContainerStyle={styles.galleryRow}
-        >
-          {images.map((source, index) => (
-            <View
-              key={`${itemId}-gallery-${index}`}
-              style={[styles.slide, { width: stageWidth }]}
-            >
-              <Image
-                source={source}
-                style={styles.image}
-                contentFit="contain"
-                transition={220}
-              />
-            </View>
-          ))}
-        </ScrollView>
+        {images.length > 0 ? (
+          <ScrollView
+            horizontal
+            pagingEnabled
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleScroll}
+            decelerationRate="fast"
+            contentContainerStyle={styles.galleryRow}
+          >
+            {images.map((imageUri, index) => (
+              <View
+                key={`${imageUri}-${index}`}
+                style={[styles.slide, { width: stageWidth }]}
+              >
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.image}
+                  contentFit="contain"
+                  transition={220}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        ) : null}
 
         {discountPercent > 0 ? (
           <View style={styles.discountBadge}>
@@ -81,17 +88,19 @@ export function ProductImageHero({
         ) : null}
       </View>
 
-      <View style={styles.dots}>
-        {images.map((_, index) => (
-          <View
-            key={`dot-${itemId}-${index}`}
-            style={[
-              styles.dot,
-              index === activeIndex ? styles.dotActive : null,
-            ]}
-          />
-        ))}
-      </View>
+      {images.length > 1 ? (
+        <View style={styles.dots}>
+          {images.map((imageUri, index) => (
+            <View
+              key={`dot-${imageUri}-${index}`}
+              style={[
+                styles.dot,
+                index === activeIndex ? styles.dotActive : null,
+              ]}
+            />
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }

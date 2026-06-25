@@ -1,33 +1,62 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  CUISINE_OPTIONS,
-  DIETARY_OPTIONS,
-} from '@/features/auth/constants/personalization';
+import { DIETARY_OPTIONS } from '@/features/auth/constants/personalization';
 import type { DietaryPreference } from '@/features/auth/types/onboarding.types';
+import { fetchCategories } from '@/features/catalog/api/catalog.api';
+import type { Category } from '@/features/catalog/types/catalog.types';
+import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumButton } from '@/shared/components/premium-button';
 import { PremiumText } from '@/shared/components/premium-text';
+import { Shimmer } from '@/shared/components/shimmer';
 import { hapticSelection } from '@/shared/haptics/feedback';
 import { savePersonalization, skipPersonalization } from '@/store/app.store';
 import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
+function CategorySkeleton() {
+  return (
+    <View style={styles.cuisineGrid}>
+      {Array.from({ length: 6 }, (_, index) => (
+        <Shimmer
+          key={index}
+          height={108}
+          borderRadius={radius.lg}
+          style={styles.skeletonCard}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function PersonalizationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [dietary, setDietary] = useState<DietaryPreference>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  function toggleCuisine(id: string) {
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchCategories(controller.signal)
+      .then(setCategories)
+      .catch(() => setCategories([]))
+      .finally(() => setLoadingCategories(false));
+
+    return () => controller.abort();
+  }, []);
+
+  function toggleCategory(id: string) {
     hapticSelection();
-    setSelectedCuisines((prev) =>
+    setSelectedCategories((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
     );
   }
@@ -43,7 +72,7 @@ export function PersonalizationScreen() {
   }
 
   function handleSave() {
-    savePersonalization(selectedCuisines, dietary);
+    savePersonalization(selectedCategories, dietary);
     router.replace('/(tabs)');
   }
 
@@ -85,47 +114,60 @@ export function PersonalizationScreen() {
             What do you love to eat?
           </PremiumText>
           <PremiumText style={styles.subtitle}>
-            Pick a few favourites — we&apos;ll personalise your home feed. You
-            can change this anytime.
+            Pick your favourite categories — we&apos;ll personalise your home
+            feed. You can change this anytime.
           </PremiumText>
         </View>
 
-        <PremiumText style={styles.sectionLabel}>Cuisines</PremiumText>
-        <View style={styles.cuisineGrid}>
-          {CUISINE_OPTIONS.map((cuisine) => {
-            const active = selectedCuisines.includes(cuisine.id);
-            return (
-              <Pressable
-                key={cuisine.id}
-                onPress={() => toggleCuisine(cuisine.id)}
-                style={[styles.cuisineCard, active && styles.cuisineActive]}
-              >
-                <Image
-                  source={{ uri: cuisine.image }}
-                  style={styles.cuisineImage}
-                  contentFit="cover"
-                />
-                <View style={styles.cuisineOverlay} />
-                {active ? (
-                  <View style={styles.checkBadge}>
-                    <AppSymbol
-                      name="checkmark.circle.fill"
-                      size={28}
-                      tintColor={colors.textInverse}
-                    />
-                  </View>
-                ) : null}
-                <PremiumText
-                  variant="captionMedium"
-                  color={colors.textInverse}
-                  style={styles.cuisineLabel}
-                >
-                  {cuisine.label}
-                </PremiumText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <PremiumText style={styles.sectionLabel}>Categories</PremiumText>
+        {loadingCategories ? (
+          <CategorySkeleton />
+        ) : categories.length === 0 ? (
+          <PremiumText color={colors.textSecondary}>
+            Menu categories are loading. You can skip and explore everything.
+          </PremiumText>
+        ) : (
+          <View style={styles.cuisineGrid}>
+            {categories
+              .filter((category) => resolveCategoryImageUri(category.image))
+              .map((category) => {
+                const imageUri = resolveCategoryImageUri(category.image);
+                const active = selectedCategories.includes(category.id);
+                return (
+                  <Pressable
+                    key={category.id}
+                    onPress={() => toggleCategory(category.id)}
+                    style={[styles.cuisineCard, active && styles.cuisineActive]}
+                  >
+                    {imageUri ? (
+                      <Image
+                        source={{ uri: imageUri }}
+                        style={styles.cuisineImage}
+                        contentFit="cover"
+                      />
+                    ) : null}
+                    <View style={styles.cuisineOverlay} />
+                    {active ? (
+                      <View style={styles.checkBadge}>
+                        <AppSymbol
+                          name="checkmark.circle.fill"
+                          size={28}
+                          tintColor={colors.textInverse}
+                        />
+                      </View>
+                    ) : null}
+                    <PremiumText
+                      variant="captionMedium"
+                      color={colors.textInverse}
+                      style={styles.cuisineLabel}
+                    >
+                      {category.name}
+                    </PremiumText>
+                  </Pressable>
+                );
+              })}
+          </View>
+        )}
 
         <PremiumText style={styles.sectionLabel}>
           Dietary preference
@@ -157,11 +199,11 @@ export function PersonalizationScreen() {
 
         <PremiumButton
           label={
-            selectedCuisines.length > 0
+            selectedCategories.length > 0
               ? 'Save & explore restaurants'
               : 'Continue without picks'
           }
-          onPress={selectedCuisines.length > 0 ? handleSave : handleSkip}
+          onPress={selectedCategories.length > 0 ? handleSave : handleSkip}
           style={styles.cta}
         />
       </ScrollView>
@@ -242,6 +284,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm,
     justifyContent: 'space-between',
+  },
+  skeletonCard: {
+    width: '48%',
   },
   cuisineCard: {
     width: '48%',

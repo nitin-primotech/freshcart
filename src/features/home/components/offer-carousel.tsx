@@ -11,57 +11,10 @@ import {
 } from 'react-native';
 
 import type { Promo } from '@/features/catalog/types/catalog.types';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { PremiumText } from '@/shared/components/premium-text';
 import { colors, screens, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
-
-const FALLBACK_OFFERS: Promo[] = [
-  {
-    id: 'fallback-1',
-    title: '65% OFF',
-    subtitle: 'Every 30 mins',
-    code: 'RUSH MODE',
-    gradient: ['#D4543C', '#8B3A32'],
-    image:
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=80',
-  },
-  {
-    id: 'fallback-2',
-    title: '20% off',
-    subtitle: 'First order with code WELCOME20',
-    code: 'WELCOME20',
-    gradient: ['#C9A962', '#8B6914'],
-    image:
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80',
-  },
-  {
-    id: 'fallback-3',
-    title: 'Free delivery',
-    subtitle: 'On orders over $35 this week',
-    code: 'RUSHFREE',
-    gradient: ['#1C1C1E', '#3D3D42'],
-    image:
-      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80',
-  },
-  {
-    id: 'fallback-4',
-    title: 'Weekend special',
-    subtitle: 'Flat 30% off tonight',
-    code: 'WEEKEND',
-    gradient: ['#D4543C', '#8B3A32'],
-    image:
-      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&q=80',
-  },
-  {
-    id: 'fallback-5',
-    title: 'New user deal',
-    subtitle: 'Extra $10 off your first order',
-    code: 'NEW10',
-    gradient: ['#C9A962', '#8B6914'],
-    image:
-      'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&q=80',
-  },
-];
 
 const SLIDE_HEIGHT = 176;
 const AUTO_ADVANCE_MS = 4000;
@@ -80,7 +33,9 @@ export function OfferCarousel({ promos }: OfferCarouselProps) {
     null,
   );
 
-  const items = (promos?.length ? promos : FALLBACK_OFFERS).slice(0, 5);
+  const items = (promos ?? [])
+    .filter((promo) => isHttpImageUrl(promo.image))
+    .slice(0, 5);
   const cardWidth = width - spacing.lg * 2;
 
   const clearAutoAdvance = useCallback(() => {
@@ -132,6 +87,10 @@ export function OfferCarousel({ promos }: OfferCarouselProps) {
     syncIndexFromOffset(e.nativeEvent.contentOffset.x);
     isUserDraggingRef.current = false;
     startAutoAdvance();
+  }
+
+  if (items.length === 0) {
+    return null;
   }
 
   return (

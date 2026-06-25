@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Category } from '@/features/catalog/types/catalog.types';
+import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors } from '@/theme/colors';
@@ -60,7 +61,7 @@ export function SearchCategoryStrip({
           >
             <View style={[styles.tile, active && styles.tileActive]}>
               <Image
-                source={{ uri: category.image }}
+                source={{ uri: resolveCategoryImageUri(category.image) }}
                 style={styles.image}
                 contentFit="cover"
               />
