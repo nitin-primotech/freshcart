@@ -49,6 +49,12 @@ export const ORDER_STATUS_UI: Record<OrderStatus, OrderStatusUi> = {
     color: '#2D6A4F',
     bg: 'rgba(45, 106, 79, 0.12)',
   },
+  cancelled: {
+    label: 'Cancelled',
+    icon: 'xmark.circle.fill',
+    color: '#B91C1C',
+    bg: 'rgba(185, 28, 28, 0.12)',
+  },
 };
 
 export function formatOrderId(orderId: string): string {
@@ -177,6 +183,12 @@ export const TRACKING_STATUS_BADGE: Record<OrderStatus, OrderStatusUi> = {
     color: '#2D6A4F',
     bg: 'rgba(45, 106, 79, 0.12)',
   },
+  cancelled: {
+    label: 'Cancelled',
+    icon: 'xmark.circle.fill',
+    color: '#B91C1C',
+    bg: 'rgba(185, 28, 28, 0.12)',
+  },
 };
 
 export function resolveTrackingStepState(
@@ -190,6 +202,7 @@ export function resolveTrackingStepState(
     preparing: 1,
     on_the_way: 3,
     delivered: 4,
+    cancelled: 0,
   };
 
   const active = activeIndex[status];

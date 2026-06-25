@@ -17,8 +17,11 @@ import {
 import {
   hydrateAuthState,
   selectIsAuthenticated,
+  selectUserPhone,
   useAuthStore,
 } from '@/store/auth.store';
+import { startCatalogSync, stopCatalogSync } from '@/store/catalog.store';
+import { startOrdersSync, stopOrdersSync } from '@/store/orders.store';
 import { fontAssets } from '@/theme/typography';
 
 SplashScreen.preventAutoHideAsync();
@@ -27,6 +30,7 @@ export default function RootLayout() {
   const [loaded] = useFonts(fontAssets);
   const segments = useSegments();
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const userPhone = useAuthStore(selectUserPhone);
   const onboardingComplete = useAppStore(selectOnboardingComplete);
   const [showCartChrome, setShowCartChrome] = useState(false);
   const inAuth = segments[0] === '(auth)';
@@ -40,6 +44,20 @@ export default function RootLayout() {
     preloadAppHaptics();
     void Promise.all([hydrateAuthState(), hydrateAppProfile()]);
   }, []);
+
+  useEffect(() => {
+    startCatalogSync();
+    return () => {
+      stopCatalogSync();
+    };
+  }, []);
+
+  useEffect(() => {
+    startOrdersSync(isAuthenticated ? userPhone : null);
+    return () => {
+      stopOrdersSync();
+    };
+  }, [isAuthenticated, userPhone]);
 
   useEffect(() => {
     if (loaded) {
