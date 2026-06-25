@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
 import type { Restaurant } from '@/features/catalog/types/catalog.types';
+import { formatInr } from '@/features/checkout/utils/format-currency';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
 import { colors, shadows } from '@/theme/colors';
@@ -23,12 +25,14 @@ export function RestaurantCard({ restaurant, index = 0 }: RestaurantCardProps) {
         entering={FadeInRight.delay(index * 80).duration(400)}
         style={styles.card}
       >
-        <Image
-          source={{ uri: restaurant.coverImage }}
-          style={styles.cover}
-          contentFit="cover"
-          transition={300}
-        />
+        {isHttpImageUrl(restaurant.coverImage) ? (
+          <Image
+            source={{ uri: restaurant.coverImage }}
+            style={styles.cover}
+            contentFit="cover"
+            transition={300}
+          />
+        ) : null}
         {restaurant.isPromoted ? (
           <View style={styles.promoBadge}>
             <PremiumText variant="label" color={colors.textInverse}>
@@ -38,7 +42,12 @@ export function RestaurantCard({ restaurant, index = 0 }: RestaurantCardProps) {
         ) : null}
         <View style={styles.body}>
           <View style={styles.row}>
-            <Image source={{ uri: restaurant.logoImage }} style={styles.logo} />
+            {isHttpImageUrl(restaurant.logoImage) ? (
+              <Image
+                source={{ uri: restaurant.logoImage }}
+                style={styles.logo}
+              />
+            ) : null}
             <View style={styles.meta}>
               <PremiumText variant="h3" numberOfLines={1}>
                 {restaurant.name}
@@ -68,7 +77,7 @@ export function RestaurantCard({ restaurant, index = 0 }: RestaurantCardProps) {
             <PremiumText variant="caption" color={colors.textSecondary}>
               {restaurant.isFreeDelivery
                 ? 'Free delivery'
-                : `$${restaurant.deliveryFee.toFixed(2)} delivery`}
+                : `${formatInr(restaurant.deliveryFee)} delivery`}
             </PremiumText>
           </View>
         </View>

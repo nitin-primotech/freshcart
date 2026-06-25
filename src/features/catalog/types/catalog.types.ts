@@ -63,9 +63,18 @@ export type CartItem = {
 export type OrderStatus =
   | 'confirmed'
   | 'preparing'
+  | 'ready'
   | 'on_the_way'
   | 'delivered'
   | 'cancelled';
+
+export type OrderRider = {
+  name: string;
+  phone?: string;
+  otp?: number;
+  avatar?: string;
+  rating?: number;
+};
 
 export type Order = {
   id: string;
@@ -79,8 +88,14 @@ export type Order = {
   total: number;
   status: OrderStatus;
   createdAt: string;
+  updatedAt: string;
   estimatedDelivery: string;
   address: string;
+  prepTime?: number;
+  prepStartedAt?: string;
+  rider?: OrderRider;
+  riderCoords?: [number, number];
+  deliveryCoords?: [number, number];
 };
 
 export type DeliveryAddress = {

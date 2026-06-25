@@ -33,7 +33,10 @@ function filterOrdersByTab(orders: Order[], tab: OrderTabId): Order[] {
       return orders.filter((o) => o.status === 'confirmed');
     case 'processing':
       return orders.filter(
-        (o) => o.status === 'confirmed' || o.status === 'preparing',
+        (o) =>
+          o.status === 'confirmed' ||
+          o.status === 'preparing' ||
+          o.status === 'ready',
       );
     case 'shipped':
       return orders.filter((o) => o.status === 'on_the_way');

@@ -6,8 +6,8 @@ import {
   formatInr,
 } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
-import { getTrendingFoodImage } from '@/features/home/utils/trending-food-images';
 import { productDetailPath } from '@/features/product/utils/product-path';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
 import {
@@ -23,7 +23,6 @@ import { fonts } from '@/theme/typography';
 type TopPicksProductCardProps = {
   dish: RecommendedDish;
   width: number;
-  imageIndex: number;
 };
 
 function formatPrice(price: number): string {
@@ -35,14 +34,11 @@ function formatWeight(calories?: number): string {
   return '1 serving';
 }
 
-export function TopPicksProductCard({
-  dish,
-  width,
-  imageIndex,
-}: TopPicksProductCardProps) {
+export function TopPicksProductCard({ dish, width }: TopPicksProductCardProps) {
   const { item, restaurantId, restaurantName } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
   const originalPrice = deriveMrp(item.price);
+  const imageUri = isHttpImageUrl(item.image) ? item.image : undefined;
 
   function handleAdd() {
     hapticAddToCart();
@@ -67,12 +63,16 @@ export function TopPicksProductCard({
     <View style={[styles.card, { width }]}>
       <Link href={productDetailPath(restaurantId, item.id)} asChild>
         <Pressable style={styles.imageWrap} accessibilityRole="link">
-          <Image
-            source={getTrendingFoodImage(imageIndex)}
-            style={styles.image}
-            contentFit="contain"
-            transition={200}
-          />
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.image}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <View style={styles.imageFallback} />
+          )}
         </Pressable>
       </Link>
 
@@ -140,30 +140,36 @@ export function TopPicksProductCard({
 
 const ACTION_HEIGHT = 30;
 
+const IMAGE_HEIGHT = 112;
+const CARD_RADIUS = 14;
+
 const styles = StyleSheet.create({
   card: {
     marginRight: spacing.md,
     backgroundColor: colors.backgroundElevated,
-    borderRadius: 14,
+    borderRadius: CARD_RADIUS,
     borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
   },
   imageWrap: {
-    height: 92,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.backgroundElevated,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+    width: '100%',
+    height: IMAGE_HEIGHT,
+    backgroundColor: colors.backgroundMuted,
   },
   image: {
     width: '100%',
     height: '100%',
   },
+  imageFallback: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.backgroundMuted,
+  },
   body: {
     paddingHorizontal: spacing.sm,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
     gap: 2,
   },

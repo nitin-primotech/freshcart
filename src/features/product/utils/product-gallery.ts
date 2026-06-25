@@ -1,18 +1,42 @@
-import type { ImageSource } from 'expo-image';
+import type { Restaurant } from '@/features/catalog/types/catalog.types';
 
-import { getTrendingFoodImage } from '@/features/home/utils/trending-food-images';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 
 export function getProductGalleryImages(
-  itemId: string,
-  count = 3,
-): ImageSource[] {
-  const seed = itemId
-    .split('')
-    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  primaryImage: string,
+  relatedImages: string[],
+  limit = 3,
+): string[] {
+  const gallery: string[] = [];
 
-  return Array.from({ length: count }, (_, index) =>
-    getTrendingFoodImage(seed + index),
-  );
+  if (isHttpImageUrl(primaryImage)) {
+    gallery.push(primaryImage);
+  }
+
+  for (const image of relatedImages) {
+    if (gallery.length >= limit) {
+      break;
+    }
+    if (isHttpImageUrl(image) && !gallery.includes(image)) {
+      gallery.push(image);
+    }
+  }
+
+  return gallery;
+}
+
+export function getRelatedProductImageUrls(
+  restaurant: Restaurant,
+  itemId: string,
+  limit = 3,
+): string[] {
+  const items = restaurant.menu.flatMap((section) => section.items);
+  const primary = items.find((item) => item.id === itemId)?.image ?? '';
+  const related = items
+    .filter((item) => item.id !== itemId)
+    .map((item) => item.image);
+
+  return getProductGalleryImages(primary, related, limit);
 }
 
 export function getRatingDistribution(

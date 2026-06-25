@@ -3,6 +3,7 @@ import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Restaurant } from '@/features/catalog/types/catalog.types';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -22,18 +23,20 @@ export function RestaurantTileCard({
 }: RestaurantTileCardProps) {
   const offer =
     restaurant.offerLabel ??
-    (restaurant.isPromoted ? '40% OFF up to $12' : undefined);
+    (restaurant.isPromoted ? '40% OFF up to ₹99' : undefined);
 
   return (
     <Link href={`/restaurant/${restaurant.id}`} asChild>
       <Pressable style={StyleSheet.flatten([styles.card, { width }])}>
         <View style={styles.imageWrap}>
-          <Image
-            source={{ uri: restaurant.coverImage }}
-            style={styles.image}
-            contentFit="cover"
-            transition={250}
-          />
+          {isHttpImageUrl(restaurant.coverImage) ? (
+            <Image
+              source={{ uri: restaurant.coverImage }}
+              style={styles.image}
+              contentFit="cover"
+              transition={250}
+            />
+          ) : null}
           <View style={styles.heart} pointerEvents="none">
             <AppSymbol name="heart" size={14} tintColor={colors.textInverse} />
           </View>
@@ -53,12 +56,14 @@ export function RestaurantTileCard({
 
         <View style={styles.body}>
           <View style={styles.titleRow}>
-            <Image
-              source={{ uri: restaurant.logoImage }}
-              style={styles.logo}
-              contentFit="cover"
-              transition={200}
-            />
+            {isHttpImageUrl(restaurant.logoImage) ? (
+              <Image
+                source={{ uri: restaurant.logoImage }}
+                style={styles.logo}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : null}
             <View style={styles.titleCopy}>
               <Text style={styles.name} numberOfLines={1}>
                 {restaurant.name}

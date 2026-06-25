@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Category } from '@/features/catalog/types/catalog.types';
+import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -28,27 +29,34 @@ export function FoodCategoryStrip({ categories }: FoodCategoryStripProps) {
         decelerationRate="fast"
         contentContainerStyle={styles.row}
       >
-        {categories.map((cat) => (
-          <Pressable
-            key={cat.id}
-            style={styles.item}
-            onPress={() => router.push(`/category/${cat.id}`)}
-            accessibilityRole="button"
-            accessibilityLabel={`Browse ${cat.name}`}
-          >
-            <View style={styles.tile}>
-              <Image
-                source={{ uri: cat.image }}
-                style={styles.image}
-                contentFit="cover"
-                transition={200}
-              />
-            </View>
-            <Text style={styles.label} numberOfLines={2}>
-              {cat.name}
-            </Text>
-          </Pressable>
-        ))}
+        {categories.map((cat) => {
+          const imageUri = resolveCategoryImageUri(cat.image);
+          if (!imageUri) {
+            return null;
+          }
+
+          return (
+            <Pressable
+              key={cat.id}
+              style={styles.item}
+              onPress={() => router.push(`/category/${cat.id}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Browse ${cat.name}`}
+            >
+              <View style={styles.tile}>
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.image}
+                  contentFit="cover"
+                  transition={200}
+                />
+              </View>
+              <Text style={styles.label} numberOfLines={2}>
+                {cat.name}
+              </Text>
+            </Pressable>
+          );
+        })}
 
         <Pressable
           style={styles.item}

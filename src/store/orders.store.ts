@@ -13,6 +13,7 @@ import {
 } from '@/lib/firebase';
 import { simulateMutation } from '@/shared/utils/simulate-request';
 import { useCatalogStore } from '@/store/catalog.store';
+import { useMerchantStore } from '@/store/merchant.store';
 
 type OrdersState = {
   orders: Order[];
@@ -82,6 +83,13 @@ export async function placeOrder(input: PlaceOrderInput) {
 
   try {
     if (isFirebaseConfigured()) {
+      const merchantState = useMerchantStore.getState();
+      if (merchantState.ready && !merchantState.isOnline) {
+        throw new Error(
+          'Restaurant is currently offline. Please try again later.',
+        );
+      }
+
       const customerPhone = input.customerPhone?.trim();
       const customerName = input.customerName?.trim() || 'FoodRush Customer';
 
@@ -120,6 +128,7 @@ export async function placeOrder(input: PlaceOrderInput) {
           total: input.subtotal + input.deliveryFee + input.tip,
           status: 'confirmed' as const,
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
           estimatedDelivery: new Date(
             Date.now() + 35 * 60 * 1000,
           ).toISOString(),
@@ -141,6 +150,7 @@ export async function placeOrder(input: PlaceOrderInput) {
       total,
       status: 'confirmed',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       estimatedDelivery: new Date(Date.now() + 35 * 60 * 1000).toISOString(),
       address: input.address,
     };
@@ -173,6 +183,7 @@ export function advanceOrderStatus(orderId: string) {
   const flow: OrderStatus[] = [
     'confirmed',
     'preparing',
+    'ready',
     'on_the_way',
     'delivered',
   ];

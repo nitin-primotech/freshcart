@@ -1,5 +1,12 @@
-import { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -11,8 +18,8 @@ import type { Restaurant } from '@/features/catalog/types/catalog.types';
 import { FilterPills } from '@/features/home/components/filter-pills';
 import { FoodCategoryStrip } from '@/features/home/components/food-category-strip';
 import { HomeBestOffers } from '@/features/home/components/home-best-offers';
+import { HomeCollectionsGrid } from '@/features/home/components/home-collections-grid';
 import { HomeHeader } from '@/features/home/components/home-header';
-import { HomePopularBrands } from '@/features/home/components/home-popular-brands';
 import { HomeRestaurantCarousel } from '@/features/home/components/home-restaurant-carousel';
 import { HomeSearchBar } from '@/features/home/components/home-search-bar';
 import { OfferCarousel } from '@/features/home/components/offer-carousel';
@@ -24,6 +31,7 @@ import {
 } from '@/features/home/utils/personalize-restaurants';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { ErrorState } from '@/shared/components/error-state';
+import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { Shimmer } from '@/shared/components/shimmer';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { selectPreferences, useAppStore } from '@/store/app.store';
@@ -57,6 +65,9 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const preferences = useAppStore(selectPreferences);
   const [filterId, setFilterId] = useState<string | null>(null);
+  const headerBlockHeight = useRef(0);
+  const searchStuckRef = useRef(false);
+  const [searchStuck, setSearchStuck] = useState(false);
 
   const promosQuery = useSimulatedQuery((signal) => fetchPromos(signal), []);
   const categoriesQuery = useSimulatedQuery(
@@ -95,7 +106,7 @@ export function HomeScreen() {
       ? 'Lightning delivery'
       : filterId === 'off'
         ? 'Top offers near you'
-        : getPersonalizedSectionTitle(preferences);
+        : getPersonalizedSectionTitle(preferences, categoriesQuery.data ?? []);
 
   const exploreRestaurants = [...personalized].reverse();
   const recommendedDishes = getRecommendedDishes(
@@ -107,6 +118,18 @@ export function HomeScreen() {
 
   const bottomPad = tabBarContentPadding(insets.bottom);
 
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const stuck = offsetY >= Math.max(0, headerBlockHeight.current - 1);
+      if (stuck !== searchStuckRef.current) {
+        searchStuckRef.current = stuck;
+        setSearchStuck(stuck);
+      }
+    },
+    [],
+  );
+
   return (
     <View style={styles.root} collapsable={false}>
       <AppStatusBar style="dark" />
@@ -114,6 +137,9 @@ export function HomeScreen() {
         style={styles.screen}
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[1]}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: bottomPad }}
         refreshControl={
           <RefreshControl
@@ -123,11 +149,32 @@ export function HomeScreen() {
           />
         }
       >
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <HomeHeader />
-            <HomeSearchBar />
-          </View>
+        <View
+          style={[styles.headerBlock, { paddingTop: insets.top + spacing.xs }]}
+          onLayout={(event) => {
+            headerBlockHeight.current = event.nativeEvent.layout.height;
+          }}
+        >
+          <HomeHeader />
+        </View>
+
+        <View
+          style={[
+            styles.stickySearchShell,
+            searchStuck
+              ? {
+                  paddingTop: insets.top,
+                  borderBottomWidth: StyleSheet.hairlineWidth,
+                  borderBottomColor: colors.border,
+                }
+              : styles.stickySearchShellIdle,
+          ]}
+        >
+          <HomeSearchBar />
+        </View>
+
+        <View style={styles.promoBlock}>
+          <MerchantOfflineBanner />
           <OfferCarousel promos={promosQuery.data} />
         </View>
 
@@ -141,7 +188,7 @@ export function HomeScreen() {
           ) : null}
           {!isLoading && !hasError ? (
             <View style={styles.brandsCluster}>
-              <HomePopularBrands />
+              <HomeCollectionsGrid />
               <FilterPills activeId={filterId} onSelect={setFilterId} />
             </View>
           ) : null}
@@ -151,7 +198,6 @@ export function HomeScreen() {
             <RecommendedSection
               title="Recommended picks"
               dishes={morePicksDishes}
-              imageIndexOffset={6}
             />
           ) : null}
           {hasError ? (
@@ -188,13 +234,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  headerBlock: {
+    backgroundColor: colors.background,
+  },
+  stickySearchShell: {
+    backgroundColor: colors.background,
+    paddingBottom: spacing.xs,
+    zIndex: 10,
+  },
+  stickySearchShellIdle: {
+    paddingTop: spacing.sm,
+  },
+  promoBlock: {
     backgroundColor: colors.background,
     gap: spacing.sm,
     paddingBottom: spacing.xs,
-  },
-  headerTop: {
-    gap: spacing.md,
   },
   body: {
     backgroundColor: colors.background,

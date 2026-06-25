@@ -11,6 +11,8 @@ import {
   DEFAULT_MERCHANT_RESTAURANT_ID,
   isFirebaseConfigured,
 } from '@/lib/firebase';
+import { collectRestaurantMenuImages } from '@/lib/firebase/catalog-images';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { simulateRequest } from '@/shared/utils/simulate-request';
 import {
   selectCatalogCategories,
@@ -22,6 +24,39 @@ import {
 const categories = categoriesData as Category[];
 const restaurants = restaurantsData as Restaurant[];
 const promos = promosData as Promo[];
+
+function deriveMockCategories(): Category[] {
+  return categories.map((category) => {
+    const restaurant = restaurants.find((entry) =>
+      entry.categoryIds.includes(category.id),
+    );
+    const firstProductImage = restaurant?.menu
+      .flatMap((section) => section.items)
+      .find((item) => isHttpImageUrl(item.image))?.image;
+
+    return {
+      ...category,
+      image: firstProductImage ?? '',
+    };
+  });
+}
+
+function getBannerPromos(): Promo[] {
+  return promos.filter((promo) => isHttpImageUrl(promo.image));
+}
+
+function deriveRestaurantImages(restaurant: Restaurant): Restaurant {
+  const images = collectRestaurantMenuImages(restaurant);
+  return {
+    ...restaurant,
+    coverImage: images[0] ?? '',
+    logoImage: images[1] ?? images[0] ?? '',
+  };
+}
+
+const mockCategories = deriveMockCategories();
+const mockPromos = getBannerPromos();
+const mockRestaurants = restaurants.map(deriveRestaurantImages);
 
 async function getLiveRestaurant(): Promise<Restaurant> {
   await waitForCatalogReady();
@@ -44,14 +79,22 @@ export function fetchCategories(signal?: AbortSignal) {
   if (isFirebaseConfigured()) {
     return getLiveCategories();
   }
-  return simulateRequest(categories, { delayMs: 600 });
+  return simulateRequest(mockCategories, { delayMs: 600 });
 }
 
 export function fetchPromos(signal?: AbortSignal) {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
-  return simulateRequest(promos, { delayMs: 700 });
+  if (isFirebaseConfigured()) {
+    return getLivePromos();
+  }
+  return simulateRequest(mockPromos, { delayMs: 700 });
+}
+
+async function getLivePromos(): Promise<Promo[]> {
+  await waitForCatalogReady();
+  return getBannerPromos();
 }
 
 export function fetchRestaurants(signal?: AbortSignal) {
@@ -61,7 +104,7 @@ export function fetchRestaurants(signal?: AbortSignal) {
   if (isFirebaseConfigured()) {
     return getLiveRestaurant().then((restaurant) => [restaurant]);
   }
-  return simulateRequest(restaurants, { delayMs: 1000 });
+  return simulateRequest(mockRestaurants, { delayMs: 1000 });
 }
 
 export async function fetchRestaurantById(id: string, signal?: AbortSignal) {
@@ -77,7 +120,7 @@ export async function fetchRestaurantById(id: string, signal?: AbortSignal) {
     return restaurant;
   }
 
-  const restaurant = restaurants.find((entry) => entry.id === id);
+  const restaurant = mockRestaurants.find((entry) => entry.id === id);
   if (!restaurant) {
     throw new Error('Restaurant not found');
   }
@@ -101,7 +144,7 @@ export async function fetchMenuItemContext(
 
   const restaurant = isFirebaseConfigured()
     ? await getLiveRestaurant()
-    : restaurants.find((entry) => entry.id === restaurantId);
+    : mockRestaurants.find((entry) => entry.id === restaurantId);
 
   if (!restaurant) {
     throw new Error('Restaurant not found');
@@ -142,7 +185,7 @@ export async function searchRestaurants(query: string, signal?: AbortSignal) {
 
   const source = isFirebaseConfigured()
     ? [await getLiveRestaurant()]
-    : restaurants;
+    : mockRestaurants;
 
   const normalized = query.trim().toLowerCase();
   const results = normalized
@@ -174,14 +217,16 @@ export async function fetchCategoryById(id: string, signal?: AbortSignal) {
 
   const source = isFirebaseConfigured()
     ? useCatalogStore.getState().categories
-    : categories;
+    : mockCategories;
 
   if (isFirebaseConfigured() && source.length === 0) {
     await waitForCatalogReady();
   }
 
   const category = (
-    isFirebaseConfigured() ? useCatalogStore.getState().categories : categories
+    isFirebaseConfigured()
+      ? useCatalogStore.getState().categories
+      : mockCategories
   ).find((entry) => entry.id === id);
 
   if (!category) {
@@ -204,7 +249,7 @@ export async function fetchRestaurantsByCategory(
 
   const source = isFirebaseConfigured()
     ? [await getLiveRestaurant()]
-    : restaurants;
+    : mockRestaurants;
 
   const results = source.filter((restaurant) =>
     restaurant.categoryIds.includes(categoryId),

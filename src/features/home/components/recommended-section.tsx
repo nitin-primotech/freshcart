@@ -10,13 +10,11 @@ import { spacing } from '@/theme/spacing';
 type RecommendedSectionProps = {
   dishes: RecommendedDish[];
   title?: string;
-  imageIndexOffset?: number;
 };
 
 export function RecommendedSection({
   dishes,
   title = 'Top Picks for You',
-  imageIndexOffset = 0,
 }: RecommendedSectionProps) {
   const router = useRouter();
   const cardWidth = useCarouselItemWidth({
@@ -46,7 +44,6 @@ export function RecommendedSection({
             key={`${dish.restaurantId}-${dish.item.id}`}
             dish={dish}
             width={cardWidth}
-            imageIndex={imageIndexOffset + index}
           />
         ))}
       </ScrollView>

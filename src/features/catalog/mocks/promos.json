@@ -2,7 +2,7 @@
   {
     "id": "promo-1",
     "title": "Free delivery",
-    "subtitle": "On orders over $35 this week",
+    "subtitle": "On orders over ₹299 this week",
     "code": "RUSHFREE",
     "gradient": ["#D4543C", "#8B3A32"],
     "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80"
@@ -34,7 +34,7 @@
   {
     "id": "promo-5",
     "title": "New user deal",
-    "subtitle": "Extra $10 off your first order",
+    "subtitle": "Extra ₹80 off your first order",
     "code": "NEW10",
     "gradient": ["#C9A962", "#8B6914"],
     "image": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80"

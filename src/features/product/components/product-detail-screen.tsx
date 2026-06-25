@@ -219,7 +219,11 @@ export function ProductDetailScreen() {
         ]}
       >
         <View style={styles.hero}>
-          <ProductImageHero itemId={item.id} discountPercent={discount} />
+          <ProductImageHero
+            primaryImage={item.image}
+            relatedImages={relatedItems.map((entry) => entry.image)}
+            discountPercent={discount}
+          />
 
           <View style={styles.infoCol}>
             <Text style={styles.brand}>{restaurant.name}</Text>

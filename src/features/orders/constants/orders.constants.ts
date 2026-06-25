@@ -37,6 +37,12 @@ export const ORDER_STATUS_UI: Record<OrderStatus, OrderStatusUi> = {
     color: '#D97706',
     bg: 'rgba(217, 119, 6, 0.12)',
   },
+  ready: {
+    label: 'Ready',
+    icon: 'shippingbox.fill',
+    color: '#D4543C',
+    bg: 'rgba(212, 84, 60, 0.12)',
+  },
   on_the_way: {
     label: 'Shipped',
     icon: 'truck.box.fill',
@@ -102,9 +108,15 @@ export function formatPlacedOn(iso: string): string {
   })}`;
 }
 
-export function formatEstimatedWindow(iso: string): string {
-  const eta = new Date(iso);
-  const start = new Date(eta.getTime() - 30 * 60 * 1000);
+export function formatEstimatedWindow(
+  estimatedDelivery: string,
+  options?: {
+    prepStartedAt?: string;
+    prepTime?: number;
+    status?: OrderStatus;
+  },
+): string {
+  const eta = new Date(estimatedDelivery);
   const now = new Date();
   const isToday =
     eta.getDate() === now.getDate() &&
@@ -113,6 +125,7 @@ export function formatEstimatedWindow(iso: string): string {
   const dayLabel = isToday
     ? 'Today'
     : eta.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('en-IN', {
       hour: 'numeric',
@@ -120,10 +133,31 @@ export function formatEstimatedWindow(iso: string): string {
       hour12: true,
     });
 
+  if (
+    options?.status === 'preparing' &&
+    options.prepStartedAt &&
+    options.prepTime
+  ) {
+    const prepEnd = new Date(
+      new Date(options.prepStartedAt).getTime() + options.prepTime * 60 * 1000,
+    );
+    const deliveryStart = prepEnd;
+    const deliveryEnd = eta;
+    return `${dayLabel}, ${formatTime(deliveryStart)} - ${formatTime(deliveryEnd)}`;
+  }
+
+  const start = new Date(eta.getTime() - 15 * 60 * 1000);
   return `${dayLabel}, ${formatTime(start)} - ${formatTime(eta)}`;
 }
 
-export type TrackingStepState = 'done' | 'active' | 'pending';
+export function formatMinutesUntil(iso: string): string | null {
+  const target = new Date(iso).getTime();
+  const diffMins = Math.max(0, Math.round((target - Date.now()) / 60000));
+  if (diffMins <= 0) return 'Arriving soon';
+  return `${diffMins} min`;
+}
+
+export type TrackingStepState = 'done' | 'active' | 'pending' | 'cancelled';
 
 export const TRACKING_STEPS = [
   {
@@ -131,6 +165,12 @@ export const TRACKING_STEPS = [
     label: 'Order Confirmed',
     description: 'Your order has been confirmed',
     icon: 'checkmark',
+  },
+  {
+    key: 'preparing',
+    label: 'Being Prepared',
+    description: 'Restaurant is preparing your food',
+    icon: 'flame.fill',
   },
   {
     key: 'packed',
@@ -158,6 +198,13 @@ export const TRACKING_STEPS = [
   },
 ] as const;
 
+export const CANCELLED_TRACKING_STEP = {
+  key: 'cancelled',
+  label: 'Order Cancelled',
+  description: 'This order was cancelled and will not be delivered',
+  icon: 'xmark.circle.fill',
+} as const;
+
 export const TRACKING_STATUS_BADGE: Record<OrderStatus, OrderStatusUi> = {
   confirmed: {
     label: 'Confirmed',
@@ -166,10 +213,16 @@ export const TRACKING_STATUS_BADGE: Record<OrderStatus, OrderStatusUi> = {
     bg: 'rgba(212, 84, 60, 0.12)',
   },
   preparing: {
-    label: 'Processing',
-    icon: 'clock',
+    label: 'Preparing',
+    icon: 'flame.fill',
     color: '#D97706',
     bg: 'rgba(217, 119, 6, 0.12)',
+  },
+  ready: {
+    label: 'Packed',
+    icon: 'shippingbox.fill',
+    color: '#D4543C',
+    bg: 'rgba(212, 84, 60, 0.12)',
   },
   on_the_way: {
     label: 'In transit',
@@ -191,45 +244,106 @@ export const TRACKING_STATUS_BADGE: Record<OrderStatus, OrderStatusUi> = {
   },
 };
 
+export function getCancelledProgressIndex(
+  timestamps: TrackingTimestamps,
+): number {
+  if (!timestamps.prepStartedAt) {
+    return 0;
+  }
+  return 1;
+}
+
 export function resolveTrackingStepState(
   stepIndex: number,
   status: OrderStatus,
+  timestamps?: TrackingTimestamps,
 ): TrackingStepState {
+  if (status === 'cancelled') {
+    const progress = timestamps ? getCancelledProgressIndex(timestamps) : 0;
+    if (stepIndex <= progress) {
+      return 'done';
+    }
+    return 'pending';
+  }
   if (status === 'delivered') return 'done';
 
   const activeIndex: Record<OrderStatus, number> = {
     confirmed: 0,
     preparing: 1,
-    on_the_way: 3,
-    delivered: 4,
+    ready: 2,
+    on_the_way: 4,
+    delivered: 5,
     cancelled: 0,
   };
 
   const active = activeIndex[status];
 
   if (stepIndex < active) return 'done';
-  if (status === 'on_the_way' && stepIndex === 2) return 'done';
+  if (status === 'on_the_way' && stepIndex === 3) return 'done';
   if (stepIndex === active) return 'active';
   return 'pending';
 }
 
-export function formatTrackingStepTime(
-  createdAt: string,
-  stepIndex: number,
-  state: TrackingStepState,
-): string | null {
-  if (state === 'pending') return null;
-
-  const offsetsMin = [0, 6, 12, 20, 35];
-  const timestamp = new Date(
-    new Date(createdAt).getTime() + offsetsMin[stepIndex] * 60 * 1000,
-  );
-
-  return timestamp.toLocaleString('en-IN', {
+export function formatCancelledOn(iso: string): string {
+  return new Date(iso).toLocaleString('en-IN', {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   });
+}
+
+export type TrackingTimestamps = {
+  createdAt: string;
+  prepStartedAt?: string;
+  prepTime?: number;
+  updatedAt: string;
+};
+
+export function formatTrackingStepTime(
+  stepKey:
+    | (typeof TRACKING_STEPS)[number]['key']
+    | typeof CANCELLED_TRACKING_STEP.key,
+  state: TrackingStepState,
+  timestamps: TrackingTimestamps,
+): string | null {
+  if (state === 'pending') return null;
+
+  const format = (iso: string) =>
+    new Date(iso).toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+  switch (stepKey) {
+    case 'confirmed':
+      return format(timestamps.createdAt);
+    case 'preparing':
+      return timestamps.prepStartedAt
+        ? format(timestamps.prepStartedAt)
+        : format(timestamps.createdAt);
+    case 'packed':
+      if (timestamps.prepStartedAt && timestamps.prepTime) {
+        return format(
+          new Date(
+            new Date(timestamps.prepStartedAt).getTime() +
+              timestamps.prepTime * 60 * 1000,
+          ).toISOString(),
+        );
+      }
+      return timestamps.updatedAt ? format(timestamps.updatedAt) : null;
+    case 'dispatched':
+    case 'out_for_delivery':
+      return timestamps.updatedAt ? format(timestamps.updatedAt) : null;
+    case 'delivered':
+      return timestamps.updatedAt ? format(timestamps.updatedAt) : null;
+    case 'cancelled':
+      return timestamps.updatedAt ? format(timestamps.updatedAt) : null;
+    default:
+      return null;
+  }
 }

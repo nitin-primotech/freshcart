@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   InteractionManager,
@@ -45,6 +45,15 @@ export function OtpVerifyScreen() {
   const masked = phone ? formatIndianPhone(phone) : '';
   const codeString = code.join('');
   const canVerify = codeString.length === OTP_LENGTH && !isLoading;
+
+  useFocusEffect(
+    useCallback(() => {
+      const timer = setTimeout(() => {
+        invisibleInputRef.current?.focus();
+      }, 400);
+      return () => clearTimeout(timer);
+    }, []),
+  );
 
   const resetCode = useCallback(() => {
     setTimeout(() => {
@@ -171,12 +180,14 @@ export function OtpVerifyScreen() {
         ref={invisibleInputRef}
         value={codeString}
         onChangeText={handleTextChange}
+        autoFocus
         keyboardType="number-pad"
         keyboardAppearance={keyboardAppearance}
         maxLength={OTP_LENGTH}
         textContentType="oneTimeCode"
         autoComplete="one-time-code"
         caretHidden
+        showSoftInputOnFocus
         style={authScreenStyles.invisibleInput}
         accessibilityLabel="OTP input"
         blurOnSubmit={false}

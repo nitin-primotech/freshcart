@@ -1,11 +1,20 @@
-import {
-  CUISINE_CATEGORY_MAP,
-  CUISINE_OPTIONS,
-} from '@/features/auth/constants/personalization';
 import type { UserPreferences } from '@/features/auth/types/onboarding.types';
-import type { Restaurant } from '@/features/catalog/types/catalog.types';
+import type {
+  Category,
+  Restaurant,
+} from '@/features/catalog/types/catalog.types';
 
-const VEG_FRIENDLY_CATEGORY_IDS = new Set(['cat-2', 'cat-4', 'cat-6']);
+function restaurantHasVegOptions(restaurant: Restaurant): boolean {
+  return restaurant.menu.some((section) =>
+    section.items.some((item) => item.isVegetarian),
+  );
+}
+
+function restaurantHasNonVegOptions(restaurant: Restaurant): boolean {
+  return restaurant.menu.some((section) =>
+    section.items.some((item) => !item.isVegetarian),
+  );
+}
 
 export function getPersonalizedRestaurants(
   restaurants: Restaurant[],
@@ -18,27 +27,23 @@ export function getPersonalizedRestaurants(
   let list = [...restaurants];
 
   if (preferences.dietary === 'veg' || preferences.dietary === 'vegan') {
-    list = list.filter((r) =>
-      r.categoryIds.some((id) => VEG_FRIENDLY_CATEGORY_IDS.has(id)),
-    );
+    list = list.filter(restaurantHasVegOptions);
+  } else if (preferences.dietary === 'non_veg') {
+    list = list.filter(restaurantHasNonVegOptions);
   }
 
   if (preferences.cuisineIds.length === 0) {
     return list.length > 0 ? list : restaurants;
   }
 
-  const categoryIds = new Set(
-    preferences.cuisineIds
-      .map((id) => CUISINE_CATEGORY_MAP[id])
-      .filter(Boolean),
-  );
+  const categoryIds = new Set(preferences.cuisineIds);
 
-  const matched = list.filter((r) =>
-    r.categoryIds.some((id) => categoryIds.has(id)),
+  const matched = list.filter((restaurant) =>
+    restaurant.categoryIds.some((id) => categoryIds.has(id)),
   );
 
   const rest = list.filter(
-    (r) => !r.categoryIds.some((id) => categoryIds.has(id)),
+    (restaurant) => !restaurant.categoryIds.some((id) => categoryIds.has(id)),
   );
 
   return [...matched, ...rest];
@@ -46,11 +51,13 @@ export function getPersonalizedRestaurants(
 
 export function getPersonalizedSectionTitle(
   preferences: UserPreferences,
+  categories: Category[] = [],
 ): string {
   if (preferences.skipped || preferences.cuisineIds.length === 0) {
     return 'Recommended for you';
   }
+
   const firstId = preferences.cuisineIds[0];
-  const match = CUISINE_OPTIONS.find((c) => c.id === firstId);
-  return match ? `Because you like ${match.label}` : 'Picked for you';
+  const match = categories.find((category) => category.id === firstId);
+  return match ? `Because you like ${match.name}` : 'Picked for you';
 }

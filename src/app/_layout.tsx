@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootProvider } from '@/providers/root-provider';
 import { CartBottomSheet } from '@/shared/components/cart-bottom-sheet';
 import { CartDropAnimation } from '@/shared/components/cart-drop-animation';
+import { EmptyCartPrompt } from '@/shared/components/empty-cart-prompt';
 import { FloatingCartBar } from '@/shared/components/floating-cart-bar';
 import { preloadAppHaptics } from '@/shared/haptics/feedback';
 import {
@@ -21,6 +22,7 @@ import {
   useAuthStore,
 } from '@/store/auth.store';
 import { startCatalogSync, stopCatalogSync } from '@/store/catalog.store';
+import { startMerchantSync, stopMerchantSync } from '@/store/merchant.store';
 import { startOrdersSync, stopOrdersSync } from '@/store/orders.store';
 import { fontAssets } from '@/theme/typography';
 
@@ -47,8 +49,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     startCatalogSync();
+    startMerchantSync();
     return () => {
       stopCatalogSync();
+      stopMerchantSync();
     };
   }, []);
 
@@ -176,6 +180,7 @@ export default function RootLayout() {
             <CartDropAnimation />
             {showFloatingCartBar ? <FloatingCartBar /> : null}
             <CartBottomSheet />
+            <EmptyCartPrompt />
           </>
         ) : null}
       </RootProvider>

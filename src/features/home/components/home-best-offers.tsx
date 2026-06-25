@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
-import { getTrendingFoodImage } from '@/features/home/utils/trending-food-images';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -17,7 +17,9 @@ const OFFERS = [
     subline: 'On Popular Dishes',
     backgroundColor: '#FDEEEA',
     textColor: colors.primaryDark,
-    imageIndex: 0,
+    accentColor: 'rgba(212, 84, 60, 0.18)',
+    iconColor: colors.primary,
+    icon: 'tag.fill',
   },
   {
     id: 'offer-2',
@@ -26,7 +28,9 @@ const OFFERS = [
     subline: 'On Premium Meals',
     backgroundColor: colors.accentMuted,
     textColor: '#7A5C1E',
-    imageIndex: 1,
+    accentColor: 'rgba(201, 169, 98, 0.22)',
+    iconColor: '#A8844A',
+    icon: 'crown.fill',
   },
   {
     id: 'offer-3',
@@ -35,7 +39,9 @@ const OFFERS = [
     subline: 'On Weekend Specials',
     backgroundColor: colors.successLight,
     textColor: colors.success,
-    imageIndex: 2,
+    accentColor: 'rgba(45, 106, 79, 0.16)',
+    iconColor: colors.success,
+    icon: 'sparkles',
   },
 ] as const;
 
@@ -79,12 +85,31 @@ export function HomeBestOffers() {
                 {offer.subline}
               </Text>
             </View>
-            <Image
-              source={getTrendingFoodImage(offer.imageIndex)}
-              style={styles.image}
-              contentFit="contain"
-              transition={200}
-            />
+
+            <View style={styles.artwork}>
+              <View
+                style={[styles.blob, { backgroundColor: offer.accentColor }]}
+              />
+              <LinearGradient
+                colors={[offer.accentColor, 'transparent']}
+                start={{ x: 0.2, y: 0.2 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.blobGlow}
+              />
+              <View
+                style={[
+                  styles.iconBadge,
+                  { backgroundColor: offer.backgroundColor },
+                ]}
+              >
+                <AppSymbol
+                  name={offer.icon}
+                  size={28}
+                  tintColor={offer.iconColor}
+                  weight="semibold"
+                />
+              </View>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -115,6 +140,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 1,
     paddingRight: spacing.xs,
+    zIndex: 1,
   },
   eyebrow: {
     fontFamily: fonts.medium,
@@ -133,9 +159,39 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     opacity: 0.9,
   },
-  image: {
+  artwork: {
+    width: 92,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blob: {
+    position: 'absolute',
     width: 88,
-    height: '100%',
-    alignSelf: 'flex-end',
+    height: 88,
+    borderRadius: 44,
+    right: -18,
+    top: 4,
+  },
+  blobGlow: {
+    position: 'absolute',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    right: -8,
+    top: 12,
+  },
+  iconBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.65)',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
 });

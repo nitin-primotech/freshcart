@@ -1,13 +1,10 @@
-import type { ImageSource } from 'expo-image';
-
 type WelcomeFeature = {
   icon: string;
   label: string;
   tint: 'success' | 'primary';
 };
 
-type WelcomeGalleryCard = {
-  source: ImageSource;
+type WelcomeGalleryLayout = {
   glow: string;
   rotate: string;
   layout: 'left' | 'center' | 'right';
@@ -23,21 +20,18 @@ export const WELCOME_FEATURES: WelcomeFeature[] = [
   },
 ];
 
-export const WELCOME_GALLERY: WelcomeGalleryCard[] = [
+export const WELCOME_GALLERY_LAYOUT: WelcomeGalleryLayout[] = [
   {
-    source: require('@/assets/foodimages/a3.png'),
     glow: '0 14px 36px rgba(45, 106, 79, 0.28)',
     rotate: '-11deg',
     layout: 'left',
   },
   {
-    source: require('@/assets/foodimages/a1.png'),
     glow: '0 16px 40px rgba(139, 92, 246, 0.3)',
     rotate: '0deg',
     layout: 'center',
   },
   {
-    source: require('@/assets/foodimages/a2.png'),
     glow: '0 14px 36px rgba(236, 72, 153, 0.28)',
     rotate: '11deg',
     layout: 'right',

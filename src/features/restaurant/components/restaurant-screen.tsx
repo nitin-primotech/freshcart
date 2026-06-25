@@ -6,7 +6,9 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { fetchRestaurantById } from '@/features/catalog/api/catalog.api';
 import type { MenuItem } from '@/features/catalog/types/catalog.types';
+import { formatInr } from '@/features/checkout/utils/format-currency';
 import { productDetailPath } from '@/features/product/utils/product-path';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -150,7 +152,9 @@ export function RestaurantScreen() {
         contentContainerStyle={{ paddingBottom: cartCount > 0 ? 140 : 80 }}
       >
         <View style={styles.heroWrap}>
-          <Image source={{ uri: data.coverImage }} style={styles.hero} />
+          {isHttpImageUrl(data.coverImage) ? (
+            <Image source={{ uri: data.coverImage }} style={styles.hero} />
+          ) : null}
           <LinearGradient
             colors={screens.restaurant.heroGradient}
             style={styles.heroGradient}
@@ -190,7 +194,7 @@ export function RestaurantScreen() {
               tintColor={colors.textSecondary}
             />
             <PremiumText variant="bodyMedium">
-              {data.isFreeDelivery ? 'Free' : `$${data.deliveryFee}`}
+              {data.isFreeDelivery ? 'Free' : formatInr(data.deliveryFee)}
             </PremiumText>
           </View>
         </View>
