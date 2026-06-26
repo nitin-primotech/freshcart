@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -20,15 +20,15 @@ import { FoodCategoryStrip } from '@/features/home/components/food-category-stri
 import { HomeBestOffers } from '@/features/home/components/home-best-offers';
 import { HomeCollectionsGrid } from '@/features/home/components/home-collections-grid';
 import { HomeHeader } from '@/features/home/components/home-header';
-import { HomeRestaurantCarousel } from '@/features/home/components/home-restaurant-carousel';
 import { HomeSearchBar } from '@/features/home/components/home-search-bar';
 import { OfferCarousel } from '@/features/home/components/offer-carousel';
 import { RecommendedSection } from '@/features/home/components/recommended-section';
-import { getRecommendedDishes } from '@/features/home/utils/get-recommended-dishes';
 import {
-  getPersonalizedRestaurants,
-  getPersonalizedSectionTitle,
-} from '@/features/home/utils/personalize-restaurants';
+  getDishesExcluding,
+  getDishesForCategoryIds,
+  getRecommendedDishes,
+} from '@/features/home/utils/get-recommended-dishes';
+import { getPersonalizedSectionTitle } from '@/features/home/utils/personalize-restaurants';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { ErrorState } from '@/shared/components/error-state';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
@@ -65,7 +65,6 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const preferences = useAppStore(selectPreferences);
   const [filterId, setFilterId] = useState<string | null>(null);
-  const headerBlockHeight = useRef(0);
   const searchStuckRef = useRef(false);
   const [searchStuck, setSearchStuck] = useState(false);
 
@@ -100,7 +99,6 @@ export function HomeScreen() {
     restaurantsQuery.isRefreshing;
 
   const restaurants = filterRestaurants(restaurantsQuery.data ?? [], filterId);
-  const personalized = getPersonalizedRestaurants(restaurants, preferences);
   const personalizedTitle =
     filterId === 'fast'
       ? 'Lightning delivery'
@@ -108,20 +106,59 @@ export function HomeScreen() {
         ? 'Top offers near you'
         : getPersonalizedSectionTitle(preferences, categoriesQuery.data ?? []);
 
-  const exploreRestaurants = [...personalized].reverse();
-  const recommendedDishes = getRecommendedDishes(
-    restaurantsQuery.data ?? [],
-    12,
-  );
+  const recommendedDishes = getRecommendedDishes(restaurants, 12);
   const topPicksDishes = recommendedDishes.slice(0, 6);
   const morePicksDishes = recommendedDishes.slice(6, 12);
+
+  const shownItemIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const dish of [...topPicksDishes, ...morePicksDishes]) {
+      ids.add(dish.item.id);
+    }
+    return ids;
+  }, [topPicksDishes, morePicksDishes]);
+
+  const preferenceCategoryIds =
+    preferences.cuisineIds.length > 0
+      ? preferences.cuisineIds
+      : (categoriesQuery.data?.slice(0, 2).map((category) => category.id) ??
+        []);
+
+  const personalizedDishes = useMemo(() => {
+    const fromPrefs = getDishesForCategoryIds(
+      restaurants,
+      preferenceCategoryIds,
+      12,
+    );
+    return fromPrefs
+      .filter((dish) => !shownItemIds.has(dish.item.id))
+      .slice(0, 6);
+  }, [restaurants, preferenceCategoryIds, shownItemIds]);
+
+  const exploreDishes = useMemo(() => {
+    const exclude = new Set(shownItemIds);
+    for (const dish of personalizedDishes) {
+      exclude.add(dish.item.id);
+    }
+    return getDishesExcluding(restaurants, exclude, 6);
+  }, [restaurants, shownItemIds, personalizedDishes]);
+
+  const mainRestaurantId = restaurantsQuery.data?.[0]?.id;
+  const firstCategoryId =
+    preferenceCategoryIds[0] ?? categoriesQuery.data?.[0]?.id;
+  const restaurantHref = mainRestaurantId
+    ? (`/restaurant/${mainRestaurantId}` as const)
+    : undefined;
+  const categoryHref = firstCategoryId
+    ? (`/category/${firstCategoryId}` as const)
+    : undefined;
 
   const bottomPad = tabBarContentPadding(insets.bottom);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const offsetY = event.nativeEvent.contentOffset.y;
-      const stuck = offsetY >= Math.max(0, headerBlockHeight.current - 1);
+      const stuck = offsetY > 0;
       if (stuck !== searchStuckRef.current) {
         searchStuckRef.current = stuck;
         setSearchStuck(stuck);
@@ -133,11 +170,18 @@ export function HomeScreen() {
   return (
     <View style={styles.root} collapsable={false}>
       <AppStatusBar style="dark" />
+
+      <View
+        style={[styles.headerBlock, { paddingTop: insets.top + spacing.xs }]}
+      >
+        <HomeHeader />
+      </View>
+
       <ScrollView
         style={styles.screen}
         contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[1]}
+        stickyHeaderIndices={[0]}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: bottomPad }}
@@ -150,20 +194,10 @@ export function HomeScreen() {
         }
       >
         <View
-          style={[styles.headerBlock, { paddingTop: insets.top + spacing.xs }]}
-          onLayout={(event) => {
-            headerBlockHeight.current = event.nativeEvent.layout.height;
-          }}
-        >
-          <HomeHeader />
-        </View>
-
-        <View
           style={[
             styles.stickySearchShell,
             searchStuck
               ? {
-                  paddingTop: insets.top,
                   borderBottomWidth: StyleSheet.hairlineWidth,
                   borderBottomColor: colors.border,
                 }
@@ -180,11 +214,17 @@ export function HomeScreen() {
 
         <View style={styles.body}>
           {categoriesQuery.data ? (
-            <FoodCategoryStrip categories={categoriesQuery.data} />
+            <FoodCategoryStrip
+              categories={categoriesQuery.data}
+              moreHref={categoryHref ?? restaurantHref}
+            />
           ) : null}
           {!isLoading && !hasError ? <HomeBestOffers /> : null}
           {!isLoading && !hasError ? (
-            <RecommendedSection dishes={topPicksDishes} />
+            <RecommendedSection
+              dishes={topPicksDishes}
+              viewAllHref={restaurantHref}
+            />
           ) : null}
           {!isLoading && !hasError ? (
             <View style={styles.brandsCluster}>
@@ -198,6 +238,7 @@ export function HomeScreen() {
             <RecommendedSection
               title="Recommended picks"
               dishes={morePicksDishes}
+              viewAllHref={categoryHref ?? restaurantHref}
             />
           ) : null}
           {hasError ? (
@@ -209,14 +250,24 @@ export function HomeScreen() {
 
           {!isLoading && !hasError ? (
             <>
-              <HomeRestaurantCarousel
-                title={personalizedTitle}
-                restaurants={personalized}
-              />
-              <HomeRestaurantCarousel
-                title="Explore for you"
-                restaurants={exploreRestaurants}
-              />
+              {personalizedDishes.length > 0 ? (
+                <RecommendedSection
+                  title={personalizedTitle}
+                  dishes={personalizedDishes}
+                  viewAllHref={
+                    firstCategoryId
+                      ? (`/category/${firstCategoryId}` as const)
+                      : restaurantHref
+                  }
+                />
+              ) : null}
+              {exploreDishes.length > 0 ? (
+                <RecommendedSection
+                  title="Explore for you"
+                  dishes={exploreDishes}
+                  viewAllHref={restaurantHref}
+                />
+              ) : null}
             </>
           ) : null}
         </View>

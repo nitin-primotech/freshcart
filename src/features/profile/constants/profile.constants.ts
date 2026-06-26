@@ -55,26 +55,12 @@ export const PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
     icon: 'creditcard.fill',
   },
   {
-    id: 'wishlist',
-    title: 'My Wishlist',
-    subtitle: 'Saved dishes and restaurants',
-    icon: 'heart.fill',
-    badge: '16 Items',
-    badgeTone: 'primary',
-  },
-  {
     id: 'premium',
     title: 'Premium Status',
     subtitle: 'foodRush Gold membership',
     icon: 'crown.fill',
     badge: 'Active',
     badgeTone: 'success',
-  },
-  {
-    id: 'notifications',
-    title: 'Notification Settings',
-    subtitle: 'Orders, offers and updates',
-    icon: 'bell.fill',
   },
   {
     id: 'support',
@@ -100,6 +86,3 @@ export function profileInitials(name: string | null): string {
     .slice(0, 2)
     .toUpperCase();
 }
-
-export const DEFAULT_PROFILE_AVATAR =
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&h=240&fit=crop';

@@ -18,6 +18,7 @@ export type SearchSuggestion = {
   query: string;
   restaurantId?: string;
   categoryId?: string;
+  itemId?: string;
 };
 
 const MAX_SUGGESTIONS = 8;
@@ -93,6 +94,7 @@ export function buildSearchSuggestions(
           icon: 'sparkles',
           query: item.name,
           restaurantId: restaurant.id,
+          itemId: item.id,
         });
       }
     }

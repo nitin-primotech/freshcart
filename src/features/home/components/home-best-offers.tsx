@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
+import { DEFAULT_MERCHANT_RESTAURANT_ID } from '@/lib/firebase/inventory-mapper';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { colors } from '@/theme/colors';
@@ -58,7 +59,9 @@ export function HomeBestOffers() {
     <View style={styles.wrap}>
       <HomeSectionHeader
         title="Best Offers"
-        onViewAll={() => router.push('/(tabs)/search')}
+        onViewAll={() =>
+          router.push(`/restaurant/${DEFAULT_MERCHANT_RESTAURANT_ID}`)
+        }
       />
       <ScrollView
         horizontal

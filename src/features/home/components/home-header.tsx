@@ -1,4 +1,4 @@
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -8,11 +8,11 @@ import {
   selectCartItemCount,
   useCartStore,
 } from '@/store/cart.store';
+import { selectWishlistCount, useWishlistStore } from '@/store/wishlist.store';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-const NOTIFICATION_COUNT = 3;
 const LOCATION_GREEN = '#1A4D2E';
 
 function IconBadge({
@@ -40,6 +40,7 @@ export function HomeHeader() {
   const router = useRouter();
   const address = useAppStore(selectAddress);
   const cartCount = useCartStore(selectCartItemCount);
+  const wishlistCount = useWishlistStore(selectWishlistCount);
 
   return (
     <View style={styles.wrap}>
@@ -69,16 +70,15 @@ export function HomeHeader() {
         </Pressable>
 
         <View style={styles.actions}>
-          <Link href="/(tabs)/profile" asChild>
-            <Pressable
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel={`Notifications, ${NOTIFICATION_COUNT} unread`}
-            >
-              <AppSymbol name="bell" size={20} tintColor={colors.textPrimary} />
-              <IconBadge count={NOTIFICATION_COUNT} tone="danger" />
-            </Pressable>
-          </Link>
+          <Pressable
+            style={styles.iconBtn}
+            onPress={() => router.push('/(tabs)/wishlist')}
+            accessibilityRole="button"
+            accessibilityLabel={`Wishlist, ${wishlistCount} saved`}
+          >
+            <AppSymbol name="heart" size={20} tintColor={colors.textPrimary} />
+            <IconBadge count={wishlistCount} tone="danger" />
+          </Pressable>
 
           <Pressable
             style={styles.iconBtn}

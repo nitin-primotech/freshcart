@@ -1,16 +1,15 @@
-import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { OrderTabId } from '@/features/orders/constants/orders.constants';
 import {
-  DEFAULT_PROFILE_AVATAR,
   formatProfilePhone,
   PROFILE_MENU_ITEMS,
   PROFILE_ORDER_SHORTCUTS,
   PROFILE_QUICK_STATS,
+  profileInitials,
 } from '@/features/profile/constants/profile.constants';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -26,13 +25,17 @@ import {
   selectUserPhone,
   useAuthStore,
 } from '@/store/auth.store';
+import {
+  openCartSheet,
+  selectCartItemCount,
+  useCartStore,
+} from '@/store/cart.store';
 import { selectOrders, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { tabBarContentPadding } from '@/theme/tab-bar';
 import { fonts } from '@/theme/typography';
 
-const NOTIFICATION_COUNT = 2;
 const H_PAD = spacing.lg;
 
 export function ProfileScreen() {
@@ -42,6 +45,7 @@ export function ProfileScreen() {
   const userName = useAppStore(selectUserName);
   const address = useAppStore(selectAddress);
   const orders = useOrdersStore(selectOrders);
+  const cartCount = useCartStore(selectCartItemCount);
 
   const trackableOrder = useMemo(
     () => orders.find((order) => order.status !== 'delivered') ?? null,
@@ -75,51 +79,52 @@ export function ProfileScreen() {
     openOrders('shipped');
   }
 
+  function openProfileHub(route: Href) {
+    hapticSoftTap();
+    router.push(route);
+  }
+
   return (
     <View style={styles.root}>
       <AppStatusBar style="dark" />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
-        <View style={styles.brandRow}>
-          <Image
-            source={require('@/assets/images/foodrushlogo.png')}
-            style={styles.brandLogo}
-            contentFit="contain"
-          />
-          <Text style={styles.brandName}>foodRush</Text>
-        </View>
-
+        <Text style={styles.headerTitle}>My Profile</Text>
         <View style={styles.headerActions}>
           <Pressable
-            onPress={hapticSoftTap}
+            onPress={() => {
+              hapticSoftTap();
+              router.push('/(tabs)/search');
+            }}
             hitSlop={10}
-            style={styles.headerIconBtn}
+            style={styles.iconBtn}
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
+            accessibilityLabel="Search"
           >
             <AppSymbol
-              name="bell.fill"
-              size={18}
+              name="magnifyingglass"
+              size={20}
               tintColor={colors.textPrimary}
             />
-            {NOTIFICATION_COUNT > 0 ? (
-              <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>{NOTIFICATION_COUNT}</Text>
-              </View>
-            ) : null}
           </Pressable>
           <Pressable
-            onPress={hapticSoftTap}
+            onPress={() => {
+              hapticSoftTap();
+              openCartSheet();
+            }}
             hitSlop={10}
-            style={styles.headerIconBtn}
+            style={styles.iconBtn}
             accessibilityRole="button"
-            accessibilityLabel="Settings"
+            accessibilityLabel="Cart"
           >
-            <AppSymbol
-              name="gearshape.fill"
-              size={18}
-              tintColor={colors.textPrimary}
-            />
+            <AppSymbol name="cart" size={20} tintColor={colors.textPrimary} />
+            {cartCount > 0 ? (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>
+                  {cartCount > 9 ? '9+' : cartCount}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
       </View>
@@ -133,11 +138,18 @@ export function ProfileScreen() {
         ]}
       >
         <View style={styles.profileRow}>
-          <Image
-            source={{ uri: DEFAULT_PROFILE_AVATAR }}
-            style={styles.avatar}
-            contentFit="cover"
-          />
+          <View style={styles.avatar}>
+            <AppSymbol
+              name="person.fill"
+              size={26}
+              tintColor={colors.primary}
+            />
+            <View style={styles.avatarBadge}>
+              <Text style={styles.avatarInitials}>
+                {profileInitials(displayName)}
+              </Text>
+            </View>
+          </View>
 
           <View style={styles.profileCopy}>
             <Text style={styles.profileName}>{displayName}</Text>
@@ -153,7 +165,7 @@ export function ProfileScreen() {
           </View>
 
           <Pressable
-            onPress={hapticSoftTap}
+            onPress={() => openProfileHub('/profile/edit')}
             style={styles.editBtn}
             accessibilityRole="button"
             accessibilityLabel="Edit profile"
@@ -171,7 +183,13 @@ export function ProfileScreen() {
           {PROFILE_QUICK_STATS.map((stat, index) => (
             <Pressable
               key={stat.id}
-              onPress={hapticSoftTap}
+              onPress={() => {
+                if (stat.id === 'wallet') openProfileHub('/profile/wallet');
+                else if (stat.id === 'offers')
+                  openProfileHub('/profile/offers');
+                else if (stat.id === 'premium')
+                  openProfileHub('/profile/membership');
+              }}
               style={[styles.statCol, index > 0 && styles.statColDivider]}
               accessibilityRole="button"
               accessibilityLabel={`${stat.label}, ${stat.value}`}
@@ -275,6 +293,18 @@ export function ProfileScreen() {
                   hapticSoftTap();
                   if (item.id === 'addresses') {
                     router.push('/location');
+                    return;
+                  }
+                  if (item.id === 'payments') {
+                    openProfileHub('/profile/payments');
+                    return;
+                  }
+                  if (item.id === 'premium') {
+                    openProfileHub('/profile/membership');
+                    return;
+                  }
+                  if (item.id === 'support') {
+                    openProfileHub('/profile/support');
                   }
                 }}
                 style={[
@@ -376,20 +406,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: H_PAD,
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
     backgroundColor: colors.backgroundElevated,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  brandLogo: {
-    width: 28,
-    height: 28,
-  },
-  brandName: {
+  headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
     lineHeight: 20,
@@ -398,33 +421,30 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  headerIconBtn: {
-    width: 34,
-    height: 34,
+  iconBtn: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notifBadge: {
+  cartBadge: {
     position: 'absolute',
     top: 2,
     right: 2,
-    minWidth: 15,
-    height: 15,
+    minWidth: 16,
+    height: 16,
     borderRadius: 8,
-    borderCurve: 'continuous',
-    backgroundColor: colors.danger,
-    borderWidth: 1.5,
-    borderColor: colors.backgroundElevated,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
-  notifBadgeText: {
+  cartBadgeText: {
     fontFamily: fonts.bold,
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 9,
+    lineHeight: 11,
     color: colors.textInverse,
   },
   profileRow: {
@@ -440,9 +460,32 @@ const styles = StyleSheet.create({
     height: 58,
     borderRadius: 29,
     borderCurve: 'continuous',
-    backgroundColor: colors.backgroundMuted,
+    backgroundColor: 'rgba(212, 84, 60, 0.1)',
     borderWidth: 2,
     borderColor: 'rgba(212, 84, 60, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 5,
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    lineHeight: 11,
+    color: colors.primary,
   },
   profileCopy: {
     flex: 1,

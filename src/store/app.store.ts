@@ -36,7 +36,7 @@ export const useAppStore = create<AppState>(() => ({
   onboardingStep: 'welcome',
   hasConfirmedAddress: false,
   preferences: DEFAULT_PREFERENCES,
-  recentSearches: ['Sushi', 'Pizza', 'Healthy bowls'],
+  recentSearches: ['Biryani', 'Paratha', 'Paneer'],
 }));
 
 async function persistProfile() {
@@ -73,6 +73,13 @@ export function setUserName(name: string) {
   const trimmed = name.trim();
   if (!trimmed) return;
   useAppStore.setState({ userName: trimmed, onboardingStep: 'location' });
+  void persistProfile();
+}
+
+export function updateProfileName(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  useAppStore.setState({ userName: trimmed });
   void persistProfile();
 }
 

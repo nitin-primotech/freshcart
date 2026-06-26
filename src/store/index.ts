@@ -37,3 +37,14 @@ export {
   selectOrders,
   useOrdersStore,
 } from './orders.store';
+export {
+  clearLastWishlistSaved,
+  clearWishlist,
+  removeWishlistEntry,
+  selectIsWishlistedProduct,
+  selectLastWishlistSaved,
+  selectWishlistCount,
+  selectWishlistEntries,
+  toggleWishlistProduct,
+  useWishlistStore,
+} from './wishlist.store';

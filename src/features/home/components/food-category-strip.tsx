@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -15,9 +16,13 @@ const ITEM_GAP = spacing.md;
 
 type FoodCategoryStripProps = {
   categories: Category[];
+  moreHref?: Href;
 };
 
-export function FoodCategoryStrip({ categories }: FoodCategoryStripProps) {
+export function FoodCategoryStrip({
+  categories,
+  moreHref,
+}: FoodCategoryStripProps) {
   const router = useRouter();
 
   return (
@@ -60,7 +65,12 @@ export function FoodCategoryStrip({ categories }: FoodCategoryStripProps) {
 
         <Pressable
           style={styles.item}
-          onPress={() => router.push('/(tabs)/search')}
+          onPress={() => {
+            if (moreHref) {
+              router.push(moreHref);
+            }
+          }}
+          disabled={!moreHref}
           accessibilityRole="button"
           accessibilityLabel="Browse more categories"
         >

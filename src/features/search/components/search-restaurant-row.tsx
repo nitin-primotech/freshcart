@@ -27,9 +27,6 @@ export function SearchRestaurantRow({ restaurant }: SearchRestaurantRowProps) {
             style={styles.image}
             contentFit="cover"
           />
-          <View style={styles.heart}>
-            <AppSymbol name="heart" size={12} tintColor={colors.textInverse} />
-          </View>
         </View>
 
         <View style={styles.body}>
@@ -67,10 +64,6 @@ export function SearchRestaurantRow({ restaurant }: SearchRestaurantRowProps) {
             <Text style={styles.freeDelivery}>{restaurant.offerLabel}</Text>
           ) : null}
         </View>
-
-        <View style={styles.favBtn}>
-          <AppSymbol name="heart" size={14} tintColor={colors.primary} />
-        </View>
       </Pressable>
     </Link>
   );
@@ -99,17 +92,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-  },
-  heart: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(0, 0, 0, 0.28)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   body: {
     flex: 1,
@@ -163,16 +145,5 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     color: colors.primary,
     marginTop: 2,
-  },
-  favBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.backgroundElevated,
   },
 });

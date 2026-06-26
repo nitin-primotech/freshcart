@@ -7,7 +7,6 @@ import type {
 } from '@/features/catalog/types/catalog.types';
 import { countRestaurantsForCategory } from '@/features/search/utils/search-suggestions';
 import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -50,13 +49,6 @@ export function SearchCuisineCarousel({
                 style={styles.image}
                 contentFit="cover"
               />
-              <View style={styles.heart}>
-                <AppSymbol
-                  name="heart"
-                  size={12}
-                  tintColor={colors.textInverse}
-                />
-              </View>
             </View>
             <Text style={styles.name}>{category.name}</Text>
             <Text style={styles.count}>{count} restaurants</Text>
@@ -87,17 +79,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-  },
-  heart: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.28)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   name: {
     fontFamily: fonts.semibold,

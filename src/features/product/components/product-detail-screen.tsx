@@ -27,6 +27,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { CartLineStepper } from '@/shared/components/cart-line-stepper';
 import { ErrorState } from '@/shared/components/error-state';
 import { Shimmer } from '@/shared/components/shimmer';
+import { WishlistToggle } from '@/shared/components/wishlist-toggle';
 import {
   hapticAddToCart,
   hapticPrimaryAction,
@@ -182,14 +183,15 @@ export function ProductDetailScreen() {
               tintColor={colors.textPrimary}
             />
           </Pressable>
-          <Pressable
-            onPress={hapticSoftTap}
+          <WishlistToggle
+            item={item}
+            restaurantId={restaurant.id}
+            restaurantName={restaurant.name}
+            rating={restaurant.rating}
+            size={18}
             style={styles.headerBtn}
-            accessibilityRole="button"
             accessibilityLabel="Add to wishlist"
-          >
-            <AppSymbol name="heart" size={16} tintColor={colors.textPrimary} />
-          </Pressable>
+          />
           <Pressable
             onPress={() => {
               hapticSoftTap();

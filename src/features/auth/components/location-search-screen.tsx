@@ -9,24 +9,38 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
 import {
   getCurrentLocationSuggestion,
   getLocationSuggestions,
 } from '@/features/auth/services/location.service';
-import type { LocationSuggestion } from '@/features/auth/types/location.types';
+import type {
+  LocationCity,
+  LocationSuggestion,
+} from '@/features/auth/types/location.types';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
 import { ScreenBackButton } from '@/shared/components/screen-back-button';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { formTextInputProps } from '@/shared/utils/keyboard';
 import { setDeliveryAddressFromSuggestion } from '@/store/app.store';
-import { colors } from '@/theme/colors';
+import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
 type LocationSearchScreenProps = {
   flow?: 'onboarding' | 'change';
 };
+
+const CITY_LABEL: Record<LocationCity, string> = {
+  mohali: 'Mohali',
+  delhi: 'Delhi',
+  noida: 'Noida',
+};
+
+const CONFIRM_SHEET_HEIGHT = 220;
 
 export function LocationSearchScreen({
   flow = 'change',
@@ -35,7 +49,8 @@ export function LocationSearchScreen({
   const insets = useSafeAreaInsets();
   const isOnboarding = flow === 'onboarding';
   const [query, setQuery] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [pendingSelection, setPendingSelection] =
+    useState<LocationSuggestion | null>(null);
 
   const results = useMemo(() => getLocationSuggestions(query), [query]);
 
@@ -49,12 +64,20 @@ export function LocationSearchScreen({
     router.back();
   }
 
+  function selectSuggestion(suggestion: LocationSuggestion) {
+    hapticSoftTap();
+    Keyboard.dismiss();
+    setPendingSelection(suggestion);
+  }
+
+  function proceedWithSelection() {
+    if (!pendingSelection) return;
+    finishWithSuggestion(pendingSelection);
+  }
+
   function useCurrentLocation() {
-    const suggestion = getCurrentLocationSuggestion();
-    setSelectedLocation(`${suggestion.title}, ${suggestion.subtitle}`);
-    setTimeout(() => {
-      finishWithSuggestion(suggestion);
-    }, 1500);
+    hapticSoftTap();
+    selectSuggestion(getCurrentLocationSuggestion());
   }
 
   function handleBack() {
@@ -64,6 +87,11 @@ export function LocationSearchScreen({
       router.back();
     }
   }
+
+  const listBottomPad =
+    insets.bottom +
+    spacing.xl +
+    (pendingSelection ? CONFIRM_SHEET_HEIGHT + spacing.md : 0);
 
   return (
     <View style={styles.root}>
@@ -92,7 +120,7 @@ export function LocationSearchScreen({
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Search area, street, landmark…"
+            placeholder="Search Mohali, Delhi, Noida…"
             placeholderTextColor={colors.textTertiary}
             style={styles.searchInput}
             autoCorrect={false}
@@ -112,45 +140,26 @@ export function LocationSearchScreen({
           ) : null}
         </View>
 
-        <Pressable
-          style={styles.actionRow}
-          onPress={useCurrentLocation}
-          disabled={selectedLocation !== null}
-        >
+        <Pressable style={styles.actionRow} onPress={useCurrentLocation}>
           <View style={styles.actionIcon}>
             <AppSymbol
               name="location.fill"
               size={20}
-              tintColor={
-                selectedLocation ? colors.textSecondary : colors.primary
-              }
-            />
-          </View>
-          {selectedLocation ? (
-            <View style={styles.actionText}>
-              <PremiumText variant="bodySmall" color={colors.textPrimary}>
-                {selectedLocation}
-              </PremiumText>
-              <PremiumText variant="caption" color={colors.textSecondary}>
-                Setting location…
-              </PremiumText>
-            </View>
-          ) : (
-            <PremiumText
-              variant="bodySmall"
-              color={colors.primary}
-              style={styles.actionLabel}
-            >
-              Use my current location
-            </PremiumText>
-          )}
-          {!selectedLocation ? (
-            <AppSymbol
-              name="chevron.right"
-              size={16}
               tintColor={colors.primary}
             />
-          ) : null}
+          </View>
+          <PremiumText
+            variant="bodySmall"
+            color={colors.primary}
+            style={styles.actionLabel}
+          >
+            Use my current location
+          </PremiumText>
+          <AppSymbol
+            name="chevron.right"
+            size={16}
+            tintColor={colors.primary}
+          />
         </Pressable>
 
         <View style={styles.divider} />
@@ -160,7 +169,7 @@ export function LocationSearchScreen({
           color={colors.textTertiary}
           style={styles.sectionLabel}
         >
-          {query.length >= 3 ? 'Search results' : 'Popular areas'}
+          {query.trim().length > 0 ? 'Search results' : 'Popular areas'}
         </PremiumText>
 
         <FlatList
@@ -168,31 +177,55 @@ export function LocationSearchScreen({
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
-          renderItem={({ item }) => (
-            <Pressable
-              style={styles.resultRow}
-              onPress={() => finishWithSuggestion(item)}
-            >
-              <View style={styles.resultIcon}>
-                <AppSymbol
-                  name="location.fill"
-                  size={18}
-                  tintColor={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.resultText}>
-                <PremiumText variant="bodySmall">{item.title}</PremiumText>
-                <PremiumText
-                  variant="caption"
-                  color={colors.textSecondary}
-                  numberOfLines={2}
-                >
-                  {item.subtitle}
-                </PremiumText>
-              </View>
-            </Pressable>
-          )}
+          contentContainerStyle={{ paddingBottom: listBottomPad }}
+          renderItem={({ item }) => {
+            const isSelected = pendingSelection?.id === item.id;
+            return (
+              <Pressable
+                style={[
+                  styles.resultRow,
+                  isSelected && styles.resultRowSelected,
+                ]}
+                onPress={() => selectSuggestion(item)}
+              >
+                <View style={styles.resultIcon}>
+                  <AppSymbol
+                    name="location.fill"
+                    size={18}
+                    tintColor={
+                      isSelected ? colors.primary : colors.textSecondary
+                    }
+                  />
+                </View>
+                <View style={styles.resultText}>
+                  <View style={styles.resultTitleRow}>
+                    <PremiumText variant="bodySmall" style={styles.resultTitle}>
+                      {item.title}
+                    </PremiumText>
+                    <View style={styles.cityPill}>
+                      <PremiumText variant="caption" color={colors.primary}>
+                        {CITY_LABEL[item.city]}
+                      </PremiumText>
+                    </View>
+                  </View>
+                  <PremiumText
+                    variant="caption"
+                    color={colors.textSecondary}
+                    numberOfLines={2}
+                  >
+                    {item.subtitle}
+                  </PremiumText>
+                </View>
+                {isSelected ? (
+                  <AppSymbol
+                    name="checkmark.circle.fill"
+                    size={22}
+                    tintColor={colors.primary}
+                  />
+                ) : null}
+              </Pressable>
+            );
+          }}
           ListEmptyComponent={
             <View style={styles.empty}>
               <PremiumText variant="caption" color={colors.textSecondary}>
@@ -202,6 +235,71 @@ export function LocationSearchScreen({
           }
         />
       </View>
+
+      {pendingSelection ? (
+        <View style={styles.confirmOverlay} pointerEvents="box-none">
+          <Pressable
+            style={styles.confirmBackdrop}
+            onPress={() => setPendingSelection(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss location confirmation"
+          />
+          <View
+            style={[
+              styles.confirmSheet,
+              shadows.card,
+              { paddingBottom: insets.bottom + spacing.md },
+            ]}
+          >
+            <View style={styles.confirmHandle} />
+            <PremiumText variant="overline" color={colors.textTertiary}>
+              Confirm delivery location
+            </PremiumText>
+            <View style={styles.confirmCard}>
+              <View style={styles.confirmIcon}>
+                <AppSymbol
+                  name="mappin.circle.fill"
+                  size={28}
+                  tintColor={colors.primary}
+                />
+              </View>
+              <View style={styles.confirmCopy}>
+                <View style={styles.resultTitleRow}>
+                  <PremiumText variant="bodyMedium">
+                    {pendingSelection.title}
+                  </PremiumText>
+                  <View style={styles.cityPill}>
+                    <PremiumText variant="caption" color={colors.primary}>
+                      {CITY_LABEL[pendingSelection.city]}
+                    </PremiumText>
+                  </View>
+                </View>
+                <PremiumText
+                  variant="caption"
+                  color={colors.textSecondary}
+                  numberOfLines={2}
+                >
+                  {pendingSelection.subtitle}
+                </PremiumText>
+              </View>
+            </View>
+            <AuthContinueButton
+              label={isOnboarding ? 'Continue' : 'Confirm & proceed'}
+              onPress={proceedWithSelection}
+            />
+            <Pressable
+              onPress={() => setPendingSelection(null)}
+              style={styles.changeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Choose another location"
+            >
+              <PremiumText variant="bodySmall" color={colors.primary}>
+                Choose another location
+              </PremiumText>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -250,10 +348,6 @@ const styles = StyleSheet.create({
   actionLabel: {
     flex: 1,
   },
-  actionText: {
-    flex: 1,
-    gap: spacing.xxs,
-  },
   divider: {
     height: 1,
     backgroundColor: colors.divider,
@@ -268,8 +362,15 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.md,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
+    marginHorizontal: -spacing.sm,
+    borderRadius: radius.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
+  },
+  resultRowSelected: {
+    backgroundColor: 'rgba(212, 84, 60, 0.08)',
+    borderBottomColor: 'transparent',
   },
   resultIcon: {
     width: 28,
@@ -280,8 +381,70 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing.xxs,
   },
+  resultTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  resultTitle: {
+    flexShrink: 1,
+  },
+  cityPill: {
+    backgroundColor: 'rgba(212, 84, 60, 0.1)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
   empty: {
     paddingVertical: spacing.xxl,
     alignItems: 'center',
+  },
+  confirmOverlay: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: 'flex-end',
+  },
+  confirmBackdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.overlay,
+  },
+  confirmSheet: {
+    backgroundColor: colors.backgroundElevated,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    borderCurve: 'continuous',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    gap: spacing.md,
+  },
+  confirmHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.borderStrong,
+    marginBottom: spacing.xxs,
+  },
+  confirmCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderCurve: 'continuous',
+    backgroundColor: colors.backgroundMuted,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  confirmIcon: {
+    paddingTop: 2,
+  },
+  confirmCopy: {
+    flex: 1,
+    gap: spacing.xxs,
+  },
+  changeBtn: {
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
   },
 });

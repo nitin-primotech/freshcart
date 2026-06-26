@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { Restaurant } from '@/features/catalog/types/catalog.types';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
@@ -9,11 +9,13 @@ import { spacing } from '@/theme/spacing';
 type HomeRestaurantCarouselProps = {
   title: string;
   restaurants: Restaurant[];
+  viewAllHref?: Href;
 };
 
 export function HomeRestaurantCarousel({
   title,
   restaurants,
+  viewAllHref,
 }: HomeRestaurantCarouselProps) {
   const router = useRouter();
   const cardWidth = useCarouselItemWidth({
@@ -29,7 +31,13 @@ export function HomeRestaurantCarousel({
     <View style={styles.wrap}>
       <HomeSectionHeader
         title={title}
-        onViewAll={() => router.push('/(tabs)/search')}
+        onViewAll={
+          viewAllHref
+            ? () => router.push(viewAllHref)
+            : restaurants.length === 1
+              ? () => router.push(`/restaurant/${restaurants[0].id}`)
+              : undefined
+        }
       />
       <ScrollView
         horizontal

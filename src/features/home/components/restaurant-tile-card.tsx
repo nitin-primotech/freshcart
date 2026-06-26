@@ -15,46 +15,49 @@ const IMAGE_HEIGHT = 132;
 type RestaurantTileCardProps = {
   restaurant: Restaurant;
   width: number;
+  flush?: boolean;
 };
 
 export function RestaurantTileCard({
   restaurant,
   width,
+  flush = false,
 }: RestaurantTileCardProps) {
   const offer =
     restaurant.offerLabel ??
     (restaurant.isPromoted ? '40% OFF up to ₹99' : undefined);
 
   return (
-    <Link href={`/restaurant/${restaurant.id}`} asChild>
-      <Pressable style={StyleSheet.flatten([styles.card, { width }])}>
-        <View style={styles.imageWrap}>
-          {isHttpImageUrl(restaurant.coverImage) ? (
-            <Image
-              source={{ uri: restaurant.coverImage }}
-              style={styles.image}
-              contentFit="cover"
-              transition={250}
-            />
-          ) : null}
-          <View style={styles.heart} pointerEvents="none">
-            <AppSymbol name="heart" size={14} tintColor={colors.textInverse} />
+    <View style={[styles.card, flush && styles.cardFlush, { width }]}>
+      <View style={styles.imageWrap}>
+        <Link href={`/restaurant/${restaurant.id}`} asChild>
+          <Pressable style={styles.imagePressable} accessibilityRole="link">
+            {isHttpImageUrl(restaurant.coverImage) ? (
+              <Image
+                source={{ uri: restaurant.coverImage }}
+                style={styles.image}
+                contentFit="cover"
+                transition={250}
+              />
+            ) : null}
+          </Pressable>
+        </Link>
+        {restaurant.isFastDelivery ? (
+          <View style={styles.fastBadge}>
+            <Text style={styles.fastBadgeText}>Fast</Text>
           </View>
-          {restaurant.isFastDelivery ? (
-            <View style={styles.fastBadge}>
-              <Text style={styles.fastBadgeText}>Fast</Text>
-            </View>
-          ) : null}
-          {offer ? (
-            <View style={styles.offerBar}>
-              <Text style={styles.offerText} numberOfLines={1}>
-                {offer.toUpperCase()}
-              </Text>
-            </View>
-          ) : null}
-        </View>
+        ) : null}
+        {offer ? (
+          <View style={styles.offerBar}>
+            <Text style={styles.offerText} numberOfLines={1}>
+              {offer.toUpperCase()}
+            </Text>
+          </View>
+        ) : null}
+      </View>
 
-        <View style={styles.body}>
+      <Link href={`/restaurant/${restaurant.id}`} asChild>
+        <Pressable style={styles.body} accessibilityRole="link">
           <View style={styles.titleRow}>
             {isHttpImageUrl(restaurant.logoImage) ? (
               <Image
@@ -88,9 +91,9 @@ export function RestaurantTileCard({
               </>
             ) : null}
           </View>
-        </View>
-      </Pressable>
-    </Link>
+        </Pressable>
+      </Link>
+    </View>
   );
 }
 
@@ -104,25 +107,21 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
   },
+  cardFlush: {
+    marginRight: 0,
+  },
   imageWrap: {
     width: '100%',
     height: IMAGE_HEIGHT,
     backgroundColor: colors.backgroundMuted,
   },
-  image: {
+  imagePressable: {
     width: '100%',
     height: '100%',
   },
-  heart: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
-    width: 28,
-    height: 28,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  image: {
+    width: '100%',
+    height: '100%',
   },
   fastBadge: {
     position: 'absolute',

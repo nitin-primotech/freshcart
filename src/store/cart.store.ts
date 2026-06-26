@@ -155,13 +155,13 @@ export function closeEmptyCartPrompt() {
   useCartStore.setState({ isEmptyPromptOpen: false });
 }
 
-/** Call right before router.push('/checkout') — avoids home flash + restores cart on back. */
+/** Call immediately before router.push('/checkout'). */
 export function prepareCheckoutNavigation(originPath: string) {
-  const reopenCartOnCheckoutBack = !originPath.includes('/restaurant/');
   useCartStore.setState({
     checkoutOrigin: originPath,
-    reopenCartOnCheckoutBack,
+    reopenCartOnCheckoutBack: false,
     isSheetOpen: false,
+    isEmptyPromptOpen: false,
   });
 }
 
@@ -170,22 +170,17 @@ export function handleCheckoutBack(router: {
   canGoBack: () => boolean;
   replace: (href: Href) => void;
 }) {
-  const { checkoutOrigin, reopenCartOnCheckoutBack } = useCartStore.getState();
+  const { checkoutOrigin } = useCartStore.getState();
   useCartStore.setState({
     checkoutOrigin: null,
     reopenCartOnCheckoutBack: false,
+    isSheetOpen: false,
   });
 
   if (router.canGoBack()) {
     router.back();
   } else if (checkoutOrigin) {
     router.replace(checkoutOrigin as Href);
-  }
-
-  if (reopenCartOnCheckoutBack && useCartStore.getState().items.length > 0) {
-    setTimeout(() => {
-      openCartSheet();
-    }, 320);
   }
 }
 

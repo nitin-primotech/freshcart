@@ -31,7 +31,14 @@ export function ProductBoughtTogether({
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.title}>Frequently Bought Together</Text>
-        <Pressable hitSlop={8} accessibilityRole="button">
+        <Pressable
+          hitSlop={8}
+          accessibilityRole="button"
+          onPress={() => {
+            hapticSoftTap();
+            router.push(`/restaurant/${restaurant.id}`);
+          }}
+        >
           <Text style={styles.viewAll}>View All</Text>
         </Pressable>
       </View>

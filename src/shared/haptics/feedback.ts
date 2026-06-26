@@ -114,6 +114,18 @@ export function hapticAddToCart(): void {
   );
 }
 
+/** Add to wishlist. */
+export function hapticWishlistSave(): void {
+  const pulsar = getPulsar();
+  if (pulsar) {
+    pulsar.Presets.chip();
+    return;
+  }
+  runExpoFallback(() =>
+    ExpoHaptics.notificationAsync(ExpoHaptics.NotificationFeedbackType.Success),
+  );
+}
+
 /** Open cart sheet / view cart bar. */
 export function hapticCartOpen(): void {
   const pulsar = getPulsar();

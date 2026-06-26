@@ -9,6 +9,7 @@ import { CartBottomSheet } from '@/shared/components/cart-bottom-sheet';
 import { CartDropAnimation } from '@/shared/components/cart-drop-animation';
 import { EmptyCartPrompt } from '@/shared/components/empty-cart-prompt';
 import { FloatingCartBar } from '@/shared/components/floating-cart-bar';
+import { WishlistSavedToast } from '@/shared/components/wishlist-saved-toast';
 import { preloadAppHaptics } from '@/shared/haptics/feedback';
 import {
   hydrateAppProfile,
@@ -91,7 +92,8 @@ export default function RootLayout() {
     segments[0] === '(tabs)' &&
     tabSegment !== 'profile' &&
     tabSegment !== 'orders' &&
-    tabSegment !== 'search';
+    tabSegment !== 'search' &&
+    tabSegment !== 'wishlist';
   const showFloatingCartBar = showCartChrome && isHomeTab;
   const showCartSheet = showCartChrome;
 
@@ -131,9 +133,7 @@ export default function RootLayout() {
           <Stack.Screen
             name="restaurant/[id]"
             options={{
-              headerShown: true,
-              headerTransparent: true,
-              headerTitle: '',
+              headerShown: false,
               animation: 'slide_from_right',
             }}
           />
@@ -146,6 +146,20 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="category/[id]"
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="wishlist"
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="profile"
             options={{
               headerShown: false,
               animation: 'slide_from_right',
@@ -178,6 +192,7 @@ export default function RootLayout() {
         {showCartSheet ? (
           <>
             <CartDropAnimation />
+            <WishlistSavedToast />
             {showFloatingCartBar ? <FloatingCartBar /> : null}
             <CartBottomSheet />
             <EmptyCartPrompt />

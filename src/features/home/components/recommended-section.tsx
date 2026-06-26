@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { type Href, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
@@ -10,11 +10,13 @@ import { spacing } from '@/theme/spacing';
 type RecommendedSectionProps = {
   dishes: RecommendedDish[];
   title?: string;
+  viewAllHref?: Href;
 };
 
 export function RecommendedSection({
   dishes,
   title = 'Top Picks for You',
+  viewAllHref,
 }: RecommendedSectionProps) {
   const router = useRouter();
   const cardWidth = useCarouselItemWidth({
@@ -30,7 +32,7 @@ export function RecommendedSection({
     <View style={styles.wrap}>
       <HomeSectionHeader
         title={title}
-        onViewAll={() => router.push('/(tabs)/search')}
+        onViewAll={viewAllHref ? () => router.push(viewAllHref) : undefined}
       />
 
       <ScrollView

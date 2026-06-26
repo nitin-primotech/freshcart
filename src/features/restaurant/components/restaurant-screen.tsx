@@ -1,134 +1,73 @@
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchRestaurantById } from '@/features/catalog/api/catalog.api';
-import type { MenuItem } from '@/features/catalog/types/catalog.types';
-import { formatInr } from '@/features/checkout/utils/format-currency';
-import { productDetailPath } from '@/features/product/utils/product-path';
-import { isHttpImageUrl } from '@/lib/firebase/category-images';
-import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
+import { HomeSectionHeader } from '@/features/home/components/home-section-header';
+import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-card';
+import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ErrorState } from '@/shared/components/error-state';
-import { PremiumText } from '@/shared/components/premium-text';
 import { Shimmer } from '@/shared/components/shimmer';
-import {
-  hapticAddToCart,
-  hapticPressIn,
-  hapticSoftTap,
-} from '@/shared/haptics/feedback';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
+import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
-import {
-  addToCart,
-  selectCartItemCount,
-  selectCartLineQuantity,
-  updateCartQuantity,
-  useCartStore,
-} from '@/store/cart.store';
-import { colors, screens, shadows } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
-
-function MenuItemRow({
-  item,
-  restaurantId,
-  restaurantName,
-}: {
-  item: MenuItem;
-  restaurantId: string;
-  restaurantName: string;
-}) {
-  const router = useRouter();
-  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
-
-  function handleAdd() {
-    hapticAddToCart();
-    addToCart(item, restaurantId, restaurantName);
-  }
-
-  function handleIncrease() {
-    hapticAddToCart();
-    if (quantity === 0) {
-      addToCart(item, restaurantId, restaurantName);
-      return;
-    }
-    updateCartQuantity(item.id, quantity + 1);
-  }
-
-  function handleDecrease() {
-    hapticPressIn();
-    updateCartQuantity(item.id, quantity - 1);
-  }
-
-  function openProduct() {
-    hapticSoftTap();
-    router.push(productDetailPath(restaurantId, item.id));
-  }
-
-  return (
-    <View style={[styles.menuRow, shadows.soft]}>
-      <Pressable style={styles.menuText} onPress={openProduct}>
-        <PremiumText variant="bodyMedium">{item.name}</PremiumText>
-        <PremiumText
-          variant="caption"
-          color={colors.textSecondary}
-          numberOfLines={2}
-        >
-          {item.description}
-        </PremiumText>
-        <PremiumText variant="price" style={styles.price}>
-          ₹{Math.round(item.price)}
-        </PremiumText>
-        {item.isPopular ? (
-          <View style={styles.popular}>
-            <PremiumText variant="label" color={colors.primary}>
-              Popular
-            </PremiumText>
-          </View>
-        ) : null}
-      </Pressable>
-      <View style={styles.menuImageWrap}>
-        <Pressable onPress={openProduct}>
-          <Image source={{ uri: item.image }} style={styles.menuImage} />
-        </Pressable>
-        <View style={styles.menuAction}>
-          <AnimatedCartAction
-            quantity={quantity}
-            onAdd={handleAdd}
-            onIncrease={handleIncrease}
-            onDecrease={handleDecrease}
-            itemLabel={item.name}
-            compact
-          />
-        </View>
-      </View>
-    </View>
-  );
-}
+import { selectCartItemCount, useCartStore } from '@/store/cart.store';
+import { colors } from '@/theme/colors';
+import { screenTopPadding } from '@/theme/screen-edge';
+import { spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 
 export function RestaurantScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
   const cartCount = useCartStore(selectCartItemCount);
 
-  const { data, status, error, refetch } = useSimulatedQuery(
+  const { data, status, error, refetch, isRefreshing } = useSimulatedQuery(
     (signal) => fetchRestaurantById(id ?? '', signal),
     [id],
     { enabled: Boolean(id) },
   );
 
-  const onScroll = useCallback(() => {}, []);
+  const menuCardWidth = useCarouselItemWidth({
+    visibleCount: 2.2,
+    peek: 0.03,
+    gap: spacing.md,
+    paddingEnd: spacing.md,
+  });
+  const heroCardWidth = width - spacing.md * 2;
+
+  const onRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  function onBack() {
+    hapticSoftTap();
+    router.back();
+  }
 
   if (status === 'loading') {
     return (
-      <View style={styles.loading}>
-        <AppStatusBar style="light" />
-        <Shimmer height={280} borderRadius={0} />
-        <View style={styles.loadingBody}>
-          <Shimmer height={32} width="60%" />
-          <Shimmer height={120} />
-          <Shimmer height={120} />
+      <View style={styles.root}>
+        <AppStatusBar style="dark" />
+        <View
+          style={[styles.loading, { paddingTop: screenTopPadding(insets.top) }]}
+        >
+          <Shimmer height={220} borderRadius={14} />
+          <Shimmer height={160} borderRadius={14} />
+          <Shimmer height={160} borderRadius={14} />
         </View>
       </View>
     );
@@ -142,76 +81,68 @@ export function RestaurantScreen() {
 
   return (
     <View style={styles.root}>
-      <AppStatusBar style="light" />
-      <ScrollView
-        style={styles.screen}
-        contentInsetAdjustmentBehavior="never"
-        showsVerticalScrollIndicator={false}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        contentContainerStyle={{ paddingBottom: cartCount > 0 ? 140 : 80 }}
+      <AppStatusBar style="dark" />
+      <View
+        style={[styles.topBar, { paddingTop: screenTopPadding(insets.top) }]}
       >
-        <View style={styles.heroWrap}>
-          {isHttpImageUrl(data.coverImage) ? (
-            <Image source={{ uri: data.coverImage }} style={styles.hero} />
-          ) : null}
-          <LinearGradient
-            colors={screens.restaurant.heroGradient}
-            style={styles.heroGradient}
+        <Pressable
+          style={styles.backBtn}
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <AppSymbol
+            name="chevron.left"
+            size={20}
+            tintColor={colors.textPrimary}
           />
-          <View style={styles.heroInfo}>
-            <PremiumText variant="h1" color={colors.textInverse}>
-              {data.name}
-            </PremiumText>
-            <PremiumText variant="caption" color={colors.textInverse}>
-              {data.tagline}
-            </PremiumText>
-          </View>
-        </View>
+        </Pressable>
+        <Text style={styles.title} numberOfLines={1}>
+          {data.name}
+        </Text>
+        <View style={styles.backBtn} />
+      </View>
 
-        <View style={styles.stats}>
-          <View style={styles.stat}>
-            <AppSymbol name="star.fill" size={18} tintColor={colors.star} />
-            <PremiumText variant="bodyMedium">{data.rating}</PremiumText>
-            <PremiumText variant="caption" color={colors.textSecondary}>
-              ({data.reviewCount})
-            </PremiumText>
-          </View>
-          <View style={styles.stat}>
-            <AppSymbol
-              name="clock"
-              size={18}
-              tintColor={colors.textSecondary}
-            />
-            <PremiumText variant="bodyMedium">
-              {data.deliveryTimeMin}–{data.deliveryTimeMax} min
-            </PremiumText>
-          </View>
-          <View style={styles.stat}>
-            <AppSymbol
-              name="bicycle"
-              size={18}
-              tintColor={colors.textSecondary}
-            />
-            <PremiumText variant="bodyMedium">
-              {data.isFreeDelivery ? 'Free' : formatInr(data.deliveryFee)}
-            </PremiumText>
-          </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + (cartCount > 0 ? 120 : spacing.xl) },
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.textPrimary}
+          />
+        }
+      >
+        <View style={styles.hero}>
+          <RestaurantTileCard restaurant={data} width={heroCardWidth} />
         </View>
 
         {data.menu.map((section) => (
           <View key={section.id} style={styles.section}>
-            <PremiumText variant="h2" style={styles.sectionTitle}>
-              {section.title}
-            </PremiumText>
-            {section.items.map((item) => (
-              <MenuItemRow
-                key={item.id}
-                item={item}
-                restaurantId={data.id}
-                restaurantName={data.name}
-              />
-            ))}
+            <HomeSectionHeader title={section.title} />
+            <ScrollView
+              horizontal
+              nestedScrollEnabled
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.menuRow}
+            >
+              {section.items.map((item) => (
+                <TopPicksProductCard
+                  key={item.id}
+                  dish={{
+                    item,
+                    restaurantId: data.id,
+                    restaurantName: data.name,
+                    rating: data.rating,
+                  }}
+                  width={menuCardWidth}
+                />
+              ))}
+            </ScrollView>
           </View>
         ))}
       </ScrollView>
@@ -224,93 +155,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  screen: {
-    flex: 1,
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     backgroundColor: colors.background,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    lineHeight: 20,
+    color: colors.textPrimary,
+  },
+  content: {
+    paddingTop: spacing.sm,
+    gap: spacing.md,
   },
   loading: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingBody: {
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  heroWrap: {
-    height: 280,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
   },
   hero: {
-    width: '100%',
-    height: '100%',
-  },
-  heroGradient: {
-    ...StyleSheet.absoluteFill,
-  },
-  heroInfo: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    left: spacing.lg,
-    right: spacing.lg,
-    gap: spacing.xxs,
-  },
-  stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: spacing.lg,
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: radius.lg,
-    marginTop: -spacing.xl,
-    ...shadows.card,
-    borderCurve: 'continuous',
-  },
-  stat: {
-    alignItems: 'center',
-    gap: spacing.xxs,
+    paddingHorizontal: spacing.md,
   },
   section: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    gap: spacing.md,
-  },
-  sectionTitle: {
-    marginBottom: spacing.xs,
-  },
-  menuRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.md,
-    borderCurve: 'continuous',
-  },
-  menuText: {
-    flex: 1,
-    gap: spacing.xxs,
-  },
-  price: {
     marginTop: spacing.xs,
   },
-  popular: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.xxs,
-    backgroundColor: colors.accentMuted,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-  },
-  menuImageWrap: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-  },
-  menuImage: {
-    width: 100,
-    height: 100,
-    borderRadius: radius.md,
-  },
-  menuAction: {
-    minHeight: 40,
-    justifyContent: 'center',
+  menuRow: {
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
   },
 });

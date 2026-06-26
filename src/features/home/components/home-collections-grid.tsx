@@ -14,7 +14,7 @@ const COLLECTIONS = [
     id: 'veg',
     title: 'Veg delights',
     subtitle: 'Fresh & wholesome',
-    query: 'veg',
+    categoryId: 'cat-veg-curries',
     gradient: ['#4A9B6E', '#2D6A4F'] as [string, string],
     icon: 'leaf.fill',
   },
@@ -22,7 +22,7 @@ const COLLECTIONS = [
     id: 'tandoor',
     title: 'Tandoor',
     subtitle: 'Smoky & grilled',
-    query: 'tandoor',
+    categoryId: 'cat-tandoor-specials',
     gradient: ['#D97706', '#B45309'] as [string, string],
     icon: 'flame.fill',
   },
@@ -30,7 +30,7 @@ const COLLECTIONS = [
     id: 'street',
     title: 'Street food',
     subtitle: 'Rolls & snacks',
-    query: 'roll',
+    categoryId: 'cat-rolls-street-food',
     gradient: ['#D4543C', '#9A3B2E'] as [string, string],
     icon: 'takeoutbag.and.cup.and.straw.fill',
   },
@@ -38,7 +38,7 @@ const COLLECTIONS = [
     id: 'curries',
     title: 'Curries',
     subtitle: 'Rich & comforting',
-    query: 'curry',
+    categoryId: 'cat-veg-curries',
     gradient: ['#7C5CBF', '#5B3F96'] as [string, string],
     icon: 'cup.and.saucer.fill',
   },
@@ -48,12 +48,9 @@ export function HomeCollectionsGrid() {
   const router = useRouter();
   const rows = [COLLECTIONS.slice(0, 2), COLLECTIONS.slice(2, 4)];
 
-  function openCollection(query: string) {
+  function openCollection(categoryId: string) {
     hapticSoftTap();
-    router.push({
-      pathname: '/(tabs)/search',
-      params: { q: query },
-    });
+    router.push(`/category/${categoryId}`);
   }
 
   return (
@@ -66,7 +63,7 @@ export function HomeCollectionsGrid() {
               <Pressable
                 key={item.id}
                 style={styles.cell}
-                onPress={() => openCollection(item.query)}
+                onPress={() => openCollection(item.categoryId)}
                 accessibilityRole="button"
                 accessibilityLabel={item.title}
               >

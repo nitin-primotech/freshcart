@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { usePathname, useRouter } from 'expo-router';
+import { usePathname, useRouter, useSegments } from 'expo-router';
 import { useMemo } from 'react';
 import {
   Modal,
@@ -96,11 +96,15 @@ function CartLineRow({
 export function CartBottomSheet() {
   const router = useRouter();
   const pathname = usePathname();
+  const segments = useSegments();
   const insets = useSafeAreaInsets();
   const isOpen = useCartStore(selectIsSheetOpen);
   const items = useCartStore(selectCartItems);
   const subtotal = useCartStore(selectCartSubtotal);
   const itemCount = useCartStore(selectCartItemCount);
+
+  const onCheckout = segments[0] === 'checkout';
+  const sheetVisible = isOpen && !onCheckout;
 
   const groups = useMemo(() => groupByRestaurant(items), [items]);
   const savings = subtotal > 0 ? Math.min(subtotal * 0.12, 8) : 0;
@@ -116,13 +120,13 @@ export function CartBottomSheet() {
 
   function goCheckout() {
     hapticSoftTap();
-    router.push('/checkout');
     prepareCheckoutNavigation(pathname);
+    router.push('/checkout');
   }
 
   return (
     <Modal
-      visible={isOpen}
+      visible={sheetVisible}
       transparent
       animationType="none"
       onRequestClose={handleClose}

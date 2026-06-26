@@ -9,6 +9,7 @@ import type { RecommendedDish } from '@/features/home/utils/get-recommended-dish
 import { productDetailPath } from '@/features/product/utils/product-path';
 import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { WishlistToggle } from '@/shared/components/wishlist-toggle';
 import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   addToCart,
@@ -23,6 +24,7 @@ import { fonts } from '@/theme/typography';
 type TopPicksProductCardProps = {
   dish: RecommendedDish;
   width: number;
+  flush?: boolean;
 };
 
 function formatPrice(price: number): string {
@@ -34,8 +36,12 @@ function formatWeight(calories?: number): string {
   return '1 serving';
 }
 
-export function TopPicksProductCard({ dish, width }: TopPicksProductCardProps) {
-  const { item, restaurantId, restaurantName } = dish;
+export function TopPicksProductCard({
+  dish,
+  width,
+  flush = false,
+}: TopPicksProductCardProps) {
+  const { item, restaurantId, restaurantName, rating } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
   const originalPrice = deriveMrp(item.price);
   const imageUri = isHttpImageUrl(item.image) ? item.image : undefined;
@@ -60,21 +66,32 @@ export function TopPicksProductCard({ dish, width }: TopPicksProductCardProps) {
   }
 
   return (
-    <View style={[styles.card, { width }]}>
-      <Link href={productDetailPath(restaurantId, item.id)} asChild>
-        <Pressable style={styles.imageWrap} accessibilityRole="link">
-          {imageUri ? (
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.image}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View style={styles.imageFallback} />
-          )}
-        </Pressable>
-      </Link>
+    <View style={[styles.card, flush && styles.cardFlush, { width }]}>
+      <View style={styles.imageWrap}>
+        <Link href={productDetailPath(restaurantId, item.id)} asChild>
+          <Pressable style={styles.imagePressable} accessibilityRole="link">
+            {imageUri ? (
+              <Image
+                source={{ uri: imageUri }}
+                style={styles.image}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View style={styles.imageFallback} />
+            )}
+          </Pressable>
+        </Link>
+        <WishlistToggle
+          item={item}
+          restaurantId={restaurantId}
+          restaurantName={restaurantName}
+          rating={rating}
+          variant="overlay"
+          style={styles.heart}
+          accessibilityLabel={`Save ${item.name} to wishlist`}
+        />
+      </View>
 
       <View style={styles.body}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
@@ -153,10 +170,23 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
   },
+  cardFlush: {
+    marginRight: 0,
+  },
   imageWrap: {
     width: '100%',
     height: IMAGE_HEIGHT,
     backgroundColor: colors.backgroundMuted,
+  },
+  imagePressable: {
+    width: '100%',
+    height: '100%',
+  },
+  heart: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+    zIndex: 2,
   },
   image: {
     width: '100%',

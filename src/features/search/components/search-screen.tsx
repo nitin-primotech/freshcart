@@ -20,6 +20,8 @@ import type {
   Restaurant,
 } from '@/features/catalog/types/catalog.types';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
+import { RecommendedSection } from '@/features/home/components/recommended-section';
+import { productDetailPath } from '@/features/product/utils/product-path';
 import { SearchCategoryStrip } from '@/features/search/components/search-category-strip';
 import { SearchCuisineCarousel } from '@/features/search/components/search-cuisine-carousel';
 import { SearchRestaurantRow } from '@/features/search/components/search-restaurant-row';
@@ -28,6 +30,8 @@ import {
   SEARCH_FILTERS,
   type SearchFilterId,
 } from '@/features/search/constants/search.constants';
+import { resolveSearchDestination } from '@/features/search/utils/resolve-search-destination';
+import { searchDishes } from '@/features/search/utils/search-dishes';
 import {
   buildSearchSuggestions,
   type SearchSuggestion,
@@ -136,20 +140,55 @@ export function SearchScreen() {
     return applyBrowseFilters(searchQuery.data, activeFilter, activeCategoryId);
   }, [searchQuery.data, activeFilter, activeCategoryId]);
 
+  const dishResults = useMemo(
+    () => (showResults ? searchDishes(trimmedQuery, restaurants, 8) : []),
+    [showResults, trimmedQuery, restaurants],
+  );
+
+  const navigateFromSearch = useCallback(
+    (term: string) => {
+      const destination = resolveSearchDestination(
+        term,
+        categories,
+        restaurants,
+      );
+      addRecentSearch(term);
+
+      switch (destination.type) {
+        case 'category':
+          router.push(`/category/${destination.categoryId}`);
+          return;
+        case 'restaurant':
+          router.push(`/restaurant/${destination.restaurantId}`);
+          return;
+        case 'product':
+          router.push(
+            productDetailPath(destination.restaurantId, destination.itemId),
+          );
+          return;
+        case 'query':
+          setQuery(destination.query);
+          setActiveCategoryId(null);
+          return;
+      }
+    },
+    [categories, restaurants, router],
+  );
+
   const submit = useCallback(() => {
     if (trimmedQuery.length >= 2) {
-      addRecentSearch(trimmedQuery);
+      navigateFromSearch(trimmedQuery);
     }
-  }, [trimmedQuery]);
+  }, [trimmedQuery, navigateFromSearch]);
 
   function handleCategorySelect(category: Category | null) {
-    setActiveCategoryId(category?.id ?? null);
     if (category) {
-      setQuery(category.name);
-      addRecentSearch(category.name);
-    } else {
-      setQuery('');
+      hapticSoftTap();
+      navigateFromSearch(category.name);
+      return;
     }
+    setActiveCategoryId(null);
+    setQuery('');
   }
 
   function handleCuisineSelect(category: Category) {
@@ -158,13 +197,33 @@ export function SearchScreen() {
 
   function handleSuggestionSelect(suggestion: SearchSuggestion) {
     hapticSoftTap();
-    if (suggestion.restaurantId) {
+    if (suggestion.kind === 'category' && suggestion.categoryId) {
+      addRecentSearch(suggestion.query);
+      router.push(`/category/${suggestion.categoryId}`);
+      return;
+    }
+    if (
+      suggestion.kind === 'dish' &&
+      suggestion.restaurantId &&
+      suggestion.itemId
+    ) {
+      addRecentSearch(suggestion.query);
+      router.push(
+        productDetailPath(suggestion.restaurantId, suggestion.itemId),
+      );
+      return;
+    }
+    if (suggestion.kind === 'restaurant' && suggestion.restaurantId) {
       addRecentSearch(suggestion.query);
       router.push(`/restaurant/${suggestion.restaurantId}`);
       return;
     }
-    setQuery(suggestion.query);
-    addRecentSearch(suggestion.query);
+    navigateFromSearch(suggestion.query);
+  }
+
+  function handleRecentSelect(term: string) {
+    hapticSoftTap();
+    navigateFromSearch(term);
   }
 
   return (
@@ -286,10 +345,7 @@ export function SearchScreen() {
                 {recent.map((term) => (
                   <Pressable
                     key={term}
-                    onPress={() => {
-                      hapticSoftTap();
-                      setQuery(term);
-                    }}
+                    onPress={() => handleRecentSelect(term)}
                     style={styles.recentRow}
                   >
                     <AppSymbol
@@ -328,6 +384,10 @@ export function SearchScreen() {
               </>
             ) : null}
 
+            {showResults && dishResults.length > 0 ? (
+              <RecommendedSection title="Dishes" dishes={dishResults} />
+            ) : null}
+
             {showResults && searchQuery.status === 'loading' ? (
               <View style={styles.loading}>
                 {[1, 2, 3].map((item) => (
@@ -345,7 +405,8 @@ export function SearchScreen() {
 
             {showResults &&
             searchQuery.status === 'success' &&
-            searchResults.length === 0 ? (
+            searchResults.length === 0 &&
+            dishResults.length === 0 ? (
               <EmptyState
                 title="No matches"
                 message={`Nothing found for "${trimmedQuery}". Try a different search.`}

@@ -5,6 +5,8 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,13 +16,13 @@ import {
   fetchRestaurantsByCategory,
 } from '@/features/catalog/api/catalog.api';
 import { getCategoryDishes } from '@/features/category/utils/get-category-dishes';
-import { RecommendedDishCard } from '@/features/home/components/recommended-dish-card';
-import { RestaurantCard } from '@/features/home/components/restaurant-card';
+import { HomeSectionHeader } from '@/features/home/components/home-section-header';
+import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-card';
+import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { EmptyState } from '@/shared/components/empty-state';
 import { ErrorState } from '@/shared/components/error-state';
-import { PremiumText } from '@/shared/components/premium-text';
 import { Shimmer } from '@/shared/components/shimmer';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
@@ -28,10 +30,12 @@ import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { colors } from '@/theme/colors';
 import { screenTopPadding } from '@/theme/screen-edge';
 import { spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 
 export function CategoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id: string }>();
   const categoryId = id ?? '';
 
@@ -64,11 +68,13 @@ export function CategoryScreen() {
   const categoryName = categoryQuery.data?.name ?? 'Category';
 
   const dishCardWidth = useCarouselItemWidth({
-    visibleCount: 2.1,
-    peek: 0.04,
+    visibleCount: 2.2,
+    peek: 0.03,
     gap: spacing.md,
-    paddingEnd: spacing.lg,
+    paddingEnd: spacing.md,
   });
+
+  const restaurantCardWidth = width - spacing.md * 2;
 
   function onBack() {
     hapticSoftTap();
@@ -93,9 +99,9 @@ export function CategoryScreen() {
             tintColor={colors.textPrimary}
           />
         </Pressable>
-        <PremiumText variant="h3" numberOfLines={1} style={styles.title}>
+        <Text style={styles.title} numberOfLines={1}>
           {categoryName}
-        </PremiumText>
+        </Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -115,9 +121,8 @@ export function CategoryScreen() {
       >
         {isLoading ? (
           <View style={styles.skeleton}>
-            <Shimmer height={180} borderRadius={20} />
-            <Shimmer height={120} borderRadius={20} />
-            <Shimmer height={120} borderRadius={20} />
+            <Shimmer height={180} borderRadius={14} />
+            <Shimmer height={200} borderRadius={14} />
           </View>
         ) : null}
 
@@ -129,9 +134,7 @@ export function CategoryScreen() {
           <>
             {dishes.length > 0 ? (
               <View style={styles.section}>
-                <PremiumText variant="sectionTitle" style={styles.sectionTitle}>
-                  Popular {categoryName}
-                </PremiumText>
+                <HomeSectionHeader title={`Popular ${categoryName}`} />
                 <ScrollView
                   horizontal
                   nestedScrollEnabled
@@ -139,7 +142,7 @@ export function CategoryScreen() {
                   contentContainerStyle={styles.dishRow}
                 >
                   {dishes.map((dish) => (
-                    <RecommendedDishCard
+                    <TopPicksProductCard
                       key={`${dish.restaurantId}-${dish.item.id}`}
                       dish={dish}
                       width={dishCardWidth}
@@ -150,9 +153,7 @@ export function CategoryScreen() {
             ) : null}
 
             <View style={styles.section}>
-              <PremiumText variant="sectionTitle" style={styles.sectionTitle}>
-                Restaurants
-              </PremiumText>
+              <HomeSectionHeader title="Restaurants" />
               {restaurants.length === 0 ? (
                 <EmptyState
                   title="Nothing here yet"
@@ -160,11 +161,11 @@ export function CategoryScreen() {
                 />
               ) : (
                 <View style={styles.restaurantList}>
-                  {restaurants.map((restaurant, index) => (
-                    <RestaurantCard
+                  {restaurants.map((restaurant) => (
+                    <RestaurantTileCard
                       key={restaurant.id}
                       restaurant={restaurant}
-                      index={index}
+                      width={restaurantCardWidth}
                     />
                   ))}
                 </View>
@@ -188,6 +189,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
     backgroundColor: colors.background,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   backBtn: {
     width: 40,
@@ -198,27 +201,27 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     textAlign: 'center',
+    fontFamily: fonts.semibold,
+    fontSize: 16,
+    lineHeight: 20,
+    color: colors.textPrimary,
   },
   content: {
-    paddingTop: spacing.xs,
+    paddingTop: spacing.sm,
   },
   section: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginTop: spacing.md,
   },
   dishRow: {
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.sm,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
   },
   restaurantList: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
   },
   skeleton: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
   },
 });
