@@ -57,6 +57,6 @@ For production, replace demo OTP with **Firebase Phone Auth** so `customerId` = 
 ### Orders not appearing on merchant dashboard (localhost:3000)?
 
 1. Confirm both apps use project `foodrush-1c40b`
-2. In dev mode, Razorpay is **skipped** when Firebase is configured — order goes straight to Firestore
+2. Checkout opens Razorpay before placing the order (requires a dev build on iOS/Android)
 3. Merchant dashboard must be logged in and on the Orders tab
 4. Customer must be logged in with phone number (orders filter by `customerPhone`)

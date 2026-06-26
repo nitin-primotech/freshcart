@@ -30,7 +30,6 @@ import {
   deriveMrp,
   formatInr,
 } from '@/features/checkout/utils/format-currency';
-import { isFirebaseConfigured } from '@/lib/firebase';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
@@ -169,26 +168,16 @@ export function CheckoutScreen() {
     setIsPaying(true);
 
     try {
-      const skipPaymentForFirebaseDev =
-        isFirebaseConfigured() && process.env.NODE_ENV !== 'production';
-
-      if (!skipPaymentForFirebaseDev) {
-        await openFoodRushCheckout({
-          amountInr: total,
-          prefill: paymentPrefill,
-          description: 'Food Service Payment',
-        });
-      }
+      await openFoodRushCheckout({
+        amountInr: total,
+        prefill: paymentPrefill,
+        description: 'Food Service Payment',
+      });
 
       hapticSuccess();
       await submitOrder();
     } catch (error) {
       if (error instanceof RazorpayPaymentCancelledError) {
-        return;
-      }
-      if (error instanceof RazorpayUnavailableError && isFirebaseConfigured()) {
-        hapticSuccess();
-        await submitOrder();
         return;
       }
       if (error instanceof RazorpayUnavailableError) {
