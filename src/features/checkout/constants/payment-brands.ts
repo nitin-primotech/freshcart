@@ -3,29 +3,25 @@ import type { ImageSource } from 'expo-image';
 export type PaymentBrandLogo = {
   id: string;
   name: string;
-  image: ImageSource;
+  image?: ImageSource;
+  symbol?: string;
 };
 
 export const PAYMENT_BRAND_LOGOS = {
+  applePay: {
+    id: 'apple-pay',
+    name: 'Apple Pay',
+    symbol: 'apple.logo',
+  },
   gpay: {
     id: 'gpay',
     name: 'Google Pay',
     image: require('@/assets/images/payments/gpay.png'),
   },
-  phonepe: {
-    id: 'phonepe',
-    name: 'PhonePe',
-    image: require('@/assets/images/payments/phonepe.png'),
-  },
-  paytm: {
-    id: 'paytm',
-    name: 'Paytm',
-    image: require('@/assets/images/payments/paytm.png'),
-  },
-  upi: {
-    id: 'upi',
-    name: 'UPI',
-    image: require('@/assets/images/payments/upi.png'),
+  paypal: {
+    id: 'paypal',
+    name: 'PayPal',
+    symbol: 'dollarsign.circle.fill',
   },
   visa: {
     id: 'visa',
@@ -37,29 +33,24 @@ export const PAYMENT_BRAND_LOGOS = {
     name: 'Mastercard',
     image: require('@/assets/images/payments/mastercard.png'),
   },
-  rupay: {
-    id: 'rupay',
-    name: 'RuPay',
-    image: require('@/assets/images/payments/rupay.png'),
+  amex: {
+    id: 'amex',
+    name: 'American Express',
+    symbol: 'creditcard.fill',
   },
-  amazonPay: {
-    id: 'amazon-pay',
-    name: 'Amazon Pay',
-    image: require('@/assets/images/payments/amazon-pay.png'),
+  discover: {
+    id: 'discover',
+    name: 'Discover',
+    symbol: 'creditcard.circle.fill',
   },
-  hdfc: {
-    id: 'hdfc',
-    name: 'HDFC Bank',
-    image: require('@/assets/images/payments/hdfc.png'),
+  klarna: {
+    id: 'klarna',
+    name: 'Klarna',
+    symbol: 'calendar.badge.clock',
   },
-  sbi: {
-    id: 'sbi',
-    name: 'State Bank of India',
-    image: require('@/assets/images/payments/sbi.png'),
-  },
-  icici: {
-    id: 'icici',
-    name: 'ICICI Bank',
-    image: require('@/assets/images/payments/icici.png'),
+  afterpay: {
+    id: 'afterpay',
+    name: 'Afterpay',
+    symbol: 'clock.arrow.2.circlepath',
   },
 } as const satisfies Record<string, PaymentBrandLogo>;

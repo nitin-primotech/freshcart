@@ -1,4 +1,4 @@
-import type { UserPreferences } from '@/features/auth/types/onboarding.types';
+import type { UserPreferences } from '@/features/auth/types/user-preferences.types';
 import type {
   Category,
   Restaurant,

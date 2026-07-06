@@ -14,43 +14,22 @@ import {
   fetchPromos,
   fetchRestaurants,
 } from '@/features/catalog/api/catalog.api';
-import type { Restaurant } from '@/features/catalog/types/catalog.types';
-import { FilterPills } from '@/features/home/components/filter-pills';
+import { DeliveryFeatureChips } from '@/features/home/components/delivery-feature-chips';
 import { FoodCategoryStrip } from '@/features/home/components/food-category-strip';
-import { HomeBestOffers } from '@/features/home/components/home-best-offers';
-import { HomeCollectionsGrid } from '@/features/home/components/home-collections-grid';
+import { GroceryDealsSection } from '@/features/home/components/grocery-deals-section';
 import { HomeHeader } from '@/features/home/components/home-header';
 import { HomeSearchBar } from '@/features/home/components/home-search-bar';
 import { OfferCarousel } from '@/features/home/components/offer-carousel';
-import { RecommendedSection } from '@/features/home/components/recommended-section';
-import {
-  getDishesExcluding,
-  getDishesForCategoryIds,
-  getRecommendedDishes,
-} from '@/features/home/utils/get-recommended-dishes';
-import { getPersonalizedSectionTitle } from '@/features/home/utils/personalize-restaurants';
+import { PopularNearYouSection } from '@/features/home/components/popular-near-you-section';
+import { getRecommendedDishes } from '@/features/home/utils/get-recommended-dishes';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { ErrorState } from '@/shared/components/error-state';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { Shimmer } from '@/shared/components/shimmer';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
-import { selectPreferences, useAppStore } from '@/store/app.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { tabBarContentPadding } from '@/theme/tab-bar';
-
-function filterRestaurants(
-  list: Restaurant[],
-  filterId: string | null,
-): Restaurant[] {
-  if (filterId === 'fast') {
-    return list.filter((r) => r.isFastDelivery || r.deliveryTimeMax <= 25);
-  }
-  if (filterId === 'off') {
-    return list.filter((r) => r.offerLabel || r.isPromoted);
-  }
-  return list;
-}
 
 function HomeSkeleton() {
   return (
@@ -63,8 +42,6 @@ function HomeSkeleton() {
 
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const preferences = useAppStore(selectPreferences);
-  const [filterId, setFilterId] = useState<string | null>(null);
   const searchStuckRef = useRef(false);
   const [searchStuck, setSearchStuck] = useState(false);
 
@@ -98,60 +75,16 @@ export function HomeScreen() {
     categoriesQuery.isRefreshing ||
     restaurantsQuery.isRefreshing;
 
-  const restaurants = filterRestaurants(restaurantsQuery.data ?? [], filterId);
-  const personalizedTitle =
-    filterId === 'fast'
-      ? 'Lightning delivery'
-      : filterId === 'off'
-        ? 'Top offers near you'
-        : getPersonalizedSectionTitle(preferences, categoriesQuery.data ?? []);
-
-  const recommendedDishes = getRecommendedDishes(restaurants, 12);
-  const topPicksDishes = recommendedDishes.slice(0, 6);
-  const morePicksDishes = recommendedDishes.slice(6, 12);
-
-  const shownItemIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const dish of [...topPicksDishes, ...morePicksDishes]) {
-      ids.add(dish.item.id);
-    }
-    return ids;
-  }, [topPicksDishes, morePicksDishes]);
-
-  const preferenceCategoryIds =
-    preferences.cuisineIds.length > 0
-      ? preferences.cuisineIds
-      : (categoriesQuery.data?.slice(0, 2).map((category) => category.id) ??
-        []);
-
-  const personalizedDishes = useMemo(() => {
-    const fromPrefs = getDishesForCategoryIds(
-      restaurants,
-      preferenceCategoryIds,
-      12,
-    );
-    return fromPrefs
-      .filter((dish) => !shownItemIds.has(dish.item.id))
-      .slice(0, 6);
-  }, [restaurants, preferenceCategoryIds, shownItemIds]);
-
-  const exploreDishes = useMemo(() => {
-    const exclude = new Set(shownItemIds);
-    for (const dish of personalizedDishes) {
-      exclude.add(dish.item.id);
-    }
-    return getDishesExcluding(restaurants, exclude, 6);
-  }, [restaurants, shownItemIds, personalizedDishes]);
-
-  const mainRestaurantId = restaurantsQuery.data?.[0]?.id;
-  const firstCategoryId =
-    preferenceCategoryIds[0] ?? categoriesQuery.data?.[0]?.id;
-  const restaurantHref = mainRestaurantId
-    ? (`/restaurant/${mainRestaurantId}` as const)
-    : undefined;
+  const restaurants = restaurantsQuery.data ?? [];
+  const storeId = restaurants[0]?.id ?? 'freshcart';
+  const firstCategoryId = categoriesQuery.data?.[0]?.id;
   const categoryHref = firstCategoryId
     ? (`/category/${firstCategoryId}` as const)
     : undefined;
+
+  const recommendedDishes = getRecommendedDishes(restaurants, 16);
+  const dealDishes = recommendedDishes.slice(0, 6);
+  const popularDishes = recommendedDishes.slice(6, 12);
 
   const bottomPad = tabBarContentPadding(insets.bottom);
 
@@ -165,6 +98,11 @@ export function HomeScreen() {
       }
     },
     [],
+  );
+
+  const viewAllHref = useMemo(
+    () => (storeId ? (`/restaurant/${storeId}` as const) : undefined),
+    [storeId],
   );
 
   return (
@@ -189,7 +127,7 @@ export function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.textPrimary}
+            tintColor={colors.primary}
           />
         }
       >
@@ -205,6 +143,7 @@ export function HomeScreen() {
           ]}
         >
           <HomeSearchBar />
+          <DeliveryFeatureChips />
         </View>
 
         <View style={styles.promoBlock}>
@@ -216,59 +155,30 @@ export function HomeScreen() {
           {categoriesQuery.data ? (
             <FoodCategoryStrip
               categories={categoriesQuery.data}
-              moreHref={categoryHref ?? restaurantHref}
+              moreHref={categoryHref}
             />
-          ) : null}
-          {!isLoading && !hasError ? <HomeBestOffers /> : null}
-          {!isLoading && !hasError ? (
-            <RecommendedSection
-              dishes={topPicksDishes}
-              viewAllHref={restaurantHref}
-            />
-          ) : null}
-          {!isLoading && !hasError ? (
-            <View style={styles.brandsCluster}>
-              <HomeCollectionsGrid />
-              <FilterPills activeId={filterId} onSelect={setFilterId} />
-            </View>
           ) : null}
 
           {isLoading ? <HomeSkeleton /> : null}
-          {!isLoading && !hasError && morePicksDishes.length > 0 ? (
-            <RecommendedSection
-              title="Recommended picks"
-              dishes={morePicksDishes}
-              viewAllHref={categoryHref ?? restaurantHref}
-            />
-          ) : null}
-          {hasError ? (
-            <ErrorState
-              message="Could not load restaurants."
-              onRetry={onRefresh}
-            />
-          ) : null}
 
           {!isLoading && !hasError ? (
             <>
-              {personalizedDishes.length > 0 ? (
-                <RecommendedSection
-                  title={personalizedTitle}
-                  dishes={personalizedDishes}
-                  viewAllHref={
-                    firstCategoryId
-                      ? (`/category/${firstCategoryId}` as const)
-                      : restaurantHref
-                  }
-                />
-              ) : null}
-              {exploreDishes.length > 0 ? (
-                <RecommendedSection
-                  title="Explore for you"
-                  dishes={exploreDishes}
-                  viewAllHref={restaurantHref}
-                />
-              ) : null}
+              <GroceryDealsSection
+                dishes={dealDishes}
+                viewAllHref={viewAllHref}
+              />
+              <PopularNearYouSection
+                dishes={popularDishes}
+                viewAllHref={viewAllHref}
+              />
             </>
+          ) : null}
+
+          {hasError ? (
+            <ErrorState
+              message="Could not load products."
+              onRetry={onRefresh}
+            />
           ) : null}
         </View>
       </ScrollView>
@@ -290,7 +200,7 @@ const styles = StyleSheet.create({
   },
   stickySearchShell: {
     backgroundColor: colors.background,
-    paddingBottom: spacing.xs,
+    paddingBottom: spacing.xxs,
     zIndex: 10,
   },
   stickySearchShellIdle: {
@@ -303,10 +213,6 @@ const styles = StyleSheet.create({
   },
   body: {
     backgroundColor: colors.background,
-  },
-  brandsCluster: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
   },
   skeleton: {
     paddingHorizontal: spacing.md,

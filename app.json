@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "foodRush",
-    "slug": "foodRush",
+    "name": "FreshCart",
+    "slug": "freshcart",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "foodrush",
+    "scheme": "freshcart",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.dev.primotech.foodRush",
+      "bundleIdentifier": "com.dev.primotech.freshcart",
       "infoPlist": {
         "LSApplicationQueriesSchemes": ["tez", "phonepe", "paytmmp", "bhim"]
       }
@@ -23,7 +23,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
-      "package": "com.dev.primotech.foodRush",
+      "package": "com.dev.primotech.freshcart",
       "androidStatusBar": {
         "translucent": true,
         "backgroundColor": "#00000000"
@@ -38,13 +38,13 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "foodRush uses your location to show nearby restaurants and delivery times."
+          "locationAlwaysAndWhenInUsePermission": "FreshCart uses your location to show nearby stores and delivery times."
         }
       ],
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAF8F5",
+          "backgroundColor": "#FFFFFF",
           "android": {
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 76

@@ -1,270 +1,196 @@
 [
   {
-    "id": "rest-1",
-    "name": "Ember & Oak",
-    "tagline": "Fire-grilled classics, elevated",
-    "cuisine": "American \u00b7 Grill",
+    "id": "freshcart",
+    "name": "FreshCart",
+    "tagline": "Premium groceries delivered fast",
+    "cuisine": "Grocery",
     "rating": 4.8,
-    "reviewCount": 1240,
-    "deliveryTimeMin": 25,
-    "deliveryTimeMax": 35,
+    "reviewCount": 12480,
+    "deliveryTimeMin": 15,
+    "deliveryTimeMax": 30,
     "deliveryFee": 2.99,
-    "distanceKm": 1.2,
+    "distanceKm": 0.8,
     "isPromoted": true,
     "isFreeDelivery": false,
-    "coverImage": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&q=80",
-    "logoImage": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=200&q=80",
-    "categoryIds": ["cat-1"],
+    "coverImage": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=80",
+    "logoImage": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80",
+    "categoryIds": [
+      "cat-fruits-veg",
+      "cat-dairy-eggs",
+      "cat-pantry",
+      "cat-beverages",
+      "cat-personal-care",
+      "cat-snacks"
+    ],
+    "offerLabel": "20% OFF select items",
+    "isFastDelivery": true,
     "menu": [
       {
-        "id": "sec-1",
-        "title": "Signature Burgers",
+        "id": "sec-fruits",
+        "title": "Fruits & Vegetables",
         "items": [
           {
-            "id": "item-1-1",
-            "name": "Truffle Oak Burger",
-            "description": "Wagyu blend, aged cheddar, truffle aioli, brioche",
-            "price": 18.5,
-            "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80",
+            "id": "prod-strawberries",
+            "name": "Fresh Strawberries",
+            "description": "Sweet, juicy and handpicked",
+            "price": 3.99,
+            "image": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=600&q=80",
             "isPopular": true,
-            "calories": 820
+            "calories": 32
           },
           {
-            "id": "item-1-2",
-            "name": "Smoked BBQ Stack",
-            "description": "Double patty, house BBQ, crispy onions",
-            "price": 16.0,
-            "image": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=600&q=80",
-            "calories": 940
+            "id": "prod-banana",
+            "name": "Banana Cavendish",
+            "description": "1 bunch · ripe & ready",
+            "price": 1.59,
+            "image": "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&q=80",
+            "isPopular": true,
+            "calories": 89
+          },
+          {
+            "id": "prod-avocado",
+            "name": "Hass Avocado",
+            "description": "Creamy, ripe avocados",
+            "price": 2.49,
+            "image": "https://images.unsplash.com/photo-1523049673857-eb18f1ebb7?w=600&q=80",
+            "isPopular": true,
+            "isVegetarian": true,
+            "calories": 160
+          },
+          {
+            "id": "prod-tomatoes",
+            "name": "Vine Tomatoes",
+            "description": "1 lb · farm fresh",
+            "price": 2.99,
+            "image": "https://images.unsplash.com/photo-1546094097-2073aa3c0c1f?w=600&q=80",
+            "isVegetarian": true,
+            "calories": 18
           }
         ]
       },
       {
-        "id": "sec-2",
-        "title": "Sides",
+        "id": "sec-dairy",
+        "title": "Dairy & Eggs",
         "items": [
           {
-            "id": "item-1-3",
-            "name": "Parmesan Truffle Fries",
-            "description": "Hand-cut, rosemary salt",
-            "price": 7.5,
-            "image": "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&q=80",
-            "isVegetarian": true,
-            "calories": 420
+            "id": "prod-milk",
+            "name": "Organic Whole Milk",
+            "description": "Half gallon · pasture raised",
+            "price": 4.99,
+            "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600&q=80",
+            "isPopular": true,
+            "calories": 150
+          },
+          {
+            "id": "prod-eggs",
+            "name": "Free Range Eggs",
+            "description": "12 count · cage free",
+            "price": 5.49,
+            "image": "https://images.unsplash.com/photo-1582722878645-9462f8a8a5?w=600&q=80",
+            "isPopular": true,
+            "calories": 70
+          },
+          {
+            "id": "prod-butter",
+            "name": "Salted Butter",
+            "description": "8 oz · European style",
+            "price": 3.79,
+            "image": "https://images.unsplash.com/photo-1589985270156-5637c083d2f7?w=600&q=80",
+            "calories": 100
           }
         ]
-      }
-    ],
-    "offerLabel": "65% OFF up to ₹99",
-    "isFastDelivery": true
-  },
-  {
-    "id": "rest-2",
-    "name": "Sora Sushi",
-    "tagline": "Omakase-inspired delivery",
-    "cuisine": "Japanese \u00b7 Sushi",
-    "rating": 4.9,
-    "reviewCount": 890,
-    "deliveryTimeMin": 30,
-    "deliveryTimeMax": 45,
-    "deliveryFee": 0,
-    "distanceKm": 2.4,
-    "isFreeDelivery": true,
-    "coverImage": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=1200&q=80",
-    "logoImage": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=200&q=80",
-    "categoryIds": ["cat-2"],
-    "menu": [
+      },
       {
-        "id": "sec-3",
-        "title": "Chef Selection",
+        "id": "sec-snacks",
+        "title": "Snacks",
         "items": [
           {
-            "id": "item-2-1",
-            "name": "Omakase Box (12 pc)",
-            "description": "Chef's daily nigiri & maki selection",
-            "price": 42.0,
-            "image": "https://images.unsplash.com/photo-1553621042-f6e147245754?w=600&q=80",
+            "id": "prod-lays",
+            "name": "Lay's Classic Chips",
+            "description": "7.75 oz bag",
+            "price": 3.49,
+            "image": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=600&q=80",
+            "isPopular": true,
+            "calories": 160
+          },
+          {
+            "id": "prod-granola",
+            "name": "Honey Granola Bars",
+            "description": "6 pack · whole grain",
+            "price": 4.29,
+            "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476?w=600&q=80",
+            "calories": 140
+          }
+        ]
+      },
+      {
+        "id": "sec-beverages",
+        "title": "Beverages",
+        "items": [
+          {
+            "id": "prod-water",
+            "name": "Aquafina Water",
+            "description": "24 pack · 16.9 fl oz",
+            "price": 5.99,
+            "image": "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=600&q=80",
+            "isPopular": true,
+            "calories": 0
+          },
+          {
+            "id": "prod-orange-juice",
+            "name": "Fresh Orange Juice",
+            "description": "52 fl oz · no pulp",
+            "price": 4.49,
+            "image": "https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=600&q=80",
+            "calories": 110
+          }
+        ]
+      },
+      {
+        "id": "sec-pantry",
+        "title": "Pantry",
+        "items": [
+          {
+            "id": "prod-pasta",
+            "name": "Organic Penne Pasta",
+            "description": "16 oz · durum wheat",
+            "price": 2.29,
+            "image": "https://images.unsplash.com/photo-1551892374-ef1272a5b089?w=600&q=80",
+            "isVegetarian": true,
+            "calories": 200
+          },
+          {
+            "id": "prod-olive-oil",
+            "name": "Extra Virgin Olive Oil",
+            "description": "16.9 fl oz · cold pressed",
+            "price": 8.99,
+            "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80",
+            "isVegetarian": true,
+            "calories": 120
+          }
+        ]
+      },
+      {
+        "id": "sec-personal-care",
+        "title": "Personal Care",
+        "items": [
+          {
+            "id": "prod-toilet-paper",
+            "name": "Scott Toilet Paper",
+            "description": "12 mega rolls · ultra soft",
+            "price": 12.99,
+            "image": "https://images.unsplash.com/photo-1584438784894-089d6a271b92?w=600&q=80",
             "isPopular": true
           },
           {
-            "id": "item-2-2",
-            "name": "Spicy Tuna Crunch",
-            "description": "Crispy rice, avocado, togarashi",
-            "price": 14.5,
-            "image": "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=600&q=80"
+            "id": "prod-shampoo",
+            "name": "Moisture Shampoo",
+            "description": "12 fl oz · sulfate free",
+            "price": 7.49,
+            "image": "https://images.unsplash.com/photo-1527799820374-dcf8d9a4e388?w=600&q=80"
           }
         ]
       }
-    ],
-    "offerLabel": "40% OFF up to ₹120",
-    "isFastDelivery": false
-  },
-  {
-    "id": "rest-3",
-    "name": "Luna Pizzeria",
-    "tagline": "Neapolitan soul, wood-fired",
-    "cuisine": "Italian \u00b7 Pizza",
-    "rating": 4.7,
-    "reviewCount": 2100,
-    "deliveryTimeMin": 20,
-    "deliveryTimeMax": 30,
-    "deliveryFee": 1.99,
-    "distanceKm": 0.8,
-    "coverImage": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&q=80",
-    "logoImage": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80",
-    "categoryIds": ["cat-3"],
-    "menu": [
-      {
-        "id": "sec-4",
-        "title": "Pizza",
-        "items": [
-          {
-            "id": "item-3-1",
-            "name": "Margherita D.O",
-            "description": "San Marzano, fior di latte, basil",
-            "price": 19.0,
-            "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&q=80",
-            "isPopular": true,
-            "isVegetarian": true
-          },
-          {
-            "id": "item-3-2",
-            "name": "Prosciutto e Funghi",
-            "description": "Wild mushrooms, prosciutto, taleggio",
-            "price": 22.0,
-            "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80"
-          }
-        ]
-      }
-    ],
-    "offerLabel": "50% OFF up to ₹80",
-    "isFastDelivery": true
-  },
-  {
-    "id": "rest-4",
-    "name": "Verde Kitchen",
-    "tagline": "Plant-forward, globally inspired",
-    "cuisine": "Healthy \u00b7 Bowls",
-    "rating": 4.6,
-    "reviewCount": 560,
-    "deliveryTimeMin": 15,
-    "deliveryTimeMax": 25,
-    "deliveryFee": 0,
-    "distanceKm": 1.5,
-    "isFreeDelivery": true,
-    "coverImage": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80",
-    "logoImage": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&q=80",
-    "categoryIds": ["cat-4"],
-    "menu": [
-      {
-        "id": "sec-5",
-        "title": "Bowls",
-        "items": [
-          {
-            "id": "item-4-1",
-            "name": "Golden Harvest Bowl",
-            "description": "Quinoa, roasted squash, tahini, pomegranate",
-            "price": 15.5,
-            "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80",
-            "isPopular": true,
-            "isVegetarian": true,
-            "calories": 520
-          },
-          {
-            "id": "item-4-2",
-            "name": "Citrus Salmon Bowl",
-            "description": "Farro, citrus fennel, miso glaze",
-            "price": 17.0,
-            "image": "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80",
-            "calories": 610
-          }
-        ]
-      }
-    ],
-    "offerLabel": "Free delivery",
-    "isFastDelivery": true
-  },
-  {
-    "id": "rest-5",
-    "name": "Maison P\u00e2tisserie",
-    "tagline": "French pastries & desserts",
-    "cuisine": "Desserts \u00b7 Bakery",
-    "rating": 4.9,
-    "reviewCount": 430,
-    "deliveryTimeMin": 20,
-    "deliveryTimeMax": 35,
-    "deliveryFee": 3.49,
-    "distanceKm": 3.1,
-    "coverImage": "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=1200&q=80",
-    "logoImage": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&q=80",
-    "categoryIds": ["cat-5"],
-    "menu": [
-      {
-        "id": "sec-6",
-        "title": "Pastries",
-        "items": [
-          {
-            "id": "item-5-1",
-            "name": "Salted Caramel \u00c9clair",
-            "description": "Vanilla cr\u00e8me, fleur de sel",
-            "price": 8.5,
-            "image": "https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&q=80",
-            "isPopular": true
-          },
-          {
-            "id": "item-5-2",
-            "name": "Dark Chocolate Tart",
-            "description": "72% Valrhona, gold leaf",
-            "price": 9.0,
-            "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&q=80"
-          }
-        ]
-      }
-    ],
-    "offerLabel": "30% OFF up to ₹65",
-    "isFastDelivery": true
-  },
-  {
-    "id": "rest-6",
-    "name": "Noir Roastery",
-    "tagline": "Specialty coffee & light bites",
-    "cuisine": "Coffee \u00b7 Caf\u00e9",
-    "rating": 4.5,
-    "reviewCount": 780,
-    "deliveryTimeMin": 10,
-    "deliveryTimeMax": 20,
-    "deliveryFee": 0,
-    "distanceKm": 0.5,
-    "isFreeDelivery": true,
-    "coverImage": "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&q=80",
-    "logoImage": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=200&q=80",
-    "categoryIds": ["cat-6"],
-    "menu": [
-      {
-        "id": "sec-7",
-        "title": "Coffee",
-        "items": [
-          {
-            "id": "item-6-1",
-            "name": "Oat Flat White",
-            "description": "Single origin espresso, oat microfoam",
-            "price": 5.5,
-            "image": "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=600&q=80",
-            "isPopular": true,
-            "isVegetarian": true
-          },
-          {
-            "id": "item-6-2",
-            "name": "Pour Over (12oz)",
-            "description": "Rot of the day, hand-brewed",
-            "price": 6.0,
-            "image": "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=600&q=80",
-            "isVegetarian": true
-          }
-        ]
-      }
-    ],
-    "offerLabel": "Buy 1 Get 1",
-    "isFastDelivery": true
+    ]
   }
 ]

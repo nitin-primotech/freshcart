@@ -10,7 +10,7 @@ import {
 } from '@/lib/firebase/catalog-images';
 import type { FirestoreMenuItem } from '@/lib/firebase/types';
 
-export const DEFAULT_MERCHANT_RESTAURANT_ID = 'foodrush-main';
+export const DEFAULT_MERCHANT_RESTAURANT_ID = 'freshcart';
 
 const DEFAULT_RESTAURANT_PROFILE: Omit<Restaurant, 'categoryIds' | 'menu'> = {
   id: DEFAULT_MERCHANT_RESTAURANT_ID,

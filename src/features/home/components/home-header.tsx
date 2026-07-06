@@ -8,12 +8,11 @@ import {
   selectCartItemCount,
   useCartStore,
 } from '@/store/cart.store';
-import { selectWishlistCount, useWishlistStore } from '@/store/wishlist.store';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-const LOCATION_GREEN = '#1A4D2E';
+const LOCATION_GREEN = colors.primary;
 
 function IconBadge({
   count,
@@ -40,7 +39,6 @@ export function HomeHeader() {
   const router = useRouter();
   const address = useAppStore(selectAddress);
   const cartCount = useCartStore(selectCartItemCount);
-  const wishlistCount = useWishlistStore(selectWishlistCount);
 
   return (
     <View style={styles.wrap}>
@@ -51,6 +49,12 @@ export function HomeHeader() {
           accessibilityRole="button"
           accessibilityLabel={`Deliver to ${address.line2}`}
         >
+          <AppSymbol
+            name="location.fill"
+            size={14}
+            tintColor={colors.primary}
+            style={styles.pinIcon}
+          />
           <Text style={styles.deliverLabel}>Deliver to</Text>
           <View style={styles.locationRow}>
             <Text
@@ -72,12 +76,11 @@ export function HomeHeader() {
         <View style={styles.actions}>
           <Pressable
             style={styles.iconBtn}
-            onPress={() => router.push('/(tabs)/wishlist')}
             accessibilityRole="button"
-            accessibilityLabel={`Wishlist, ${wishlistCount} saved`}
+            accessibilityLabel="Notifications"
           >
-            <AppSymbol name="heart" size={20} tintColor={colors.textPrimary} />
-            <IconBadge count={wishlistCount} tone="danger" />
+            <AppSymbol name="bell" size={20} tintColor={colors.textPrimary} />
+            <View style={styles.notifDot} />
           </Pressable>
 
           <Pressable
@@ -125,6 +128,9 @@ const styles = StyleSheet.create({
     minWidth: 0,
     justifyContent: 'center',
     paddingRight: spacing.xs,
+  },
+  pinIcon: {
+    marginBottom: 2,
   },
   deliverLabel: {
     fontFamily: fonts.regular,
@@ -189,5 +195,16 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     color: colors.textInverse,
     textAlign: 'center',
+  },
+  notifDot: {
+    position: 'absolute',
+    top: 10,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.danger,
+    borderWidth: 1.5,
+    borderColor: colors.background,
   },
 });

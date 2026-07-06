@@ -82,12 +82,18 @@ export function PaymentMethodsScreen() {
                 accessibilityLabel={`${method.label}, ${isDefault ? 'default' : 'set as default'}`}
               >
                 <View style={styles.savedLeading}>
-                  {brandLogo ? (
+                  {brandLogo && 'image' in brandLogo && brandLogo.image ? (
                     <Image
                       source={brandLogo.image}
                       style={styles.brandLogo}
                       contentFit="contain"
                       accessibilityLabel={brandLogo.name}
+                    />
+                  ) : brandLogo && 'symbol' in brandLogo && brandLogo.symbol ? (
+                    <AppSymbol
+                      name={brandLogo.symbol}
+                      size={18}
+                      tintColor={colors.primary}
                     />
                   ) : (
                     <AppSymbol
@@ -166,7 +172,7 @@ export function PaymentMethodsScreen() {
               </View>
               <CheckoutPaymentTrailingLogos
                 logos={method.trailingLogos}
-                showMore={method.showMore}
+                showMore={method.showChevron}
               />
             </View>
           ))}

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,14 +10,18 @@ import {
 import {
   deriveDiscountPercent,
   deriveMrp,
-  formatInr,
+  formatUsd,
 } from '@/features/checkout/utils/format-currency';
 import { ProductBoughtTogether } from '@/features/product/components/product-bought-together';
 import { ProductImageHero } from '@/features/product/components/product-image-hero';
+import { ProductNutritionSection } from '@/features/product/components/product-nutrition-section';
 import { ProductReviewsSection } from '@/features/product/components/product-reviews-section';
+import {
+  ProductWeightSelector,
+  type WeightOption,
+} from '@/features/product/components/product-weight-selector';
 import { StarRating } from '@/features/product/components/star-rating';
 import {
-  formatDeliveryEta,
   formatServingLabel,
   getProductDetailBullets,
   PRODUCT_TRUST_ITEMS,
@@ -44,7 +48,7 @@ import {
   useCartStore,
 } from '@/store/cart.store';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 export function ProductDetailScreen() {
@@ -72,6 +76,33 @@ export function ProductDetailScreen() {
     [data],
   );
 
+  const itemPrice = data?.item.price ?? 0;
+  const itemCalories = data?.item.calories;
+
+  const weightOptions = useMemo((): WeightOption[] => {
+    const base = itemPrice;
+    if (!base) return [];
+    return [
+      { id: 'w1', label: '250g', price: base },
+      { id: 'w2', label: '500g', price: Math.round(base * 1.75 * 100) / 100 },
+      { id: 'w3', label: '1 lb', price: Math.round(base * 2.25 * 100) / 100 },
+      { id: 'w4', label: '2 lb', price: Math.round(base * 4 * 100) / 100 },
+    ];
+  }, [itemPrice]);
+
+  const [selectedWeightId, setSelectedWeightId] = useState('w1');
+
+  const nutritionFacts = useMemo(() => {
+    const cal = itemCalories ?? 32;
+    return [
+      { label: 'Calories', value: `${cal} kcal` },
+      { label: 'Carbs', value: `${(cal * 0.24).toFixed(1)} g` },
+      { label: 'Protein', value: `${(cal * 0.02).toFixed(1)} g` },
+      { label: 'Fat', value: `${(cal * 0.01).toFixed(1)} g` },
+      { label: 'Fiber', value: `${(cal * 0.06).toFixed(1)} g` },
+    ];
+  }, [itemCalories]);
+
   if (status === 'loading') {
     return (
       <View style={styles.root}>
@@ -92,9 +123,13 @@ export function ProductDetailScreen() {
   }
 
   const { restaurant, item } = data;
-  const mrp = deriveMrp(item.price);
-  const discount = deriveDiscountPercent(item.price, mrp);
-  const savings = mrp - Math.round(item.price);
+  const selectedWeight =
+    weightOptions.find((w) => w.id === selectedWeightId) ?? weightOptions[0];
+  const displayPrice = selectedWeight?.price ?? item.price;
+
+  const mrp = deriveMrp(displayPrice);
+  const discount = deriveDiscountPercent(displayPrice, mrp);
+  const savings = mrp - displayPrice;
   const bullets = getProductDetailBullets(item);
 
   function handleIncrease() {
@@ -228,8 +263,8 @@ export function ProductDetailScreen() {
             </View>
 
             <View style={styles.priceRow}>
-              <Text style={styles.price}>{formatInr(item.price)}</Text>
-              <Text style={styles.mrp}>{formatInr(mrp)}</Text>
+              <Text style={styles.price}>{formatUsd(displayPrice)}</Text>
+              <Text style={styles.mrp}>{formatUsd(mrp)}</Text>
               {discount > 0 ? (
                 <View style={styles.offPill}>
                   <Text style={styles.offText}>{discount}% OFF</Text>
@@ -245,28 +280,40 @@ export function ProductDetailScreen() {
                   tintColor={colors.primary}
                 />
                 <Text style={styles.savingsText}>
-                  You save {formatInr(savings)} on this item
+                  You save {formatUsd(savings)} on this item
                 </Text>
               </View>
             ) : null}
 
             <View style={styles.deliveryCard}>
-              <Text style={styles.deliveryTitle}>
-                Delivery in{' '}
-                <Text style={styles.deliveryAccent}>
-                  {formatDeliveryEta(
-                    restaurant.deliveryTimeMin,
-                    restaurant.deliveryTimeMax,
-                  )}
+              <View style={styles.deliveryIconWrap}>
+                <AppSymbol
+                  name="scooter"
+                  size={18}
+                  tintColor={colors.primary}
+                />
+              </View>
+              <View style={styles.deliveryCopy}>
+                <Text style={styles.deliveryTitle}>
+                  Get it by{' '}
+                  <Text style={styles.deliveryAccent}>
+                    Tomorrow, 10 AM – 12 PM
+                  </Text>
                 </Text>
-              </Text>
-              <Text style={styles.deliverySubtitle}>
-                {restaurant.isFastDelivery
-                  ? 'Express delivery from '
-                  : 'Delivered fresh from '}
-                {restaurant.name}
-              </Text>
+                <Text style={styles.deliverySubtitle}>
+                  Express delivery available
+                </Text>
+              </View>
+              <Pressable accessibilityRole="button">
+                <Text style={styles.changeLink}>Change</Text>
+              </Pressable>
             </View>
+
+            <ProductWeightSelector
+              options={weightOptions}
+              selectedId={selectedWeightId}
+              onSelect={setSelectedWeightId}
+            />
           </View>
         </View>
 
@@ -298,6 +345,10 @@ export function ProductDetailScreen() {
               <Text style={styles.bulletText}>{bullet}</Text>
             </View>
           ))}
+        </View>
+
+        <View style={styles.section}>
+          <ProductNutritionSection facts={nutritionFacts} />
         </View>
 
         <ProductBoughtTogether restaurant={restaurant} items={relatedItems} />
@@ -338,7 +389,9 @@ export function ProductDetailScreen() {
           accessibilityLabel="Add to cart"
         >
           <AppSymbol name="cart" size={14} tintColor={colors.primary} />
-          <Text style={styles.addToCartText}>Add to Cart</Text>
+          <Text style={styles.addToCartText}>
+            Add to Cart – {formatUsd(displayPrice)}
+          </Text>
         </Pressable>
         <Pressable
           style={styles.buyNowBtn}
@@ -512,13 +565,33 @@ const styles = StyleSheet.create({
   },
   deliveryCard: {
     marginTop: spacing.sm,
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.md,
     borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
+    backgroundColor: colors.backgroundMuted,
+    padding: spacing.md,
+  },
+  deliveryIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
     backgroundColor: colors.backgroundElevated,
-    padding: spacing.sm,
-    gap: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deliveryCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  changeLink: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    lineHeight: 17,
+    color: colors.primary,
   },
   deliveryTitle: {
     fontFamily: fonts.regular,

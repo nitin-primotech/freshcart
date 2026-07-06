@@ -1,11 +1,15 @@
-/** Masks a 10-digit Indian mobile number for display. */
-export function formatIndianPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '').slice(-10);
-  if (digits.length < 4) {
-    return `+91 ${digits}`;
-  }
-  if (digits.length < 10) {
-    return `+91 ${digits}`;
-  }
-  return `+91 ${digits.slice(0, 2)}••••${digits.slice(-2)}`;
+const INDIAN_MOBILE = /^[6-9]\d{9}$/;
+
+export function sanitizeIndianPhoneInput(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 10);
+}
+
+export function isValidIndianMobile(phone: string): boolean {
+  return INDIAN_MOBILE.test(phone);
+}
+
+export function formatIndianPhoneDisplay(phone: string): string {
+  const digits = sanitizeIndianPhoneInput(phone);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)} ${digits.slice(5)}`;
 }

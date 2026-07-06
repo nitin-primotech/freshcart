@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -62,7 +62,9 @@ export function AnimatedCodeNumber({
             {code}
           </Animated.Text>
         </Animated.View>
-      ) : null}
+      ) : (
+        <View style={styles.placeholderDash} />
+      )}
     </Animated.View>
   );
 }
@@ -75,12 +77,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1.5,
     height: 52,
-    width: 48,
+    width: '100%',
+    maxWidth: 48,
   },
   text: {
     fontFamily: fonts.bold,
     fontSize: 22,
     lineHeight: 26,
     color: colors.textPrimary,
+  },
+  placeholderDash: {
+    width: 14,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: colors.borderStrong,
   },
 });

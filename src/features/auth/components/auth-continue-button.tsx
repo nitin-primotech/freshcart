@@ -12,6 +12,7 @@ type AuthContinueButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   tone?: 'primary' | 'success';
+  showTrailingIcon?: boolean;
 };
 
 export function AuthContinueButton({
@@ -20,6 +21,7 @@ export function AuthContinueButton({
   disabled = false,
   loading = false,
   tone = 'primary',
+  showTrailingIcon = true,
 }: AuthContinueButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -47,13 +49,15 @@ export function AuthContinueButton({
       accessibilityState={{ disabled: isDisabled }}
     >
       <Text style={styles.label}>{loading ? 'Please wait…' : label}</Text>
-      <View style={styles.arrow}>
-        <AppSymbol
-          name="chevron.right"
-          size={16}
-          tintColor={colors.textInverse}
-        />
-      </View>
+      {showTrailingIcon ? (
+        <View style={styles.arrow}>
+          <AppSymbol
+            name="chevron.right"
+            size={16}
+            tintColor={colors.textInverse}
+          />
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -67,7 +71,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    boxShadow: '0 6px 18px rgba(212, 84, 60, 0.2)',
+    boxShadow: '0 6px 18px rgba(45, 139, 63, 0.22)',
   },
   label: {
     fontFamily: fonts.semibold,

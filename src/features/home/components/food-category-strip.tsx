@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Category } from '@/features/catalog/types/catalog.types';
+import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
@@ -27,6 +28,7 @@ export function FoodCategoryStrip({
 
   return (
     <View style={styles.wrap}>
+      <HomeSectionHeader title="Shop by Category" href={moreHref} />
       <ScrollView
         horizontal
         nestedScrollEnabled

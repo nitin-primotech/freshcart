@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import {
   clearStoredSession,
+  createPhoneSession,
   getStoredSession,
   isSessionValid,
   saveSession,
@@ -17,13 +18,11 @@ type AuthState = {
   isAuthenticated: boolean;
 };
 
-const initialState: AuthState = {
+export const useAuthStore = create<AuthState>(() => ({
   hydrationStatus: 'loading',
   session: null,
   isAuthenticated: false,
-};
-
-export const useAuthStore = create<AuthState>(() => initialState);
+}));
 
 export async function hydrateAuthState() {
   const stored = await getStoredSession();
@@ -52,6 +51,11 @@ export async function setAuthSession(session: AuthSession) {
     session,
     isAuthenticated: true,
   });
+}
+
+export async function signInWithPhone(phoneDigits: string) {
+  const session = createPhoneSession(phoneDigits);
+  await setAuthSession(session);
 }
 
 export async function clearAuthState() {

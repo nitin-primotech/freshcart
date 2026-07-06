@@ -1,35 +1,25 @@
 import * as SecureStore from 'expo-secure-store';
 
-import type {
-  DietaryPreference,
-  OnboardingStep,
-  UserPreferences,
-} from '@/features/auth/types/onboarding.types';
-import { DEFAULT_PREFERENCES } from '@/features/auth/types/onboarding.types';
+import type { UserPreferences } from '@/features/auth/types/user-preferences.types';
+import { DEFAULT_PREFERENCES } from '@/features/auth/types/user-preferences.types';
 import type { DeliveryAddress } from '@/features/catalog/types/catalog.types';
 
-const PROFILE_KEY = 'foodrush.app.profile';
+const PROFILE_KEY = 'freshcart.app.profile';
 
 export type StoredProfile = {
-  userName: string | null;
-  onboardingComplete: boolean;
-  onboardingStep: OnboardingStep;
-  hasConfirmedAddress: boolean;
+  userName: string;
   address: DeliveryAddress;
   preferences: UserPreferences;
 };
 
 const DEFAULT_ADDRESS: DeliveryAddress = {
-  label: 'West Village',
-  line1: '14th St · Station Plaza',
-  line2: 'New York, NY 10011',
+  label: 'Home',
+  line1: '221B Baker Street',
+  line2: 'New York, NY 10001',
 };
 
 export const DEFAULT_PROFILE: StoredProfile = {
-  userName: null,
-  onboardingComplete: false,
-  onboardingStep: 'welcome',
-  hasConfirmedAddress: false,
+  userName: 'Alex Morgan',
   address: DEFAULT_ADDRESS,
   preferences: DEFAULT_PREFERENCES,
 };
@@ -40,14 +30,11 @@ export async function getStoredProfile(): Promise<StoredProfile> {
   try {
     const parsed = JSON.parse(raw) as Partial<StoredProfile>;
     return {
-      userName: parsed.userName ?? null,
-      onboardingComplete: Boolean(parsed.onboardingComplete),
-      onboardingStep: parsed.onboardingStep ?? 'welcome',
-      hasConfirmedAddress: Boolean(parsed.hasConfirmedAddress),
+      userName: parsed.userName?.trim() || DEFAULT_PROFILE.userName,
       address: parsed.address ?? DEFAULT_ADDRESS,
       preferences: {
         cuisineIds: parsed.preferences?.cuisineIds ?? [],
-        dietary: (parsed.preferences?.dietary ?? null) as DietaryPreference,
+        dietary: parsed.preferences?.dietary ?? null,
         skipped: Boolean(parsed.preferences?.skipped),
       },
     };

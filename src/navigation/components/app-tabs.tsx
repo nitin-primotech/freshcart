@@ -13,9 +13,20 @@ export function AppTabs() {
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="search" role="search">
-        <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
-        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="categories">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' }}
+          md="grid_view"
+        />
+        <NativeTabs.Trigger.Label>Categories</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="offers">
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'tag', selected: 'tag.fill' }}
+          md="local_offer"
+        />
+        <NativeTabs.Trigger.Label>Offers</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="orders">
@@ -23,15 +34,7 @@ export function AppTabs() {
           sf={{ default: 'bag', selected: 'bag.fill' }}
           md="shopping_bag"
         />
-        <NativeTabs.Trigger.Label>Orders</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="wishlist">
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'heart', selected: 'heart.fill' }}
-          md="favorite"
-        />
-        <NativeTabs.Trigger.Label>Wishlist</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>My Orders</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">

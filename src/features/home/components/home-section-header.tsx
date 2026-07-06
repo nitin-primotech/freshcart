@@ -1,3 +1,5 @@
+import type { Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/theme/colors';
@@ -7,18 +9,28 @@ import { fonts } from '@/theme/typography';
 type HomeSectionHeaderProps = {
   title: string;
   onViewAll?: () => void;
+  href?: Href;
 };
 
 export function HomeSectionHeader({
   title,
   onViewAll,
+  href,
 }: HomeSectionHeaderProps) {
+  const router = useRouter();
+  const handleViewAll =
+    onViewAll ?? (href ? () => router.push(href) : undefined);
+
   return (
     <View style={styles.row}>
       <Text style={styles.title}>{title}</Text>
-      {onViewAll ? (
-        <Pressable onPress={onViewAll} hitSlop={8} accessibilityRole="button">
-          <Text style={styles.viewAll}>View all</Text>
+      {handleViewAll ? (
+        <Pressable
+          onPress={handleViewAll}
+          hitSlop={8}
+          accessibilityRole="button"
+        >
+          <Text style={styles.viewAll}>See all ›</Text>
         </Pressable>
       ) : null}
     </View>

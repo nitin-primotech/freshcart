@@ -223,6 +223,6 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 18,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: colors.primary,
   },
 });

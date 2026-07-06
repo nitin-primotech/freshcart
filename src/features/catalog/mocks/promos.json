@@ -1,42 +1,26 @@
 [
   {
     "id": "promo-1",
-    "title": "Free delivery",
-    "subtitle": "On orders over ₹299 this week",
-    "code": "RUSHFREE",
-    "gradient": ["#D4543C", "#8B3A32"],
-    "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80"
+    "title": "Fresh Groceries Delivered Fast",
+    "subtitle": "Get everything you need, delivered in 15–30 mins",
+    "code": "FRESH",
+    "gradient": ["#2D8B3F", "#1A5C2A"],
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"
   },
   {
     "id": "promo-2",
-    "title": "20% off",
-    "subtitle": "First order with code WELCOME20",
-    "code": "WELCOME20",
-    "gradient": ["#C9A962", "#8B6914"],
-    "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80"
+    "title": "Free delivery",
+    "subtitle": "On orders over $35 this week",
+    "code": "FREEDEL",
+    "gradient": ["#4CAF50", "#2D8B3F"],
+    "image": "https://images.unsplash.com/photo-1606787366850-de2336a7a417?w=800&q=80"
   },
   {
     "id": "promo-3",
-    "title": "Premium picks",
-    "subtitle": "Curated chef selections near you",
-    "code": "PREMIUM",
-    "gradient": ["#1C1C1E", "#3D3D42"],
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80"
-  },
-  {
-    "id": "promo-4",
-    "title": "Weekend special",
-    "subtitle": "Flat 30% off tonight",
-    "code": "WEEKEND",
-    "gradient": ["#D4543C", "#8B3A32"],
-    "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80"
-  },
-  {
-    "id": "promo-5",
-    "title": "New user deal",
-    "subtitle": "Extra ₹80 off your first order",
-    "code": "NEW10",
-    "gradient": ["#C9A962", "#8B6914"],
-    "image": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80"
+    "title": "20% off",
+    "subtitle": "First order with code WELCOME20",
+    "code": "WELCOME20",
+    "gradient": ["#1A5C2A", "#2D8B3F"],
+    "image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80"
   }
 ]

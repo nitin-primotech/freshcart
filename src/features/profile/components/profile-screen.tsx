@@ -57,14 +57,14 @@ export function ProfileScreen() {
     [orders],
   );
 
-  const displayName = userName ?? 'Guest User';
-  const displayPhone = phone ? formatProfilePhone(phone) : '+91 ••••• •••••';
+  const displayName = userName;
+  const displayPhone = phone ? formatProfilePhone(phone) : '+1 ••• ••• ••••';
 
   async function performLogout() {
     setLogoutModalVisible(false);
     await clearAuthState();
     await resetAppProfile();
-    router.replace('/(auth)/welcome');
+    router.replace('/login');
   }
 
   function handleLogout() {

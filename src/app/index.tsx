@@ -2,12 +2,8 @@ import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 
 import { AppSplash } from '@/features/auth/components/app-splash';
-import { getOnboardingHref } from '@/features/auth/utils/onboarding-route';
 import {
   selectHydrationStatus as selectAppHydrationStatus,
-  selectHasConfirmedAddress,
-  selectOnboardingComplete,
-  selectUserName,
   useAppStore,
 } from '@/store/app.store';
 import {
@@ -22,9 +18,6 @@ export default function Index() {
   const authHydrationStatus = useAuthStore(selectHydrationStatus);
   const appHydrationStatus = useAppStore(selectAppHydrationStatus);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
-  const onboardingComplete = useAppStore(selectOnboardingComplete);
-  const userName = useAppStore(selectUserName);
-  const hasConfirmedAddress = useAppStore(selectHasConfirmedAddress);
   const [splashDone, setSplashDone] = useState(false);
 
   const hydrated =
@@ -39,12 +32,9 @@ export default function Index() {
     return <AppSplash ready={hydrated} />;
   }
 
-  const href = getOnboardingHref({
-    isAuthenticated,
-    onboardingComplete,
-    userName,
-    hasConfirmedAddress,
-  });
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
 
-  return <Redirect href={href} />;
+  return <Redirect href="/(tabs)" />;
 }

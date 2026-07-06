@@ -31,7 +31,7 @@ export function DeleteProfileScreen() {
     setConfirmVisible(false);
     try {
       await deleteUserAccount();
-      router.replace('/(auth)/welcome');
+      router.replace('/login');
     } finally {
       setIsDeleting(false);
     }

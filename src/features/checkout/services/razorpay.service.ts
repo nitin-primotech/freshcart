@@ -1,8 +1,9 @@
-import { Platform } from 'react-native';
-import RazorpayCheckout, {
-  type PaymentErrorData,
-  type PaymentSuccessData,
-  type RazorpayOptions,
+import { NativeModules, Platform } from 'react-native';
+
+import type {
+  PaymentErrorData,
+  PaymentSuccessData,
+  RazorpayOptions,
 } from 'react-native-razorpay';
 
 import { fetchRazorpayOrderId } from '@/features/checkout/api/razorpay.api';
@@ -18,7 +19,9 @@ export type RazorpayPrefill = {
 };
 
 export class RazorpayUnavailableError extends Error {
-  constructor(message = 'Razorpay is not available on this platform.') {
+  constructor(
+    message = 'Razorpay requires a development build and is not available in Expo Go.',
+  ) {
     super(message);
     this.name = 'RazorpayUnavailableError';
   }
@@ -29,6 +32,25 @@ export class RazorpayPaymentCancelledError extends Error {
     super('Payment cancelled');
     this.name = 'RazorpayPaymentCancelledError';
   }
+}
+
+function isRazorpayNativeModuleLinked(): boolean {
+  if (Platform.OS === 'web') {
+    return false;
+  }
+
+  return Boolean(
+    NativeModules.RNRazorpayCheckout ?? NativeModules.RazorpayCheckout,
+  );
+}
+
+async function loadRazorpayCheckout() {
+  if (!isRazorpayNativeModuleLinked()) {
+    throw new RazorpayUnavailableError();
+  }
+
+  const { default: RazorpayCheckout } = await import('react-native-razorpay');
+  return RazorpayCheckout;
 }
 
 function formatContact(phone?: string | null): string | undefined {
@@ -62,6 +84,8 @@ export async function openFoodRushCheckout(input: {
   if (!RAZORPAY_KEY_ID) {
     throw new Error('Razorpay key is not configured.');
   }
+
+  const RazorpayCheckout = await loadRazorpayCheckout();
 
   const amountPaise = Math.max(Math.round(input.amountInr * 100), 100);
   const orderId = await fetchRazorpayOrderId(amountPaise);

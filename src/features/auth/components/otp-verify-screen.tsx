@@ -1,56 +1,87 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  InteractionManager,
   Keyboard,
   Pressable,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import Animated, { useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
-import { AuthOnboardingShell } from '@/features/auth/components/auth-onboarding-shell';
 import type { OtpDigitStatus } from '@/features/auth/components/verification-code/animated-code-number';
 import { useAnimatedShake } from '@/features/auth/components/verification-code/use-animated-shake';
 import { VerificationCode } from '@/features/auth/components/verification-code/verification-code';
-import { OTP_ONBOARDING_COPY } from '@/features/auth/constants/auth-onboarding.constants';
-import { authScreenStyles } from '@/features/auth/constants/auth-screen.styles';
 import {
-  requestOtp,
-  verifyOtpAndCreateSession,
-} from '@/features/auth/services/auth.service';
-import { formatIndianPhone } from '@/features/auth/utils/format-indian-phone';
+  formatIndianPhoneDisplay,
+  isValidIndianMobile,
+  sanitizeIndianPhoneInput,
+} from '@/features/auth/utils/format-indian-phone';
+import { AppStatusBar } from '@/shared/components/app-status-bar';
+import { AppSymbol } from '@/shared/components/app-symbol';
+import { AuthKeyboardWrapper } from '@/shared/components/auth-keyboard-wrapper';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   formTextInputProps,
   keyboardAppearance,
 } from '@/shared/utils/keyboard';
-import { setAuthSession } from '@/store/auth.store';
+import { signInWithPhone } from '@/store/auth.store';
+import { colors } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 
-const OTP_LENGTH = 4;
-const CORRECT_OTP = 1234;
+const OTP_LENGTH = 6;
+const RESEND_SECONDS = 30;
+
+function formatCountdown(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
 
 export function OtpVerifyScreen() {
   const router = useRouter();
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const insets = useSafeAreaInsets();
+  const { phone: phoneParam } = useLocalSearchParams<{ phone: string }>();
+  const phone = sanitizeIndianPhoneInput(phoneParam ?? '');
+
   const [code, setCode] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
 
   const verificationStatus = useSharedValue<OtpDigitStatus>('inProgress');
   const invisibleInputRef = useRef<TextInput>(null);
   const { shake, rShakeStyle } = useAnimatedShake();
 
-  const masked = phone ? formatIndianPhone(phone) : '';
   const codeString = code.join('');
-  const canVerify = codeString.length === OTP_LENGTH && !isLoading;
+  const canVerify = codeString.length === OTP_LENGTH && !loading;
+  const canResend = secondsLeft <= 0 && !resending;
+
+  useEffect(() => {
+    if (!isValidIndianMobile(phone)) {
+      router.replace('/login');
+    }
+  }, [phone, router]);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const timer = setInterval(() => {
+      setSecondsLeft((value) => value - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [secondsLeft]);
 
   useFocusEffect(
     useCallback(() => {
       const timer = setTimeout(() => {
         invisibleInputRef.current?.focus();
-      }, 400);
+      }, 350);
       return () => clearTimeout(timer);
     }, []),
   );
@@ -60,127 +91,174 @@ export function OtpVerifyScreen() {
       verificationStatus.value = 'inProgress';
       setCode([]);
       invisibleInputRef.current?.clear();
-    }, 1000);
+    }, 900);
   }, [verificationStatus]);
 
-  const onWrongCode = useCallback(() => {
-    verificationStatus.value = 'wrong';
-    shake();
-    resetCode();
-  }, [resetCode, shake, verificationStatus]);
+  const completeSignIn = useCallback(async () => {
+    if (!isValidIndianMobile(phone) || loading) return;
 
-  const onCorrectCode = useCallback(async () => {
-    if (!phone || isLoading) return;
     verificationStatus.value = 'correct';
-    setIsLoading(true);
+    setLoading(true);
 
     try {
-      const session = await verifyOtpAndCreateSession(phone, codeString);
-      await setAuthSession(session);
+      await signInWithPhone(phone);
       Keyboard.dismiss();
-      InteractionManager.runAfterInteractions(() => {
-        router.replace('/(auth)/name');
-      });
+      router.replace('/(tabs)');
     } catch {
       verificationStatus.value = 'wrong';
       shake();
       resetCode();
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [
-    phone,
-    codeString,
-    isLoading,
-    resetCode,
-    router,
-    shake,
-    verificationStatus,
-  ]);
+  }, [loading, phone, resetCode, router, shake, verificationStatus]);
 
-  const handleVerifyPress = useCallback(() => {
-    if (codeString.length !== OTP_LENGTH || isLoading) return;
-    if (codeString === CORRECT_OTP.toString()) {
-      void onCorrectCode();
-      return;
-    }
-    onWrongCode();
-  }, [codeString, isLoading, onCorrectCode, onWrongCode]);
+  function handleVerifyPress() {
+    if (!canVerify) return;
+    void completeSignIn();
+  }
 
   function handleTextChange(text: string) {
-    if (isLoading) return;
+    if (loading) return;
 
     const digits = text.replace(/\D/g, '').slice(0, OTP_LENGTH);
-    const newCode = digits.split('').map((d) => Number(d));
-    setCode(newCode);
+    const nextCode = digits.split('').map((digit) => Number(digit));
+    setCode(nextCode);
     verificationStatus.value = 'inProgress';
   }
 
   async function handleResend() {
-    if (!phone || isResending) return;
-    setIsResending(true);
+    if (!canResend) return;
+    hapticSoftTap();
+    setResending(true);
     try {
-      await requestOtp(phone);
+      setSecondsLeft(RESEND_SECONDS);
       resetCode();
     } finally {
-      setIsResending(false);
+      setResending(false);
     }
   }
 
+  function handleEditPhone() {
+    hapticSoftTap();
+    router.back();
+  }
+
+  if (!isValidIndianMobile(phone)) {
+    return null;
+  }
+
   return (
-    <AuthOnboardingShell
-      copy={OTP_ONBOARDING_COPY}
-      onBack={() => router.back()}
-    >
-      <View style={authScreenStyles.formHeader}>
-        <Text style={authScreenStyles.title}>Enter OTP</Text>
-        <Text style={authScreenStyles.subtitle}>
-          Code sent to{' '}
-          <Text style={authScreenStyles.phoneHighlight}>{masked}</Text>
-        </Text>
+    <View style={styles.root}>
+      <AppStatusBar style="dark" />
+
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
+        <ScreenBackButton onPress={() => router.back()} />
       </View>
 
-      <Pressable
-        onPress={() => invisibleInputRef.current?.focus()}
-        accessibilityRole="button"
-        accessibilityLabel="OTP input"
-      >
-        <Animated.View style={[authScreenStyles.codeWrap, rShakeStyle]}>
-          <VerificationCode
-            code={code}
-            maxLength={OTP_LENGTH}
-            status={verificationStatus}
+      <AuthKeyboardWrapper style={styles.keyboard}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: insets.bottom + spacing.xl },
+          ]}
+        >
+          <View style={styles.logoRow}>
+            <AppSymbol name="leaf.fill" size={22} tintColor={colors.primary} />
+            <AppSymbol
+              name="leaf.fill"
+              size={18}
+              tintColor={colors.primaryLight}
+              style={styles.logoLeafSecond}
+            />
+          </View>
+
+          <View style={styles.header}>
+            <Text style={styles.title}>Verify your number</Text>
+            <Text style={styles.subtitle}>
+              We&apos;ve sent a 6-digit OTP to
+            </Text>
+            <View style={styles.phoneRow}>
+              <Text style={styles.phone}>
+                +91 {formatIndianPhoneDisplay(phone)}
+              </Text>
+              <Pressable
+                onPress={handleEditPhone}
+                style={styles.editBtn}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Edit phone number"
+              >
+                <AppSymbol name="pencil" size={14} tintColor={colors.primary} />
+                <Text style={styles.editLabel}>Edit</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <Pressable
+            onPress={() => invisibleInputRef.current?.focus()}
+            accessibilityRole="button"
+            accessibilityLabel="OTP input"
+          >
+            <Animated.View style={[styles.codeWrap, rShakeStyle]}>
+              <VerificationCode
+                code={code}
+                maxLength={OTP_LENGTH}
+                status={verificationStatus}
+              />
+            </Animated.View>
+          </Pressable>
+
+          <View style={styles.resendRow}>
+            <Text style={styles.resendText}>
+              Didn&apos;t receive the code?{' '}
+            </Text>
+            {canResend ? (
+              <Pressable
+                onPress={() => void handleResend()}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Resend OTP"
+              >
+                <Text style={styles.resendLink}>
+                  {resending ? 'Sending…' : 'Resend OTP'}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text style={styles.resendText}>
+                <Text style={styles.resendLink}>Resend OTP</Text>
+                {' in '}
+                {formatCountdown(secondsLeft)}
+              </Text>
+            )}
+          </View>
+
+          <AuthContinueButton
+            label="Verify & Continue →"
+            onPress={handleVerifyPress}
+            disabled={!canVerify}
+            loading={loading}
+            showTrailingIcon={false}
           />
-        </Animated.View>
-      </Pressable>
 
-      <AuthContinueButton
-        label={isLoading ? 'Verifying…' : 'Verify & continue'}
-        onPress={handleVerifyPress}
-        disabled={!canVerify}
-        loading={isLoading}
-        tone="primary"
-      />
-
-      <Pressable
-        onPress={() => void handleResend()}
-        hitSlop={8}
-        style={authScreenStyles.resendRow}
-        accessibilityRole="button"
-        accessibilityLabel="Resend OTP"
-      >
-        <Text style={authScreenStyles.resendText}>
-          Didn&apos;t get it?{' '}
-          <Text style={authScreenStyles.resendLink}>
-            {isResending ? 'Sending…' : 'Resend'}
-          </Text>
-        </Text>
-      </Pressable>
+          <View style={styles.trustRow}>
+            <AppSymbol
+              name="checkmark.shield.fill"
+              size={16}
+              tintColor={colors.primary}
+            />
+            <Text style={styles.trustText}>
+              Secure login. We never share your number.
+            </Text>
+          </View>
+        </ScrollView>
+      </AuthKeyboardWrapper>
 
       <TextInput
         ref={invisibleInputRef}
         value={codeString}
         onChangeText={handleTextChange}
-        autoFocus
         keyboardType="number-pad"
         keyboardAppearance={keyboardAppearance}
         maxLength={OTP_LENGTH}
@@ -188,11 +266,121 @@ export function OtpVerifyScreen() {
         autoComplete="one-time-code"
         caretHidden
         showSoftInputOnFocus
-        style={authScreenStyles.invisibleInput}
+        style={styles.invisibleInput}
         accessibilityLabel="OTP input"
         blurOnSubmit={false}
         {...formTextInputProps}
       />
-    </AuthOnboardingShell>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  topBar: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  keyboard: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+  },
+  logoLeafSecond: {
+    marginLeft: -6,
+    marginTop: 4,
+    opacity: 0.85,
+  },
+  header: {
+    gap: spacing.xs,
+  },
+  title: {
+    fontFamily: fonts.bold,
+    fontSize: 24,
+    lineHeight: 30,
+    color: colors.textPrimary,
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSecondary,
+    marginTop: spacing.xxs,
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xxs,
+  },
+  phone: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.textPrimary,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xxs,
+  },
+  editLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 14,
+    lineHeight: 18,
+    color: colors.primary,
+  },
+  codeWrap: {
+    paddingVertical: spacing.sm,
+  },
+  resendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -spacing.xs,
+  },
+  resendText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textSecondary,
+  },
+  resendLink: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.primary,
+  },
+  trustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  trustText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textSecondary,
+  },
+  invisibleInput: {
+    position: 'absolute',
+    opacity: 0,
+    width: 1,
+    height: 1,
+  },
+});

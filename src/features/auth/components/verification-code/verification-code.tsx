@@ -36,11 +36,13 @@ export function VerificationCode({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.xs,
     width: '100%',
   },
   codeContainer: {
+    flex: 1,
+    maxWidth: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },

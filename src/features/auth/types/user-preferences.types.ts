@@ -1,12 +1,3 @@
-export type OnboardingStep =
-  | 'welcome'
-  | 'location_permission'
-  | 'location'
-  | 'phone'
-  | 'name'
-  | 'personalize'
-  | 'done';
-
 export type DietaryPreference =
   | 'veg'
   | 'non_veg'

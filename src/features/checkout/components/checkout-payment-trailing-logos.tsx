@@ -2,29 +2,39 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { PaymentBrandLogo } from '@/features/checkout/constants/payment-brands';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 
 type CheckoutPaymentTrailingLogosProps = {
-  logos: PaymentBrandLogo[];
+  logos?: PaymentBrandLogo[];
   showMore?: boolean;
 };
 
 export function CheckoutPaymentTrailingLogos({
-  logos,
+  logos = [],
   showMore,
 }: CheckoutPaymentTrailingLogosProps) {
   return (
     <View style={styles.row}>
-      {logos.map((logo) => (
-        <Image
-          key={logo.id}
-          source={logo.image}
-          style={styles.logo}
-          contentFit="contain"
-          accessibilityLabel={logo.name}
-        />
-      ))}
+      {logos.map((logo) =>
+        logo.image ? (
+          <Image
+            key={logo.id}
+            source={logo.image}
+            style={styles.logo}
+            contentFit="contain"
+            accessibilityLabel={logo.name}
+          />
+        ) : logo.symbol ? (
+          <AppSymbol
+            key={logo.id}
+            name={logo.symbol}
+            size={20}
+            tintColor={colors.textSecondary}
+          />
+        ) : null,
+      )}
       {showMore ? <Text style={styles.more}>+</Text> : null}
     </View>
   );

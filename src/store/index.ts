@@ -11,7 +11,7 @@ export {
   selectIsAuthenticated,
   selectSession,
   selectUserPhone,
-  setAuthSession,
+  signInWithPhone,
   useAuthStore,
 } from './auth.store';
 export {

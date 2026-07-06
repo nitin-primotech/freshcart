@@ -36,7 +36,7 @@ export function AppSplash({ ready = false }: AppSplashProps) {
           />
         </View>
         <PremiumText variant="h1" color={colors.textInverse}>
-          foodRush
+          FreshCart
         </PremiumText>
         <PremiumText
           variant="caption"

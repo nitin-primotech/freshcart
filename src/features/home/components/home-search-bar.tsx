@@ -14,16 +14,21 @@ export function HomeSearchBar() {
       style={styles.search}
       onPress={() => router.push('/(tabs)/search')}
       accessibilityRole="button"
-      accessibilityLabel="Search for products, brands and more"
+      accessibilityLabel="Search groceries"
     >
       <AppSymbol
         name="magnifyingglass"
         size={18}
-        tintColor={colors.textPrimary}
+        tintColor={colors.textSecondary}
       />
       <Text style={styles.placeholder} numberOfLines={1}>
-        Search for products, brands and more...
+        Search 'milk, eggs, fruits...'
       </Text>
+      <AppSymbol
+        name="barcode.viewfinder"
+        size={20}
+        tintColor={colors.textSecondary}
+      />
     </Pressable>
   );
 }
@@ -33,14 +38,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: spacing.md,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.backgroundMuted,
     borderRadius: 14,
     paddingHorizontal: spacing.md,
-    paddingVertical: 11,
+    paddingVertical: 12,
     gap: spacing.sm,
     borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   placeholder: {
     flex: 1,

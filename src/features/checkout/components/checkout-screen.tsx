@@ -22,22 +22,15 @@ import {
   PLATFORM_FEE,
 } from '@/features/checkout/constants/checkout.constants';
 import {
-  openFoodRushCheckout,
-  RazorpayPaymentCancelledError,
-  RazorpayUnavailableError,
-} from '@/features/checkout/services/razorpay.service';
-import {
   deriveMrp,
-  formatInr,
+  formatUsd,
 } from '@/features/checkout/utils/format-currency';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
-import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
-import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
-import { selectUserPhone, useAuthStore } from '@/store/auth.store';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
+import { selectAddress, useAppStore } from '@/store/app.store';
 import {
   cartLineKey,
-  clearCart,
   handleCheckoutBack,
   removeFromCart,
   selectCartItems,
@@ -50,11 +43,7 @@ import {
   selectMerchantReady,
   useMerchantStore,
 } from '@/store/merchant.store';
-import {
-  placeOrder,
-  selectIsPlacing,
-  useOrdersStore,
-} from '@/store/orders.store';
+import { selectIsPlacing, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -76,29 +65,16 @@ export function CheckoutScreen() {
   const items = useCartStore(selectCartItems);
   const subtotal = useCartStore(selectCartSubtotal);
   const savedAddress = useAppStore(selectAddress);
-  const userName = useAppStore(selectUserName);
-  const userPhone = useAuthStore(selectUserPhone);
   const isPlacing = useOrdersStore(selectIsPlacing);
   const merchantReady = useMerchantStore(selectMerchantReady);
   const merchantIsOnline = useMerchantStore(selectMerchantIsOnline);
-  const [isPaying, setIsPaying] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const [paymentId, setPaymentId] = useState('upi');
+  const [paymentId, setPaymentId] = useState('apple-pay');
 
-  const isProcessing = isPlacing || isPaying;
+  const isProcessing = isPlacing;
   const merchantOffline = merchantReady && !merchantIsOnline;
 
   const itemCount = items.reduce((sum, line) => sum + line.quantity, 0);
-
-  const paymentPrefill = useMemo(
-    () => ({
-      name: userName,
-      contact: userPhone,
-      email: userPhone ? `${userPhone.replace(/\D/g, '')}@foodrush.app` : null,
-    }),
-    [userName, userPhone],
-  );
 
   const itemMrpSavings = useMemo(
     () =>
@@ -135,62 +111,19 @@ export function CheckoutScreen() {
     return () => subscription.remove();
   }, [router]);
 
-  async function submitOrder() {
-    await placeOrder({
-      items,
-      subtotal,
-      deliveryFee: deliveryFee + PLATFORM_FEE,
-      tip: 0,
-      address: fullAddress,
-      restaurantId: restaurant.restaurantId,
-      restaurantName: restaurant.restaurantName,
-      restaurantLogo: '',
-      customerId: userPhone ?? undefined,
-      customerName: userName ?? undefined,
-      customerPhone: userPhone ?? undefined,
-    });
-    clearCart();
-    router.replace('/order-success');
-  }
-
   async function handlePlaceOrder() {
     if (!restaurant || isProcessing) return;
 
     if (merchantOffline) {
       Alert.alert(
-        'Restaurant offline',
-        'This restaurant is not accepting orders right now. Please try again later.',
+        'Store offline',
+        'FreshCart is not accepting orders right now. Please try again later.',
       );
       return;
     }
 
-    setPaymentError(null);
-    setIsPaying(true);
-
-    try {
-      await openFoodRushCheckout({
-        amountInr: total,
-        prefill: paymentPrefill,
-        description: 'Food Service Payment',
-      });
-
-      hapticSuccess();
-      await submitOrder();
-    } catch (error) {
-      if (error instanceof RazorpayPaymentCancelledError) {
-        return;
-      }
-      if (error instanceof RazorpayUnavailableError) {
-        Alert.alert('Payments unavailable', error.message);
-        return;
-      }
-      const message =
-        error instanceof Error ? error.message : 'Payment failed. Try again.';
-      setPaymentError(message);
-      Alert.alert('Payment failed', message);
-    } finally {
-      setIsPaying(false);
-    }
+    hapticSoftTap();
+    router.push('/payment' as never);
   }
 
   return (
@@ -272,7 +205,7 @@ export function CheckoutScreen() {
               <Text style={styles.billLabel}>
                 Item Total ({itemCount} {itemCount === 1 ? 'Item' : 'Items'})
               </Text>
-              <Text style={styles.billValue}>{formatInr(subtotal)}</Text>
+              <Text style={styles.billValue}>{formatUsd(subtotal)}</Text>
             </View>
             <View style={styles.billRow}>
               <View style={styles.billLabelRow}>
@@ -289,7 +222,7 @@ export function CheckoutScreen() {
                   deliveryFee === 0 && styles.billValueFree,
                 ]}
               >
-                {deliveryFee === 0 ? 'FREE' : formatInr(deliveryFee)}
+                {deliveryFee === 0 ? 'FREE' : formatUsd(deliveryFee)}
               </Text>
             </View>
             <View style={styles.billRow}>
@@ -301,7 +234,7 @@ export function CheckoutScreen() {
                   tintColor={colors.textTertiary}
                 />
               </View>
-              <Text style={styles.billValue}>{formatInr(PLATFORM_FEE)}</Text>
+              <Text style={styles.billValue}>{formatUsd(PLATFORM_FEE)}</Text>
             </View>
             {displaySavings > 0 ? (
               <View style={styles.billRow}>
@@ -309,14 +242,14 @@ export function CheckoutScreen() {
                   You Saved
                 </Text>
                 <Text style={styles.savedValue}>
-                  −{formatInr(displaySavings)}
+                  −{formatUsd(displaySavings)}
                 </Text>
               </View>
             ) : null}
             <View style={styles.billDivider} />
             <View style={styles.billRow}>
               <Text style={styles.toPayLabel}>To Pay</Text>
-              <Text style={styles.toPayValue}>{formatInr(total)}</Text>
+              <Text style={styles.toPayValue}>{formatUsd(total)}</Text>
             </View>
           </View>
         </View>
@@ -392,7 +325,7 @@ export function CheckoutScreen() {
                   </View>
                   <CheckoutPaymentTrailingLogos
                     logos={method.trailingLogos}
-                    showMore={method.showMore}
+                    showMore={method.showChevron}
                   />
                 </Pressable>
               );
@@ -400,10 +333,6 @@ export function CheckoutScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {paymentError ? (
-        <Text style={styles.paymentError}>{paymentError}</Text>
-      ) : null}
 
       <CheckoutStickyFooter
         total={total}

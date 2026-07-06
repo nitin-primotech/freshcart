@@ -42,7 +42,14 @@ export type SavedPaymentMethod = {
   label: string;
   subtitle: string;
   icon: string;
-  brandId?: 'phonepe' | 'visa' | 'paytm' | 'upi' | 'mastercard' | 'rupay';
+  brandId?:
+    | 'applePay'
+    | 'gpay'
+    | 'paypal'
+    | 'visa'
+    | 'mastercard'
+    | 'amex'
+    | 'discover';
   isDefault?: boolean;
 };
 
@@ -52,7 +59,7 @@ export const SUPPORT_HOURS = '8:00 AM – 11:00 PM, every day';
 
 export const SUPPORT_PHONE = '18001234567';
 
-export const SUPPORT_EMAIL = 'help@foodrush.in';
+export const SUPPORT_EMAIL = 'help@freshcart.com';
 
 export const SUPPORT_CONTACT_OPTIONS: SupportContactOption[] = [
   {
@@ -113,26 +120,26 @@ export const SUPPORT_FAQS: SupportFaq[] = [
 
 export const SAVED_PAYMENT_METHODS: SavedPaymentMethod[] = [
   {
-    id: 'saved-upi',
-    label: 'PhonePe UPI',
-    subtitle: 'chan@oksbi',
-    icon: 'qrcode.viewfinder',
-    brandId: 'phonepe',
+    id: 'saved-apple-pay',
+    label: 'Apple Pay',
+    subtitle: 'Default wallet',
+    icon: 'apple.logo',
+    brandId: 'applePay',
     isDefault: true,
   },
   {
     id: 'saved-card',
-    label: 'HDFC Visa',
-    subtitle: '•••• 4242 · Exp 09/28',
+    label: 'Visa ending 4242',
+    subtitle: '•••• 4242 · Exp 08/27',
     icon: 'creditcard.fill',
     brandId: 'visa',
   },
   {
-    id: 'saved-wallet',
-    label: 'Paytm Wallet',
+    id: 'saved-paypal',
+    label: 'PayPal',
     subtitle: 'Linked for quick pay',
-    icon: 'wallet.pass.fill',
-    brandId: 'paytm',
+    icon: 'dollarsign.circle.fill',
+    brandId: 'paypal',
   },
 ];
 

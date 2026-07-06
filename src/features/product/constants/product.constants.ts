@@ -1,9 +1,10 @@
 import type { MenuItem } from '@/features/catalog/types/catalog.types';
 
 export const PRODUCT_TRUST_ITEMS = [
-  { icon: 'shield.fill', label: '100% Original Products' },
-  { icon: 'truck.box.fill', label: 'On-time Delivery' },
-  { icon: 'arrow.2.circlepath', label: 'Easy Returns' },
+  { icon: 'leaf.fill', label: '100% Fresh' },
+  { icon: 'shield.fill', label: 'No Preservatives' },
+  { icon: 'sun.max.fill', label: 'Naturally Grown' },
+  { icon: 'heart.fill', label: 'Rich in Vitamin C' },
 ] as const;
 
 export type ProductReview = {

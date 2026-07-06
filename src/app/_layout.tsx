@@ -12,11 +12,7 @@ import { FloatingCartBar } from '@/shared/components/floating-cart-bar';
 import { ProfileSavedToast } from '@/shared/components/profile-saved-toast';
 import { WishlistSavedToast } from '@/shared/components/wishlist-saved-toast';
 import { preloadAppHaptics } from '@/shared/haptics/feedback';
-import {
-  hydrateAppProfile,
-  selectOnboardingComplete,
-  useAppStore,
-} from '@/store/app.store';
+import { hydrateAppProfile } from '@/store/app.store';
 import {
   hydrateAuthState,
   selectIsAuthenticated,
@@ -33,14 +29,16 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded] = useFonts(fontAssets);
   const segments = useSegments();
-  const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const userPhone = useAuthStore(selectUserPhone);
-  const onboardingComplete = useAppStore(selectOnboardingComplete);
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const [showCartChrome, setShowCartChrome] = useState(false);
-  const inAuth = segments[0] === '(auth)';
+  const onLogin = segments[0] === 'login';
+  const onVerify = segments[0] === 'verify';
   const onLocation = segments[0] === 'location';
+  const onLegal = segments[0] === 'terms' || segments[0] === 'privacy';
   const hideCartRoute =
     segments[0] === 'checkout' ||
+    (segments[0] as string) === 'payment' ||
     segments[0] === 'order-success' ||
     segments[0] === 'order';
 
@@ -73,11 +71,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (
-      inAuth ||
+      onLogin ||
+      onVerify ||
+      onLegal ||
       onLocation ||
       hideCartRoute ||
-      !isAuthenticated ||
-      !onboardingComplete
+      !isAuthenticated
     ) {
       setShowCartChrome(false);
       return;
@@ -86,7 +85,7 @@ export default function RootLayout() {
       setShowCartChrome(true);
     });
     return () => cancelAnimationFrame(handle);
-  }, [inAuth, onLocation, hideCartRoute, isAuthenticated, onboardingComplete]);
+  }, [onLogin, onVerify, onLegal, onLocation, hideCartRoute, isAuthenticated]);
 
   const tabSegment = segments[0] === '(tabs)' ? segments[1] : undefined;
   const isHomeTab =
@@ -115,7 +114,19 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" options={{ animation: 'none' }} />
           <Stack.Screen
-            name="(auth)"
+            name="login"
+            options={{ animation: 'fade', gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="verify"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="terms"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="privacy"
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
@@ -161,6 +172,13 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="profile"
+            options={{
+              headerShown: false,
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="payment"
             options={{
               headerShown: false,
               animation: 'slide_from_right',

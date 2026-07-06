@@ -1,4 +1,4 @@
-import { type Href, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   FlatList,
@@ -31,10 +31,6 @@ import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
-type LocationSearchScreenProps = {
-  flow?: 'onboarding' | 'change';
-};
-
 const CITY_LABEL: Record<LocationCity, string> = {
   mohali: 'Mohali',
   delhi: 'Delhi',
@@ -43,12 +39,9 @@ const CITY_LABEL: Record<LocationCity, string> = {
 
 const CONFIRM_SHEET_HEIGHT = 220;
 
-export function LocationSearchScreen({
-  flow = 'change',
-}: LocationSearchScreenProps) {
+export function LocationSearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const isOnboarding = flow === 'onboarding';
   const [query, setQuery] = useState('');
   const [pendingSelection, setPendingSelection] =
     useState<LocationSuggestion | null>(null);
@@ -56,11 +49,6 @@ export function LocationSearchScreen({
   const results = useMemo(() => getLocationSuggestions(query), [query]);
 
   function finishWithSuggestion(suggestion: LocationSuggestion) {
-    if (isOnboarding) {
-      setDeliveryAddressFromSuggestion(suggestion, { onboarding: true });
-      router.replace('/(auth)/personalize' as Href);
-      return;
-    }
     setDeliveryAddressFromSuggestion(suggestion);
     router.back();
   }
@@ -81,14 +69,6 @@ export function LocationSearchScreen({
     selectSuggestion(getCurrentLocationSuggestion());
   }
 
-  function handleBack() {
-    if (isOnboarding) {
-      router.replace('/(auth)/name' as Href);
-    } else {
-      router.back();
-    }
-  }
-
   const listBottomPad =
     insets.bottom +
     spacing.xl +
@@ -97,17 +77,8 @@ export function LocationSearchScreen({
   const listHeader = (
     <View>
       <View style={styles.header}>
-        <ScreenBackButton onPress={handleBack} />
-        <PremiumText variant="h3">
-          {isOnboarding
-            ? 'Enter your area or apartment name'
-            : 'Change delivery location'}
-        </PremiumText>
-        {isOnboarding ? (
-          <PremiumText variant="caption" color={colors.textSecondary}>
-            We deliver to this area — pick the closest match
-          </PremiumText>
-        ) : null}
+        <ScreenBackButton onPress={() => router.back()} />
+        <PremiumText variant="h3">Change delivery location</PremiumText>
       </View>
 
       <View style={styles.searchWrap}>
@@ -119,7 +90,7 @@ export function LocationSearchScreen({
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder="Search Mohali, Delhi, Noida…"
+          placeholder="Search New York, Brooklyn, Queens…"
           placeholderTextColor={colors.textTertiary}
           style={styles.searchInput}
           autoCorrect={false}
@@ -296,7 +267,7 @@ export function LocationSearchScreen({
                 </View>
               </View>
               <AuthContinueButton
-                label={isOnboarding ? 'Continue' : 'Confirm & proceed'}
+                label="Confirm & proceed"
                 onPress={proceedWithSelection}
               />
               <Pressable
@@ -385,7 +356,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   resultRowSelected: {
-    backgroundColor: 'rgba(212, 84, 60, 0.08)',
+    backgroundColor: colors.successLight,
     borderBottomColor: 'transparent',
   },
   resultIcon: {
@@ -407,7 +378,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   cityPill: {
-    backgroundColor: 'rgba(212, 84, 60, 0.1)',
+    backgroundColor: colors.successLight,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.full,
