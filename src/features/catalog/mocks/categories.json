@@ -3,48 +3,72 @@
     "id": "cat-fruits-veg",
     "name": "Fruits & Vegetables",
     "icon": "leaf.fill",
-    "image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/apple/apple_PNG12439.png"
   },
   {
     "id": "cat-dairy-eggs",
     "name": "Dairy & Eggs",
     "icon": "drop.fill",
-    "image": "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
   },
   {
     "id": "cat-pantry",
     "name": "Pantry",
     "icon": "cabinet.fill",
-    "image": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png"
   },
   {
     "id": "cat-beverages",
     "name": "Beverages",
     "icon": "cup.and.saucer.fill",
-    "image": "https://images.unsplash.com/photo-1546173159-315724a31696?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/orange/orange_PNG789.png"
   },
   {
     "id": "cat-personal-care",
     "name": "Personal Care",
     "icon": "heart.fill",
-    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
   },
   {
     "id": "cat-snacks",
     "name": "Snacks",
     "icon": "bag.fill",
-    "image": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=600&h=600&fit=crop&q=90"
-  },
-  {
-    "id": "cat-meat-seafood",
-    "name": "Meat & Seafood",
-    "icon": "fish.fill",
-    "image": "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/potato_chips/potato_chips_PNG6.png"
   },
   {
     "id": "cat-bakery",
-    "name": "Bakery",
+    "name": "Bread & Eggs",
     "icon": "birthday.cake.fill",
-    "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=600&fit=crop&q=90"
+    "image": "https://pngimg.com/uploads/bread/bread_PNG2253.png"
+  },
+  {
+    "id": "cat-household",
+    "name": "Household",
+    "icon": "sparkles",
+    "image": "https://pngimg.com/uploads/olive_oil/olive_oil_PNG9.png"
+  },
+  {
+    "id": "cat-baby",
+    "name": "Baby Care",
+    "icon": "sparkles",
+    "image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
+  },
+  {
+    "id": "cat-meat-seafood",
+    "name": "Meat & Fish",
+    "icon": "fish.fill",
+    "image": "https://pngimg.com/uploads/cheese/cheese_PNG25332.png"
+  },
+  {
+    "id": "cat-cereals",
+    "name": "Cereals",
+    "icon": "leaf.circle.fill",
+    "image": "https://pngimg.com/uploads/cookie/cookie_PNG13664.png"
+  },
+  {
+    "id": "cat-frozen",
+    "name": "Frozen Foods",
+    "icon": "sparkles",
+    "image": "https://pngimg.com/uploads/blueberries/blueberries_PNG4.png"
   }
 ]

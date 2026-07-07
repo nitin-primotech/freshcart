@@ -30,7 +30,7 @@ export function HomeSectionHeader({
           hitSlop={8}
           accessibilityRole="button"
         >
-          <Text style={styles.viewAll}>See all ›</Text>
+          <Text style={styles.viewAll}>See all {'>'}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -46,15 +46,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   title: {
-    fontFamily: fonts.semibold,
+    fontFamily: fonts.bold,
     fontSize: 15,
-    lineHeight: 20,
+    lineHeight: 19,
     color: colors.textPrimary,
   },
   viewAll: {
     fontFamily: fonts.medium,
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 15,
     color: colors.primary,
   },
 });

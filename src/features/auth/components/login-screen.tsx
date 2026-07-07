@@ -3,13 +3,13 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
@@ -19,7 +19,6 @@ import {
 } from '@/features/auth/utils/format-indian-phone';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { AuthKeyboardWrapper } from '@/shared/components/auth-keyboard-wrapper';
 import { GoogleGIcon } from '@/shared/components/google-g-icon';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { formTextInputProps } from '@/shared/utils/keyboard';
@@ -68,7 +67,7 @@ export function LoginScreen() {
           styles.hero,
           {
             paddingTop: insets.top + spacing.md,
-            minHeight: windowHeight * 0.44,
+            minHeight: windowHeight * 0.4,
           },
         ]}
       >
@@ -96,118 +95,117 @@ export function LoginScreen() {
           <Image
             source={require('@/assets/images/login-hero-basket.png')}
             style={styles.heroImage}
-            contentFit="cover"
+            contentFit="contain"
             transition={200}
           />
         </View>
       </View>
 
-      <AuthKeyboardWrapper style={styles.keyboard}>
-        <View style={[styles.card, shadows.card]}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={[
-              styles.cardContent,
-              { paddingBottom: insets.bottom + spacing.lg },
-            ]}
-          >
-            <View style={styles.formHeader}>
-              <Text style={styles.formTitle}>Enter your mobile number</Text>
-              <Text style={styles.formSubtitle}>
-                We&apos;ll send you a One Time Password (OTP)
-              </Text>
-            </View>
-
-            <View style={styles.inputWrap}>
-              <Pressable
-                style={styles.countryBtn}
-                onPress={hapticSoftTap}
-                accessibilityRole="button"
-                accessibilityLabel="Country code India plus 91"
-              >
-                <Text style={styles.flag}>🇮🇳</Text>
-                <Text style={styles.countryCode}>+91</Text>
-                <AppSymbol
-                  name="chevron.down"
-                  size={11}
-                  tintColor={colors.textSecondary}
-                />
-              </Pressable>
-              <View style={styles.inputDivider} />
-              <TextInput
-                value={phone}
-                onChangeText={(value) => {
-                  setPhone(sanitizeIndianPhoneInput(value));
-                  if (error) setError(null);
-                }}
-                placeholder="Mobile number"
-                placeholderTextColor={colors.textTertiary}
-                keyboardType="number-pad"
-                maxLength={10}
-                style={styles.input}
-                accessibilityLabel="Mobile number"
-                {...formTextInputProps}
-              />
-            </View>
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <AuthContinueButton
-              label="Continue →"
-              onPress={handleContinue}
-              disabled={!canContinue}
-              loading={loading}
-              showTrailingIcon={false}
-            />
-
-            <View style={styles.orRow}>
-              <View style={styles.orLine} />
-              <Text style={styles.orText}>or continue with</Text>
-              <View style={styles.orLine} />
-            </View>
-
-            <Pressable
-              style={styles.googleBtn}
-              onPress={handleGoogleSignIn}
-              disabled={loading}
-              accessibilityRole="button"
-              accessibilityLabel="Continue with Google"
-            >
-              <GoogleGIcon size={22} />
-              <Text style={styles.googleLabel}>Continue with Google</Text>
-            </Pressable>
-
-            <View style={styles.trustRow}>
-              <AppSymbol
-                name="checkmark.shield.fill"
-                size={16}
-                tintColor={colors.primary}
-              />
-              <Text style={styles.trustText}>
-                Secure login. We never share your number.
-              </Text>
-            </View>
-
-            <Text style={styles.legal}>
-              By continuing, you agree to our{' '}
-              <Text
-                style={styles.legalLink}
-                onPress={() => router.push('/terms')}
-              >
-                Terms of Service
-              </Text>{' '}
-              and{' '}
-              <Text
-                style={styles.legalLink}
-                onPress={() => router.push('/privacy')}
-              >
-                Privacy Policy.
-              </Text>
+      <View style={[styles.card, shadows.card]}>
+        <KeyboardAwareScrollView
+          bottomOffset={insets.bottom + spacing.lg}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.cardContent,
+            { paddingBottom: insets.bottom + spacing.lg },
+          ]}
+        >
+          <View style={styles.formHeader}>
+            <Text style={styles.formTitle}>Enter your mobile number</Text>
+            <Text style={styles.formSubtitle}>
+              We&apos;ll send you a One Time Password (OTP)
             </Text>
-          </ScrollView>
-        </View>
-      </AuthKeyboardWrapper>
+          </View>
+
+          <View style={styles.inputWrap}>
+            <Pressable
+              style={styles.countryBtn}
+              onPress={hapticSoftTap}
+              accessibilityRole="button"
+              accessibilityLabel="Country code India plus 91"
+            >
+              <Text style={styles.flag}>🇮🇳</Text>
+              <Text style={styles.countryCode}>+91</Text>
+              <AppSymbol
+                name="chevron.down"
+                size={11}
+                tintColor={colors.textSecondary}
+              />
+            </Pressable>
+            <View style={styles.inputDivider} />
+            <TextInput
+              value={phone}
+              onChangeText={(value) => {
+                setPhone(sanitizeIndianPhoneInput(value));
+                if (error) setError(null);
+              }}
+              placeholder="Mobile number"
+              placeholderTextColor={colors.textTertiary}
+              keyboardType="number-pad"
+              maxLength={10}
+              style={styles.input}
+              accessibilityLabel="Mobile number"
+              {...formTextInputProps}
+            />
+          </View>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <AuthContinueButton
+            label="Continue →"
+            onPress={handleContinue}
+            disabled={!canContinue}
+            loading={loading}
+            showTrailingIcon={false}
+          />
+
+          <View style={styles.orRow}>
+            <View style={styles.orLine} />
+            <Text style={styles.orText}>or continue with</Text>
+            <View style={styles.orLine} />
+          </View>
+
+          <Pressable
+            style={styles.googleBtn}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+          >
+            <GoogleGIcon size={22} />
+            <Text style={styles.googleLabel}>Continue with Google</Text>
+          </Pressable>
+
+          <View style={styles.trustRow}>
+            <AppSymbol
+              name="checkmark.shield.fill"
+              size={16}
+              tintColor={colors.primary}
+            />
+            <Text style={styles.trustText}>
+              Secure login. We never share your number.
+            </Text>
+          </View>
+
+          <Text style={styles.legal}>
+            By continuing, you agree to our{' '}
+            <Text
+              style={styles.legalLink}
+              onPress={() => router.push('/terms')}
+            >
+              Terms of Service
+            </Text>{' '}
+            and{' '}
+            <Text
+              style={styles.legalLink}
+              onPress={() => router.push('/privacy')}
+            >
+              Privacy Policy.
+            </Text>
+          </Text>
+        </KeyboardAwareScrollView>
+      </View>
     </View>
   );
 }
@@ -221,7 +219,7 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.md,
   },
   logoRow: {
     flexDirection: 'row',
@@ -234,12 +232,12 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   heroContent: {
-    minHeight: 224,
+    minHeight: 210,
     justifyContent: 'flex-end',
   },
   heroCopy: {
-    width: '54%',
-    paddingBottom: spacing.xl,
+    width: '56%',
+    paddingBottom: spacing.lg,
     zIndex: 1,
   },
   heroTitle: {
@@ -261,14 +259,10 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     position: 'absolute',
-    right: -spacing.sm,
-    bottom: -spacing.sm,
-    width: 194,
-    height: 214,
-    borderRadius: 8,
-  },
-  keyboard: {
-    flex: 1,
+    right: -spacing.md,
+    bottom: -spacing.lg,
+    width: 210,
+    height: 230,
   },
   card: {
     flex: 1,
@@ -282,6 +276,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
     gap: spacing.md,
+    flexGrow: 1,
   },
   formHeader: {
     gap: spacing.xs,

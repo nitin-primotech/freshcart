@@ -1,4 +1,4 @@
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,67 +12,63 @@ import {
   deriveMrp,
   formatUsd,
 } from '@/features/checkout/utils/format-currency';
-import { ProductBoughtTogether } from '@/features/product/components/product-bought-together';
+import {
+  ProductFooterStepper,
+  productFooterControlHeight,
+} from '@/features/product/components/product-footer-stepper';
 import { ProductImageHero } from '@/features/product/components/product-image-hero';
 import { ProductNutritionSection } from '@/features/product/components/product-nutrition-section';
-import { ProductReviewsSection } from '@/features/product/components/product-reviews-section';
 import {
   ProductWeightSelector,
   type WeightOption,
 } from '@/features/product/components/product-weight-selector';
-import { StarRating } from '@/features/product/components/star-rating';
 import {
-  formatServingLabel,
-  getProductDetailBullets,
+  getProductTagline,
   PRODUCT_TRUST_ITEMS,
 } from '@/features/product/constants/product.constants';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { CartLineStepper } from '@/shared/components/cart-line-stepper';
-import { ErrorState } from '@/shared/components/error-state';
 import { Shimmer } from '@/shared/components/shimmer';
 import { WishlistToggle } from '@/shared/components/wishlist-toggle';
-import {
-  hapticAddToCart,
-  hapticPrimaryAction,
-  hapticSoftTap,
-} from '@/shared/haptics/feedback';
+import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import {
   addToCart,
   openCartSheet,
-  prepareCheckoutNavigation,
-  selectCartItemCount,
   selectCartLineQuantity,
   updateCartQuantity,
   useCartStore,
 } from '@/store/cart.store';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
+
+function asRouteParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? '';
+  return value ?? '';
+}
 
 export function ProductDetailScreen() {
   const router = useRouter();
-  const pathname = usePathname();
   const insets = useSafeAreaInsets();
-  const { restaurantId, itemId } = useLocalSearchParams<{
-    restaurantId: string;
-    itemId: string;
-  }>();
-  const cartCount = useCartStore(selectCartItemCount);
+  const { restaurantId: restaurantIdParam, itemId: itemIdParam } =
+    useLocalSearchParams<{
+      restaurantId?: string | string[];
+      itemId?: string | string[];
+    }>();
+  const restaurantId = asRouteParam(restaurantIdParam);
+  const itemId = asRouteParam(itemIdParam);
 
-  const { data, status, error, refetch } = useSimulatedQuery(
-    (signal) => fetchMenuItemContext(restaurantId ?? '', itemId ?? '', signal),
+  const { data, status } = useSimulatedQuery(
+    (signal) => fetchMenuItemContext(restaurantId, itemId, signal),
     [restaurantId, itemId],
     { enabled: Boolean(restaurantId && itemId) },
   );
 
-  const quantity = useCartStore(
-    selectCartLineQuantity(itemId ?? '', restaurantId ?? ''),
-  );
+  const quantity = useCartStore(selectCartLineQuantity(itemId, restaurantId));
 
   const relatedItems = useMemo(
-    () => (data ? getRelatedMenuItems(data.restaurant, data.item.id, 3) : []),
+    () => (data ? getRelatedMenuItems(data.restaurant, data.item.id, 5) : []),
     [data],
   );
 
@@ -97,28 +93,22 @@ export function ProductDetailScreen() {
     return [
       { label: 'Calories', value: `${cal} kcal` },
       { label: 'Carbs', value: `${(cal * 0.24).toFixed(1)} g` },
-      { label: 'Protein', value: `${(cal * 0.02).toFixed(1)} g` },
-      { label: 'Fat', value: `${(cal * 0.01).toFixed(1)} g` },
+      { label: 'Protein', value: `${(cal * 0.07).toFixed(1)} g` },
+      { label: 'Fat', value: `${(cal * 0.03).toFixed(1)} g` },
       { label: 'Fiber', value: `${(cal * 0.06).toFixed(1)} g` },
     ];
   }, [itemCalories]);
 
-  if (status === 'loading') {
+  if (status === 'loading' || !data) {
     return (
       <View style={styles.root}>
         <AppStatusBar style="dark" />
         <View style={[styles.loading, { paddingTop: insets.top + spacing.md }]}>
-          <Shimmer height={220} borderRadius={14} />
-          <Shimmer height={120} borderRadius={14} />
-          <Shimmer height={180} borderRadius={14} />
+          <Shimmer height={280} borderRadius={0} />
+          <Shimmer height={120} borderRadius={12} />
+          <Shimmer height={80} borderRadius={12} />
         </View>
       </View>
-    );
-  }
-
-  if (status === 'error' || !data) {
-    return (
-      <ErrorState message={error ?? 'Product not found'} onRetry={refetch} />
     );
   }
 
@@ -126,11 +116,11 @@ export function ProductDetailScreen() {
   const selectedWeight =
     weightOptions.find((w) => w.id === selectedWeightId) ?? weightOptions[0];
   const displayPrice = selectedWeight?.price ?? item.price;
-
   const mrp = deriveMrp(displayPrice);
   const discount = deriveDiscountPercent(displayPrice, mrp);
-  const savings = mrp - displayPrice;
-  const bullets = getProductDetailBullets(item);
+  const footerQuantity = quantity > 0 ? quantity : 1;
+  const detailCopy = `${item.name} are carefully selected for freshness and quality. ${item.description ? `Each pack is ${item.description.toLowerCase()}.` : ''} Store in a cool, dry place and consume within the recommended period for best taste.`;
+  const tagline = getProductTagline(item);
 
   function handleIncrease() {
     hapticSoftTap();
@@ -144,9 +134,7 @@ export function ProductDetailScreen() {
   function handleDecrease() {
     hapticSoftTap();
     if (quantity <= 1) {
-      if (quantity === 1) {
-        updateCartQuantity(item.id, 0, restaurant.id);
-      }
+      updateCartQuantity(item.id, 0, restaurant.id);
       return;
     }
     updateCartQuantity(item.id, quantity - 1, restaurant.id);
@@ -158,15 +146,6 @@ export function ProductDetailScreen() {
       addToCart(item, restaurant.id, restaurant.name);
     }
     openCartSheet();
-  }
-
-  function handleBuyNow() {
-    hapticPrimaryAction();
-    if (quantity === 0) {
-      addToCart(item, restaurant.id, restaurant.name);
-    }
-    prepareCheckoutNavigation(pathname);
-    router.push('/checkout');
   }
 
   return (
@@ -185,12 +164,24 @@ export function ProductDetailScreen() {
         >
           <AppSymbol
             name="chevron.left"
-            size={18}
+            size={20}
             tintColor={colors.textPrimary}
           />
         </Pressable>
 
         <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => router.push('/(tabs)/search')}
+            style={styles.headerBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Search"
+          >
+            <AppSymbol
+              name="magnifyingglass"
+              size={18}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
           <Pressable
             onPress={hapticSoftTap}
             style={styles.headerBtn}
@@ -199,7 +190,7 @@ export function ProductDetailScreen() {
           >
             <AppSymbol
               name="square.and.arrow.up"
-              size={16}
+              size={17}
               tintColor={colors.textPrimary}
             />
           </Pressable>
@@ -212,24 +203,6 @@ export function ProductDetailScreen() {
             style={styles.headerBtn}
             accessibilityLabel="Add to wishlist"
           />
-          <Pressable
-            onPress={() => {
-              hapticSoftTap();
-              openCartSheet();
-            }}
-            style={styles.headerBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Open cart"
-          >
-            <AppSymbol name="cart" size={16} tintColor={colors.textPrimary} />
-            {cartCount > 0 ? (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>
-                  {cartCount > 9 ? '9+' : cartCount}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
         </View>
       </View>
 
@@ -240,135 +213,93 @@ export function ProductDetailScreen() {
           { paddingBottom: insets.bottom + 96 },
         ]}
       >
-        <View style={styles.hero}>
-          <ProductImageHero
-            primaryImage={item.image}
-            relatedImages={relatedItems.map((entry) => entry.image)}
-            discountPercent={discount}
-          />
+        <ProductImageHero
+          primaryImage={item.image}
+          relatedImages={relatedItems.map((entry) => entry.image)}
+          discountPercent={discount}
+          onViewImages={hapticSoftTap}
+        />
 
-          <View style={styles.infoCol}>
-            <Text style={styles.brand}>{restaurant.name}</Text>
-            <Text style={styles.title}>{item.name}</Text>
-            <Text style={styles.serving}>{formatServingLabel(item)}</Text>
+        <View style={styles.body}>
+          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.subtitle}>{tagline}</Text>
 
-            <View style={styles.ratingChip}>
-              <Text style={styles.ratingValue}>
-                {restaurant.rating.toFixed(1)}
-              </Text>
-              <StarRating rating={restaurant.rating} size={13} />
-              <Text style={styles.ratingCount}>
-                ({restaurant.reviewCount.toLocaleString('en-IN')} ratings)
-              </Text>
-            </View>
+          <View style={styles.socialRow}>
+            <AppSymbol
+              name="star.fill"
+              size={12}
+              tintColor={colors.primary}
+              weight="semibold"
+            />
+            <Text style={styles.socialText}>
+              {restaurant.rating.toFixed(1)} (
+              {restaurant.reviewCount.toLocaleString('en-US')} reviews)
+            </Text>
+            <View style={styles.socialDivider} />
+            <Text style={styles.socialText}>2K+ bought this week</Text>
+          </View>
 
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>{formatUsd(displayPrice)}</Text>
-              <Text style={styles.mrp}>{formatUsd(mrp)}</Text>
-              {discount > 0 ? (
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>{formatUsd(displayPrice)}</Text>
+            {discount > 0 ? (
+              <>
+                <Text style={styles.mrp}>{formatUsd(mrp)}</Text>
                 <View style={styles.offPill}>
                   <Text style={styles.offText}>{discount}% OFF</Text>
                 </View>
-              ) : null}
-            </View>
-
-            {savings > 0 ? (
-              <View style={styles.savingsPill}>
-                <AppSymbol
-                  name="tag.fill"
-                  size={12}
-                  tintColor={colors.primary}
-                />
-                <Text style={styles.savingsText}>
-                  You save {formatUsd(savings)} on this item
-                </Text>
-              </View>
+              </>
             ) : null}
-
-            <View style={styles.deliveryCard}>
-              <View style={styles.deliveryIconWrap}>
-                <AppSymbol
-                  name="scooter"
-                  size={18}
-                  tintColor={colors.primary}
-                />
-              </View>
-              <View style={styles.deliveryCopy}>
-                <Text style={styles.deliveryTitle}>
-                  Get it by{' '}
-                  <Text style={styles.deliveryAccent}>
-                    Tomorrow, 10 AM – 12 PM
-                  </Text>
-                </Text>
-                <Text style={styles.deliverySubtitle}>
-                  Express delivery available
-                </Text>
-              </View>
-              <Pressable accessibilityRole="button">
-                <Text style={styles.changeLink}>Change</Text>
-              </Pressable>
-            </View>
-
-            <ProductWeightSelector
-              options={weightOptions}
-              selectedId={selectedWeightId}
-              onSelect={setSelectedWeightId}
-            />
           </View>
-        </View>
 
-        <View style={styles.trustRow}>
-          {PRODUCT_TRUST_ITEMS.map((entry) => (
-            <View key={entry.label} style={styles.trustItem}>
-              <View style={styles.trustIcon}>
-                <AppSymbol
-                  name={entry.icon}
-                  size={16}
-                  tintColor={colors.primary}
-                />
-              </View>
-              <Text style={styles.trustLabel}>{entry.label}</Text>
+          <ProductWeightSelector
+            options={weightOptions}
+            selectedId={selectedWeightId}
+            onSelect={setSelectedWeightId}
+          />
+
+          <View style={styles.deliveryCard}>
+            <View style={styles.deliveryIconWrap}>
+              <AppSymbol name="scooter" size={18} tintColor={colors.primary} />
             </View>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Product Details</Text>
-          <Text style={styles.description}>{item.description}</Text>
-          {bullets.map((bullet) => (
-            <View key={bullet} style={styles.bulletRow}>
-              <AppSymbol
-                name="checkmark.circle.fill"
-                size={14}
-                tintColor={colors.success}
-              />
-              <Text style={styles.bulletText}>{bullet}</Text>
+            <View style={styles.deliveryCopy}>
+              <Text style={styles.deliveryTitle}>
+                Get it by{' '}
+                <Text style={styles.deliveryAccent}>
+                  Tomorrow, 10 AM – 12 PM
+                </Text>
+              </Text>
+              <Text style={styles.deliverySubtitle}>
+                Express delivery available
+              </Text>
             </View>
-          ))}
-        </View>
+            <Pressable accessibilityRole="button">
+              <Text style={styles.changeLink}>Change</Text>
+            </Pressable>
+          </View>
 
-        <View style={styles.section}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Product Details</Text>
+            <Text style={styles.description}>{detailCopy}</Text>
+
+            <View style={styles.trustRow}>
+              {PRODUCT_TRUST_ITEMS.map((entry) => (
+                <View key={entry.label} style={styles.trustItem}>
+                  <View style={styles.trustIcon}>
+                    <AppSymbol
+                      name={entry.icon}
+                      size={16}
+                      tintColor={colors.primary}
+                      weight="semibold"
+                    />
+                  </View>
+                  <Text style={styles.trustLabel}>{entry.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
           <ProductNutritionSection facts={nutritionFacts} />
         </View>
-
-        <ProductBoughtTogether restaurant={restaurant} items={relatedItems} />
-
-        <ProductReviewsSection
-          rating={restaurant.rating}
-          reviewCount={restaurant.reviewCount}
-          onViewAll={() =>
-            router.push({
-              pathname: '/product/[restaurantId]/[itemId]/reviews',
-              params: {
-                restaurantId: restaurant.id,
-                itemId: item.id,
-                itemName: item.name,
-                rating: String(restaurant.rating),
-                reviewCount: String(restaurant.reviewCount),
-              },
-            })
-          }
-        />
       </ScrollView>
 
       <View
@@ -377,8 +308,8 @@ export function ProductDetailScreen() {
           { paddingBottom: Math.max(insets.bottom, spacing.sm) },
         ]}
       >
-        <CartLineStepper
-          quantity={quantity > 0 ? quantity : 1}
+        <ProductFooterStepper
+          quantity={footerQuantity}
           onDecrease={handleDecrease}
           onIncrease={handleIncrease}
         />
@@ -388,18 +319,9 @@ export function ProductDetailScreen() {
           accessibilityRole="button"
           accessibilityLabel="Add to cart"
         >
-          <AppSymbol name="cart" size={14} tintColor={colors.primary} />
           <Text style={styles.addToCartText}>
             Add to Cart – {formatUsd(displayPrice)}
           </Text>
-        </Pressable>
-        <Pressable
-          style={styles.buyNowBtn}
-          onPress={handleBuyNow}
-          accessibilityRole="button"
-          accessibilityLabel="Buy now"
-        >
-          <Text style={styles.buyNowText}>Buy Now</Text>
         </Pressable>
       </View>
     </View>
@@ -409,10 +331,10 @@ export function ProductDetailScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.background,
   },
   loading: {
-    padding: spacing.lg,
+    padding: spacing.md,
     gap: spacing.md,
   },
   header: {
@@ -420,112 +342,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.backgroundElevated,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    paddingBottom: spacing.xs,
+    backgroundColor: colors.background,
   },
   headerBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    borderCurve: 'continuous',
-    backgroundColor: colors.backgroundElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-    borderWidth: 1.5,
-    borderColor: colors.backgroundElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  cartBadgeText: {
-    fontFamily: fonts.bold,
-    fontSize: 8,
-    lineHeight: 10,
-    color: colors.textInverse,
+    gap: 2,
   },
   content: {
-    padding: spacing.lg,
-    gap: spacing.lg,
+    flexGrow: 1,
   },
-  hero: {
-    gap: spacing.md,
-  },
-  infoCol: {
-    gap: spacing.xs,
-  },
-  ratingChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    marginTop: spacing.xxs,
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    borderRadius: 8,
-    borderCurve: 'continuous',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.18)',
-  },
-  brand: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.primary,
+  body: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 22,
+    lineHeight: 28,
     color: colors.textPrimary,
+    letterSpacing: -0.3,
   },
-  serving: {
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textSecondary,
+    marginTop: -4,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
+    marginTop: spacing.xxs,
+  },
+  socialText: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 15,
     color: colors.textSecondary,
   },
-  ratingValue: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    lineHeight: 17,
-    color: colors.textPrimary,
-  },
-  ratingCount: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    lineHeight: 14,
-    color: colors.textSecondary,
+  socialDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: colors.border,
+    marginHorizontal: 4,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
     marginTop: spacing.xs,
   },
   price: {
     fontFamily: fonts.bold,
-    fontSize: 24,
-    lineHeight: 28,
-    color: colors.textPrimary,
+    fontSize: 26,
+    lineHeight: 30,
+    color: colors.primary,
   },
   mrp: {
     fontFamily: fonts.regular,
@@ -535,63 +417,40 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   offPill: {
-    backgroundColor: 'rgba(212, 84, 60, 0.12)',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: colors.successLight,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   offText: {
     fontFamily: fonts.bold,
-    fontSize: 10,
-    lineHeight: 12,
-    color: colors.primary,
-  },
-  savingsPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(212, 84, 60, 0.08)',
-    borderRadius: 20,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    marginTop: spacing.xs,
-  },
-  savingsText: {
-    fontFamily: fonts.medium,
     fontSize: 11,
-    lineHeight: 14,
+    lineHeight: 13,
     color: colors.primary,
   },
   deliveryCard: {
-    marginTop: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: 12,
     borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.backgroundMuted,
     padding: spacing.md,
+    marginTop: spacing.xs,
   },
   deliveryIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    backgroundColor: colors.backgroundElevated,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   deliveryCopy: {
     flex: 1,
     gap: 2,
-  },
-  changeLink: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    lineHeight: 17,
-    color: colors.primary,
+    minWidth: 0,
   },
   deliveryTitle: {
     fontFamily: fonts.regular,
@@ -601,7 +460,7 @@ const styles = StyleSheet.create({
   },
   deliveryAccent: {
     fontFamily: fonts.bold,
-    color: colors.primary,
+    color: colors.textPrimary,
   },
   deliverySubtitle: {
     fontFamily: fonts.regular,
@@ -609,39 +468,21 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: colors.textSecondary,
   },
-  trustRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  trustItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-  },
-  trustIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(212, 84, 60, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trustLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 9,
-    lineHeight: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
+  changeLink: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    lineHeight: 15,
+    color: colors.primary,
+    flexShrink: 0,
   },
   section: {
     gap: spacing.sm,
+    marginTop: spacing.md,
   },
   sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    lineHeight: 20,
+    lineHeight: 19,
     color: colors.textPrimary,
   },
   description: {
@@ -650,17 +491,31 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: colors.textSecondary,
   },
-  bulletRow: {
+  trustRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
   },
-  bulletText: {
+  trustItem: {
     flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    alignItems: 'center',
+    gap: 6,
+  },
+  trustIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.successLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trustLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 9,
+    lineHeight: 11,
     color: colors.textPrimary,
+    textAlign: 'center',
   },
   footer: {
     position: 'absolute',
@@ -669,46 +524,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 10,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.background,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
-    boxShadow: '0 -8px 24px rgba(28, 28, 30, 0.08)',
   },
   addToCartBtn: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 10,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundElevated,
-  },
-  addToCartText: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 15,
-    color: colors.primary,
-  },
-  buyNowBtn: {
-    flex: 1,
-    borderRadius: 10,
+    height: productFooterControlHeight,
+    borderRadius: 12,
     borderCurve: 'continuous',
     backgroundColor: colors.primary,
-    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buyNowText: {
+  addToCartText: {
     fontFamily: fonts.bold,
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 15,
+    lineHeight: 18,
     color: colors.textInverse,
   },
 });

@@ -13,16 +13,25 @@ import {
   updateCartQuantity,
   useCartStore,
 } from '@/store/cart.store';
-import { colors, shadows } from '@/theme/colors';
+import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 type PopularProductCardProps = {
   dish: RecommendedDish;
   width: number;
+  addPosition?: 'top-right' | 'bottom-right';
+  outlinedAdd?: boolean;
+  showDescription?: boolean;
 };
 
-export function PopularProductCard({ dish, width }: PopularProductCardProps) {
+export function PopularProductCard({
+  dish,
+  width,
+  addPosition = 'top-right',
+  outlinedAdd = false,
+  showDescription = false,
+}: PopularProductCardProps) {
   const { item, restaurantId, restaurantName } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
@@ -34,6 +43,12 @@ export function PopularProductCard({ dish, width }: PopularProductCardProps) {
     }
     updateCartQuantity(item.id, quantity + 1, restaurantId);
   }
+
+  const addBtnStyle = [
+    styles.addBtn,
+    addPosition === 'bottom-right' ? styles.addBtnBottom : styles.addBtnTop,
+    outlinedAdd ? styles.addBtnOutlined : styles.addBtnSolid,
+  ];
 
   return (
     <View style={[styles.card, { width }]}>
@@ -48,53 +63,77 @@ export function PopularProductCard({ dish, width }: PopularProductCardProps) {
             />
           </Pressable>
         </Link>
-        <Pressable
-          style={styles.addBtn}
-          onPress={handleAdd}
-          accessibilityRole="button"
-          accessibilityLabel={`Add ${item.name} to cart`}
-        >
-          <AppSymbol
-            name="plus"
-            size={14}
-            tintColor={colors.textInverse}
-            weight="semibold"
-          />
-        </Pressable>
+        {addPosition === 'top-right' ? (
+          <Pressable
+            style={addBtnStyle}
+            onPress={handleAdd}
+            accessibilityRole="button"
+            accessibilityLabel={`Add ${item.name} to cart`}
+          >
+            <AppSymbol
+              name="plus"
+              size={12}
+              tintColor={outlinedAdd ? colors.primary : colors.textInverse}
+              weight="semibold"
+            />
+          </Pressable>
+        ) : null}
       </View>
 
-      <Link href={productDetailPath(restaurantId, item.id)} asChild>
-        <Pressable style={styles.meta}>
-          <Text style={styles.name} numberOfLines={2}>
-            {item.name}
-          </Text>
-          <Text style={styles.price}>{formatUsd(item.price)}</Text>
-        </Pressable>
-      </Link>
+      <View style={styles.footer}>
+        <Link href={productDetailPath(restaurantId, item.id)} asChild>
+          <Pressable style={styles.meta}>
+            <Text style={styles.name} numberOfLines={2}>
+              {item.name}
+            </Text>
+            {showDescription ? (
+              <Text style={styles.unit} numberOfLines={1}>
+                {item.description}
+              </Text>
+            ) : null}
+            <Text style={styles.price}>{formatUsd(item.price)}</Text>
+          </Pressable>
+        </Link>
+
+        {addPosition === 'bottom-right' ? (
+          <Pressable
+            style={addBtnStyle}
+            onPress={handleAdd}
+            accessibilityRole="button"
+            accessibilityLabel={`Add ${item.name} to cart`}
+          >
+            <AppSymbol
+              name="plus"
+              size={12}
+              tintColor={outlinedAdd ? colors.primary : colors.textInverse}
+              weight="semibold"
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
   },
   imageWrap: {
-    height: 120,
-    borderRadius: radius.md,
+    height: 96,
+    borderRadius: 10,
     borderCurve: 'continuous',
     backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
     position: 'relative',
-    ...shadows.soft,
   },
   imagePress: {
-    width: '75%',
-    height: '75%',
+    width: '70%',
+    height: '70%',
   },
   image: {
     width: '100%',
@@ -102,28 +141,58 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     position: 'absolute',
-    top: spacing.sm,
-    right: spacing.sm,
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     borderRadius: radius.full,
-    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  addBtnTop: {
+    top: spacing.xs,
+    right: spacing.xs,
+  },
+  addBtnBottom: {
+    position: 'relative',
+    top: undefined,
+    right: undefined,
+    flexShrink: 0,
+    alignSelf: 'flex-end',
+  },
+  addBtnSolid: {
+    backgroundColor: colors.primary,
+  },
+  addBtnOutlined: {
+    backgroundColor: colors.background,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 4,
+  },
   meta: {
-    gap: 2,
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
   },
   name: {
     fontFamily: fonts.medium,
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
     color: colors.textPrimary,
+  },
+  unit: {
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    lineHeight: 11,
+    color: colors.textSecondary,
   },
   price: {
     fontFamily: fonts.bold,
-    fontSize: 14,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 14,
     color: colors.textPrimary,
+    marginTop: 1,
   },
 });

@@ -13,6 +13,7 @@ function icon(ios: string, android: string): CrossPlatformSymbol {
 export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
   'chevron.left': icon('chevron.left', 'chevron_left'),
   'chevron.right': icon('chevron.right', 'chevron_right'),
+  'arrow.right': icon('arrow.right', 'arrow_forward'),
   'chevron.down': icon('chevron.down', 'expand_more'),
   'chevron.up': icon('chevron.up', 'expand_less'),
   magnifyingglass: icon('magnifyingglass', 'search'),
@@ -38,6 +39,8 @@ export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
   'wifi.exclamationmark': icon('wifi.exclamationmark', 'wifi_off'),
   clock: icon('clock', 'schedule'),
   bicycle: icon('bicycle', 'pedal_bike'),
+  scooter: icon('bicycle', 'delivery_dining'),
+  'photo.on.rectangle': icon('photo.on.rectangle', 'image'),
   'map.fill': icon('map.fill', 'map'),
   'checkmark.circle.fill': icon('checkmark.circle.fill', 'check_circle'),
   checkmark: icon('checkmark', 'check'),

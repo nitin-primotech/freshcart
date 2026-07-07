@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatUsd } from '@/features/checkout/utils/format-currency';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 export type WeightOption = {
@@ -68,6 +68,7 @@ export function ProductWeightSelector({
 const styles = StyleSheet.create({
   wrap: {
     gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   header: {
     flexDirection: 'row',
@@ -76,32 +77,32 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 19,
     color: colors.textPrimary,
   },
   link: {
     fontFamily: fonts.medium,
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 12,
+    lineHeight: 15,
     color: colors.primary,
   },
   row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   option: {
-    minWidth: 72,
-    paddingHorizontal: spacing.md,
+    flex: 1,
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    paddingHorizontal: spacing.xs,
+    borderRadius: 10,
     borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.background,
     alignItems: 'center',
     gap: 2,
+    minWidth: 0,
   },
   optionSelected: {
     borderColor: colors.primary,
@@ -109,8 +110,8 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontFamily: fonts.semibold,
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 12,
+    lineHeight: 15,
     color: colors.textPrimary,
   },
   optionLabelSelected: {
@@ -118,8 +119,8 @@ const styles = StyleSheet.create({
   },
   optionPrice: {
     fontFamily: fonts.regular,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 12,
     color: colors.textSecondary,
   },
   optionPriceSelected: {

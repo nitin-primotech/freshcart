@@ -14,6 +14,7 @@ type AnimatedCartActionProps = {
   onDecrease: () => void;
   itemLabel?: string;
   compact?: boolean;
+  small?: boolean;
 };
 
 export function AnimatedCartAction({
@@ -23,8 +24,9 @@ export function AnimatedCartAction({
   onDecrease,
   itemLabel = 'item',
   compact = false,
+  small = false,
 }: AnimatedCartActionProps) {
-  const btnSize = compact ? 36 : 40;
+  const btnSize = small ? 26 : compact ? 34 : 40;
 
   return (
     <View style={styles.root}>
@@ -43,7 +45,11 @@ export function AnimatedCartAction({
             accessibilityRole="button"
             accessibilityLabel={`Add ${itemLabel} to cart`}
           >
-            <AppSymbol name="plus" size={18} tintColor={colors.textInverse} />
+            <AppSymbol
+              name="plus"
+              size={small ? 14 : 18}
+              tintColor={colors.textInverse}
+            />
           </Pressable>
         </Animated.View>
       ) : (

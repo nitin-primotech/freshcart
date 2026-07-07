@@ -18,16 +18,16 @@ export function HomeSearchBar() {
     >
       <AppSymbol
         name="magnifyingglass"
-        size={18}
+        size={16}
         tintColor={colors.textSecondary}
       />
       <Text style={styles.placeholder} numberOfLines={1}>
         Search 'milk, eggs, fruits...'
       </Text>
       <AppSymbol
-        name="barcode.viewfinder"
-        size={20}
-        tintColor={colors.textSecondary}
+        name="qrcode.viewfinder"
+        size={18}
+        tintColor={colors.primary}
       />
     </Pressable>
   );
@@ -38,18 +38,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: spacing.md,
-    backgroundColor: colors.backgroundMuted,
-    borderRadius: 14,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    gap: spacing.sm,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 9,
+    gap: spacing.xs,
     borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 40,
   },
   placeholder: {
     flex: 1,
     fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 17,
     color: colors.textTertiary,
   },
 });

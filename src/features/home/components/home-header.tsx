@@ -12,33 +12,12 @@ import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-const LOCATION_GREEN = colors.primary;
-
-function IconBadge({
-  count,
-  tone,
-}: {
-  count: number;
-  tone: 'danger' | 'success';
-}) {
-  if (count <= 0) return null;
-
-  return (
-    <View
-      style={[
-        styles.badge,
-        tone === 'danger' ? styles.badgeDanger : styles.badgeSuccess,
-      ]}
-    >
-      <Text style={styles.badgeText}>{count > 9 ? '9+' : String(count)}</Text>
-    </View>
-  );
-}
-
 export function HomeHeader() {
   const router = useRouter();
   const address = useAppStore(selectAddress);
   const cartCount = useCartStore(selectCartItemCount);
+  const locationLabel = `${address.line1}, ${address.line2}`;
+  const cartBadge = cartCount > 99 ? '99+' : String(cartCount);
 
   return (
     <View style={styles.wrap}>
@@ -47,29 +26,34 @@ export function HomeHeader() {
           style={styles.location}
           onPress={() => router.push('/location')}
           accessibilityRole="button"
-          accessibilityLabel={`Deliver to ${address.line2}`}
+          accessibilityLabel={`Deliver to ${locationLabel}`}
         >
-          <AppSymbol
-            name="location.fill"
-            size={14}
-            tintColor={colors.primary}
-            style={styles.pinIcon}
-          />
-          <Text style={styles.deliverLabel}>Deliver to</Text>
-          <View style={styles.locationRow}>
-            <Text
-              style={styles.locationLabel}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {address.line2}
-            </Text>
+          <View style={styles.pinWrap}>
             <AppSymbol
-              name="chevron.down"
-              size={11}
-              tintColor={LOCATION_GREEN}
-              style={styles.chevron}
+              name="location.fill"
+              size={16}
+              tintColor={colors.primary}
+              weight="semibold"
             />
+          </View>
+
+          <View style={styles.locationCopy}>
+            <Text style={styles.deliverLabel}>Deliver to</Text>
+            <View style={styles.locationRow}>
+              <Text
+                style={styles.locationLabel}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {locationLabel}
+              </Text>
+              <AppSymbol
+                name="chevron.down"
+                size={11}
+                tintColor={colors.textSecondary}
+                style={styles.chevron}
+              />
+            </View>
           </View>
         </Pressable>
 
@@ -85,12 +69,16 @@ export function HomeHeader() {
 
           <Pressable
             style={styles.iconBtn}
-            onPress={() => openCartSheet()}
+            onPress={openCartSheet}
             accessibilityRole="button"
             accessibilityLabel={`Cart, ${cartCount} items`}
           >
             <AppSymbol name="cart" size={20} tintColor={colors.textPrimary} />
-            <IconBadge count={cartCount} tone="success" />
+            {cartCount > 0 ? (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartBadge}</Text>
+              </View>
+            ) : null}
           </Pressable>
         </View>
       </View>
@@ -106,105 +94,89 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    height: 44,
-  },
-  menuBtn: {
-    width: 28,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  divider: {
-    width: StyleSheet.hairlineWidth,
-    height: 28,
-    backgroundColor: colors.borderStrong,
-    marginLeft: spacing.xs,
-    marginRight: spacing.sm,
-    flexShrink: 0,
+    minHeight: 44,
+    gap: spacing.sm,
   },
   location: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     minWidth: 0,
-    justifyContent: 'center',
-    paddingRight: spacing.xs,
+    gap: spacing.xs,
   },
-  pinIcon: {
-    marginBottom: 2,
+  pinWrap: {
+    width: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
   },
   deliverLabel: {
     fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 13,
     color: colors.textSecondary,
-    marginBottom: 1,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     minWidth: 0,
-    alignSelf: 'flex-start',
-    maxWidth: '100%',
   },
   locationLabel: {
     flexShrink: 1,
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    lineHeight: 18,
-    color: LOCATION_GREEN,
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    lineHeight: 17,
+    color: colors.textPrimary,
   },
   chevron: {
     flexShrink: 0,
-    marginLeft: spacing.xxs,
+    marginLeft: 2,
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 0,
-    gap: spacing.sm,
-    marginLeft: spacing.xs,
+    gap: 2,
   },
   iconBtn: {
-    width: 32,
-    height: 44,
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badge: {
+  notifDot: {
     position: 'absolute',
-    top: 6,
-    right: -4,
-    minWidth: 16,
-    height: 16,
+    top: 7,
+    right: 7,
+    width: 7,
+    height: 7,
     borderRadius: radius.full,
+    backgroundColor: colors.danger,
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 3,
+    right: 1,
+    minWidth: 15,
+    height: 15,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
     borderWidth: 1.5,
     borderColor: colors.background,
   },
-  badgeDanger: {
-    backgroundColor: colors.danger,
-  },
-  badgeSuccess: {
-    backgroundColor: colors.success,
-  },
-  badgeText: {
+  cartBadgeText: {
     fontFamily: fonts.bold,
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 8,
+    lineHeight: 10,
     color: colors.textInverse,
-    textAlign: 'center',
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 10,
-    right: 4,
-    width: 8,
-    height: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.danger,
-    borderWidth: 1.5,
-    borderColor: colors.background,
   },
 });

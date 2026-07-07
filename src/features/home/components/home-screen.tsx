@@ -18,13 +18,20 @@ import { DeliveryFeatureChips } from '@/features/home/components/delivery-featur
 import { FoodCategoryStrip } from '@/features/home/components/food-category-strip';
 import { GroceryDealsSection } from '@/features/home/components/grocery-deals-section';
 import { HomeHeader } from '@/features/home/components/home-header';
+import { HomeHeroBanner } from '@/features/home/components/home-hero-banner';
 import { HomeSearchBar } from '@/features/home/components/home-search-bar';
-import { OfferCarousel } from '@/features/home/components/offer-carousel';
+import { HomeWelcomePromo } from '@/features/home/components/home-welcome-promo';
+import { PopularBrandsSection } from '@/features/home/components/popular-brands-section';
 import { PopularNearYouSection } from '@/features/home/components/popular-near-you-section';
-import { getRecommendedDishes } from '@/features/home/utils/get-recommended-dishes';
+import { RecommendedForYouSection } from '@/features/home/components/recommended-for-you-section';
+import { TopPicksByCustomersSection } from '@/features/home/components/top-picks-by-customers-section';
+import { WhyShopWithUs } from '@/features/home/components/why-shop-with-us';
+import {
+  getDishesExcluding,
+  getRecommendedDishes,
+} from '@/features/home/utils/get-recommended-dishes';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { ErrorState } from '@/shared/components/error-state';
-import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { Shimmer } from '@/shared/components/shimmer';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { colors } from '@/theme/colors';
@@ -34,8 +41,8 @@ import { tabBarContentPadding } from '@/theme/tab-bar';
 function HomeSkeleton() {
   return (
     <View style={styles.skeleton}>
-      <Shimmer height={168} borderRadius={14} />
-      <Shimmer height={196} borderRadius={14} />
+      <Shimmer height={168} borderRadius={16} />
+      <Shimmer height={120} borderRadius={16} />
     </View>
   );
 }
@@ -77,14 +84,18 @@ export function HomeScreen() {
 
   const restaurants = restaurantsQuery.data ?? [];
   const storeId = restaurants[0]?.id ?? 'freshcart';
-  const firstCategoryId = categoriesQuery.data?.[0]?.id;
-  const categoryHref = firstCategoryId
-    ? (`/category/${firstCategoryId}` as const)
-    : undefined;
+  const categoryHref = '/(tabs)/categories' as const;
 
-  const recommendedDishes = getRecommendedDishes(restaurants, 16);
-  const dealDishes = recommendedDishes.slice(0, 6);
-  const popularDishes = recommendedDishes.slice(6, 12);
+  const recommendedDishes = getRecommendedDishes(restaurants, 30);
+  const dealDishes = recommendedDishes.slice(0, 8);
+  const dealIds = new Set(dealDishes.map((d) => d.item.id));
+  const popularDishes = getDishesExcluding(restaurants, dealIds, 6, 0);
+  const popularIds = new Set([
+    ...dealIds,
+    ...popularDishes.map((d) => d.item.id),
+  ]);
+  const recommendedForYou = getDishesExcluding(restaurants, popularIds, 6, 0);
+  const topPicks = getDishesExcluding(restaurants, new Set(), 12, 0);
 
   const bottomPad = tabBarContentPadding(insets.bottom);
 
@@ -113,6 +124,9 @@ export function HomeScreen() {
         style={[styles.headerBlock, { paddingTop: insets.top + spacing.xs }]}
       >
         <HomeHeader />
+        <View style={styles.searchWrap}>
+          <HomeSearchBar />
+        </View>
       </View>
 
       <ScrollView
@@ -133,22 +147,20 @@ export function HomeScreen() {
       >
         <View
           style={[
-            styles.stickySearchShell,
+            styles.stickyChipsShell,
             searchStuck
               ? {
                   borderBottomWidth: StyleSheet.hairlineWidth,
                   borderBottomColor: colors.border,
                 }
-              : styles.stickySearchShellIdle,
+              : null,
           ]}
         >
-          <HomeSearchBar />
           <DeliveryFeatureChips />
         </View>
 
         <View style={styles.promoBlock}>
-          <MerchantOfflineBanner />
-          <OfferCarousel promos={promosQuery.data} />
+          <HomeHeroBanner promos={promosQuery.data} />
         </View>
 
         <View style={styles.body}>
@@ -171,6 +183,17 @@ export function HomeScreen() {
                 dishes={popularDishes}
                 viewAllHref={viewAllHref}
               />
+              <PopularBrandsSection />
+              <RecommendedForYouSection
+                dishes={recommendedForYou}
+                viewAllHref={viewAllHref}
+              />
+              <WhyShopWithUs />
+              <TopPicksByCustomersSection
+                dishes={topPicks}
+                viewAllHref={viewAllHref}
+              />
+              <HomeWelcomePromo />
             </>
           ) : null}
 
@@ -198,17 +221,18 @@ const styles = StyleSheet.create({
   headerBlock: {
     backgroundColor: colors.background,
   },
-  stickySearchShell: {
-    backgroundColor: colors.background,
-    paddingBottom: spacing.xxs,
-    zIndex: 10,
+  searchWrap: {
+    paddingTop: spacing.xs,
+    paddingBottom: 2,
   },
-  stickySearchShellIdle: {
-    paddingTop: spacing.sm,
+  stickyChipsShell: {
+    backgroundColor: colors.background,
+    paddingBottom: spacing.xs,
+    zIndex: 10,
   },
   promoBlock: {
     backgroundColor: colors.background,
-    gap: spacing.sm,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.xs,
   },
   body: {

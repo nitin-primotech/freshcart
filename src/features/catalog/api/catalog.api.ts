@@ -25,20 +25,15 @@ const categories = categoriesData as Category[];
 const restaurants = restaurantsData as Restaurant[];
 const promos = promosData as Promo[];
 
-function deriveMockCategories(): Category[] {
-  return categories.map((category) => {
-    const restaurant = restaurants.find((entry) =>
-      entry.categoryIds.includes(category.id),
-    );
-    const firstProductImage = restaurant?.menu
-      .flatMap((section) => section.items)
-      .find((item) => isHttpImageUrl(item.image))?.image;
+/** FreshCart demo uses local grocery mocks instead of legacy Firebase food inventory. */
+const USE_MOCK_CATALOG = true;
 
-    return {
-      ...category,
-      image: firstProductImage ?? '',
-    };
-  });
+function usesLiveCatalog(): boolean {
+  return isFirebaseConfigured() && !USE_MOCK_CATALOG;
+}
+
+function deriveMockCategories(): Category[] {
+  return categories;
 }
 
 function getBannerPromos(): Promo[] {
@@ -76,7 +71,7 @@ export function fetchCategories(signal?: AbortSignal) {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     return getLiveCategories();
   }
   return simulateRequest(mockCategories, { delayMs: 600 });
@@ -86,7 +81,7 @@ export function fetchPromos(signal?: AbortSignal) {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     return getLivePromos();
   }
   return simulateRequest(mockPromos, { delayMs: 700 });
@@ -101,7 +96,7 @@ export function fetchRestaurants(signal?: AbortSignal) {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     return getLiveRestaurant().then((restaurant) => [restaurant]);
   }
   return simulateRequest(mockRestaurants, { delayMs: 1000 });
@@ -112,7 +107,7 @@ export async function fetchRestaurantById(id: string, signal?: AbortSignal) {
     throw new DOMException('Aborted', 'AbortError');
   }
 
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     const restaurant = await getLiveRestaurant();
     if (restaurant.id !== id && id !== DEFAULT_MERCHANT_RESTAURANT_ID) {
       throw new Error('Restaurant not found');
@@ -133,6 +128,26 @@ export type MenuItemContext = {
   sectionTitle: string;
 };
 
+function findMenuItemInMockCatalog(
+  restaurantId: string,
+  itemId: string,
+): MenuItemContext | null {
+  const stores = restaurantId
+    ? mockRestaurants.filter((entry) => entry.id === restaurantId)
+    : mockRestaurants;
+
+  for (const restaurant of stores.length > 0 ? stores : mockRestaurants) {
+    for (const section of restaurant.menu) {
+      const item = section.items.find((entry) => entry.id === itemId);
+      if (item) {
+        return { restaurant, item, sectionTitle: section.title };
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function fetchMenuItemContext(
   restaurantId: string,
   itemId: string,
@@ -142,28 +157,23 @@ export async function fetchMenuItemContext(
     throw new DOMException('Aborted', 'AbortError');
   }
 
-  const restaurant = isFirebaseConfigured()
-    ? await getLiveRestaurant()
-    : mockRestaurants.find((entry) => entry.id === restaurantId);
-
-  if (!restaurant) {
-    throw new Error('Restaurant not found');
-  }
-
-  for (const section of restaurant.menu) {
-    const item = section.items.find((entry) => entry.id === itemId);
-    if (item) {
-      if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
+    const restaurant = await getLiveRestaurant();
+    for (const section of restaurant.menu) {
+      const item = section.items.find((entry) => entry.id === itemId);
+      if (item) {
         return { restaurant, item, sectionTitle: section.title };
       }
-      return simulateRequest(
-        { restaurant, item, sectionTitle: section.title },
-        { delayMs: 650 },
-      );
     }
+    throw new Error('Product not found');
   }
 
-  throw new Error('Product not found');
+  const context = findMenuItemInMockCatalog(restaurantId, itemId);
+  if (!context) {
+    throw new Error('Product not found');
+  }
+
+  return simulateRequest(context, { delayMs: 650 });
 }
 
 export function getRelatedMenuItems(
@@ -183,7 +193,7 @@ export async function searchRestaurants(query: string, signal?: AbortSignal) {
     throw new DOMException('Aborted', 'AbortError');
   }
 
-  const source = isFirebaseConfigured()
+  const source = usesLiveCatalog()
     ? [await getLiveRestaurant()]
     : mockRestaurants;
 
@@ -204,7 +214,7 @@ export async function searchRestaurants(query: string, signal?: AbortSignal) {
       )
     : source;
 
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     return results;
   }
   return simulateRequest(results, { delayMs: 700 });
@@ -215,25 +225,23 @@ export async function fetchCategoryById(id: string, signal?: AbortSignal) {
     throw new DOMException('Aborted', 'AbortError');
   }
 
-  const source = isFirebaseConfigured()
+  const source = usesLiveCatalog()
     ? useCatalogStore.getState().categories
     : mockCategories;
 
-  if (isFirebaseConfigured() && source.length === 0) {
+  if (usesLiveCatalog() && source.length === 0) {
     await waitForCatalogReady();
   }
 
   const category = (
-    isFirebaseConfigured()
-      ? useCatalogStore.getState().categories
-      : mockCategories
+    usesLiveCatalog() ? useCatalogStore.getState().categories : mockCategories
   ).find((entry) => entry.id === id);
 
   if (!category) {
     throw new Error('Category not found');
   }
 
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     return category;
   }
   return simulateRequest(category, { delayMs: 400 });
@@ -247,7 +255,7 @@ export async function fetchRestaurantsByCategory(
     throw new DOMException('Aborted', 'AbortError');
   }
 
-  const source = isFirebaseConfigured()
+  const source = usesLiveCatalog()
     ? [await getLiveRestaurant()]
     : mockRestaurants;
 
@@ -255,7 +263,7 @@ export async function fetchRestaurantsByCategory(
     restaurant.categoryIds.includes(categoryId),
   );
 
-  if (isFirebaseConfigured()) {
+  if (usesLiveCatalog()) {
     return results;
   }
   return simulateRequest(results, { delayMs: 850 });

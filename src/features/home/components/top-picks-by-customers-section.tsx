@@ -1,21 +1,21 @@
 import type { Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { CustomerTopPickCard } from '@/features/home/components/customer-top-pick-card';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
-import { PopularProductCard } from '@/features/home/components/popular-product-card';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { spacing } from '@/theme/spacing';
 
-type PopularNearYouSectionProps = {
+type TopPicksByCustomersSectionProps = {
   dishes: RecommendedDish[];
   viewAllHref?: Href;
 };
 
-export function PopularNearYouSection({
+export function TopPicksByCustomersSection({
   dishes,
   viewAllHref,
-}: PopularNearYouSectionProps) {
+}: TopPicksByCustomersSectionProps) {
   const cardWidth = useCarouselItemWidth({
     visibleCount: 2.65,
     peek: 0.1,
@@ -28,7 +28,7 @@ export function PopularNearYouSection({
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Popular Near You" href={viewAllHref} />
+      <HomeSectionHeader title="Top Picks by Customers" href={viewAllHref} />
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -36,11 +36,10 @@ export function PopularNearYouSection({
         contentContainerStyle={styles.row}
       >
         {dishes.map((dish) => (
-          <PopularProductCard
+          <CustomerTopPickCard
             key={dish.item.id}
             dish={dish}
             width={cardWidth}
-            showDescription
           />
         ))}
       </ScrollView>

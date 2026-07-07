@@ -2,7 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 export type NutritionFact = {
@@ -61,32 +61,33 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 19,
     color: colors.textPrimary,
   },
   row: {
-    gap: spacing.sm,
+    gap: spacing.xs,
+    paddingRight: spacing.md,
   },
   card: {
-    minWidth: 88,
-    paddingHorizontal: spacing.md,
+    minWidth: 76,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
+    borderRadius: 10,
     borderCurve: 'continuous',
     backgroundColor: colors.backgroundMuted,
     gap: 2,
   },
   cardLabel: {
     fontFamily: fonts.regular,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
+    lineHeight: 12,
     color: colors.textSecondary,
   },
   cardValue: {
     fontFamily: fonts.bold,
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 12,
+    lineHeight: 15,
     color: colors.textPrimary,
   },
 });

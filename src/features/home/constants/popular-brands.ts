@@ -8,39 +8,38 @@ export type PopularBrand = {
 
 export const POPULAR_BRANDS: PopularBrand[] = [
   {
-    id: 'haldiram',
-    name: "Haldiram's",
-    image: require('@/assets/images/brands/haldiram.png'),
+    id: 'coca-cola',
+    name: 'Coca-Cola',
+    image: require('@/assets/images/brands/nestle.png'),
   },
   {
-    id: 'bikaner',
-    name: 'Bikanervala',
-    image: require('@/assets/images/brands/bikaner.png'),
-  },
-  {
-    id: 'amul',
-    name: 'Amul',
-    image: require('@/assets/images/brands/amul.png'),
-  },
-  {
-    id: 'tata',
-    name: 'Tata Salt',
-    image: require('@/assets/images/brands/tata.png'),
-  },
-
-  {
-    id: 'parle',
-    name: 'Parle',
+    id: 'pepsi',
+    name: 'Pepsi',
     image: require('@/assets/images/brands/parle.png'),
   },
   {
-    id: 'britannia',
-    name: 'Britannia',
+    id: 'quaker',
+    name: 'Quaker',
     image: require('@/assets/images/brands/britannia.png'),
   },
   {
-    id: 'nestle',
-    name: 'Nestlé',
-    image: require('@/assets/images/brands/nestle.png'),
+    id: 'kelloggs',
+    name: "Kellogg's",
+    image: require('@/assets/images/brands/britannia.png'),
+  },
+  {
+    id: 'tropicana',
+    name: 'Tropicana',
+    image: require('@/assets/images/brands/tata.png'),
+  },
+  {
+    id: 'nabisco',
+    name: 'Nabisco',
+    image: require('@/assets/images/brands/amul.png'),
+  },
+  {
+    id: 'amazon-fresh',
+    name: 'Amazon Fresh',
+    image: require('@/assets/images/brands/bikaner.png'),
   },
 ];

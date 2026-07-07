@@ -7,15 +7,15 @@ import type { RecommendedDish } from '@/features/home/utils/get-recommended-dish
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { spacing } from '@/theme/spacing';
 
-type PopularNearYouSectionProps = {
+type RecommendedForYouSectionProps = {
   dishes: RecommendedDish[];
   viewAllHref?: Href;
 };
 
-export function PopularNearYouSection({
+export function RecommendedForYouSection({
   dishes,
   viewAllHref,
-}: PopularNearYouSectionProps) {
+}: RecommendedForYouSectionProps) {
   const cardWidth = useCarouselItemWidth({
     visibleCount: 2.65,
     peek: 0.1,
@@ -28,7 +28,7 @@ export function PopularNearYouSection({
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Popular Near You" href={viewAllHref} />
+      <HomeSectionHeader title="Recommended for You" href={viewAllHref} />
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -40,6 +40,7 @@ export function PopularNearYouSection({
             key={dish.item.id}
             dish={dish}
             width={cardWidth}
+            addPosition="bottom-right"
             showDescription
           />
         ))}

@@ -15,7 +15,7 @@ export type StoredProfile = {
 const DEFAULT_ADDRESS: DeliveryAddress = {
   label: 'Home',
   line1: '221B Baker Street',
-  line2: 'New York, NY 10001',
+  line2: 'New York',
 };
 
 export const DEFAULT_PROFILE: StoredProfile = {

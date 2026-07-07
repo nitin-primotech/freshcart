@@ -3,7 +3,7 @@ import type { MenuItem } from '@/features/catalog/types/catalog.types';
 export const PRODUCT_TRUST_ITEMS = [
   { icon: 'leaf.fill', label: '100% Fresh' },
   { icon: 'shield.fill', label: 'No Preservatives' },
-  { icon: 'sun.max.fill', label: 'Naturally Grown' },
+  { icon: 'sparkles', label: 'Naturally Grown' },
   { icon: 'heart.fill', label: 'Rich in Vitamin C' },
 ] as const;
 
@@ -85,14 +85,35 @@ export const MOCK_PRODUCT_REVIEWS: ProductReview[] = [
   },
 ];
 
+export function getProductTagline(item: MenuItem): string {
+  const desc = item.description?.trim();
+  if (!desc) return 'Handpicked for freshness and quality';
+
+  const parts = desc.split('·').map((part) => part.trim());
+  if (parts.length > 1) {
+    const tagline = parts.slice(1).join(', ');
+    return tagline.charAt(0).toUpperCase() + tagline.slice(1);
+  }
+
+  if (/^\d/.test(desc)) return 'Handpicked for freshness and quality';
+  return desc;
+}
+
 export function getProductDetailBullets(item: MenuItem): string[] {
+  if (item.description) {
+    return [
+      item.description,
+      'Handpicked and quality checked before dispatch',
+      'Packed in food-safe containers',
+    ];
+  }
+
   const bullets = [
-    item.isVegetarian ? '100% vegetarian option' : 'Freshly prepared on order',
+    item.isVegetarian ? '100% vegetarian' : 'Freshly sourced for quality',
     item.calories
-      ? `Rich in flavour · ${item.calories} cal per serving`
-      : 'Handcrafted in-house',
+      ? `Approx. ${item.calories} cal per serving`
+      : 'Farm-fresh quality',
     'Packed in food-safe containers',
-    'No added preservatives',
   ];
 
   if (item.isPopular) {
@@ -103,6 +124,7 @@ export function getProductDetailBullets(item: MenuItem): string[] {
 }
 
 export function formatServingLabel(item: MenuItem): string {
+  if (item.description) return item.description;
   if (item.calories) return `1 serving · ${item.calories} cal`;
   return '1 serving';
 }

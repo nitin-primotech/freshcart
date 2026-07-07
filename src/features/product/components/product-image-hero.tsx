@@ -1,10 +1,10 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
 import {
   Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,28 +12,30 @@ import {
 } from 'react-native';
 
 import { getProductGalleryImages } from '@/features/product/utils/product-gallery';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-const STAGE_HEIGHT = 248;
-const H_PAD = spacing.lg;
+const STAGE_HEIGHT = 300;
 
 type ProductImageHeroProps = {
   primaryImage: string;
   relatedImages: string[];
   discountPercent?: number;
+  onViewImages?: () => void;
 };
 
 export function ProductImageHero({
   primaryImage,
   relatedImages,
   discountPercent = 0,
+  onViewImages,
 }: ProductImageHeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const stageWidth = Dimensions.get('window').width - H_PAD * 2;
+  const stageWidth = Dimensions.get('window').width;
   const images = useMemo(
-    () => getProductGalleryImages(primaryImage, relatedImages, 3),
+    () => getProductGalleryImages(primaryImage, relatedImages, 6),
     [primaryImage, relatedImages],
   );
 
@@ -43,18 +45,10 @@ export function ProductImageHero({
   }
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { width: stageWidth }]}>
       <View style={[styles.stage, { width: stageWidth }]}>
-        <LinearGradient
-          colors={['#FFFDFB', '#F8F1EA', '#F3E8DE']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
         {images.length > 0 ? (
           <ScrollView
-            style={styles.galleryScroll}
             horizontal
             pagingEnabled
             nestedScrollEnabled
@@ -71,7 +65,7 @@ export function ProductImageHero({
                 <Image
                   source={{ uri: imageUri }}
                   style={styles.image}
-                  contentFit="cover"
+                  contentFit="contain"
                   transition={220}
                 />
               </View>
@@ -84,74 +78,104 @@ export function ProductImageHero({
             <Text style={styles.discountText}>{discountPercent}% OFF</Text>
           </View>
         ) : null}
-      </View>
 
-      {images.length > 1 ? (
-        <View style={styles.dots}>
-          {images.map((imageUri, index) => (
-            <View
-              key={`dot-${imageUri}-${index}`}
-              style={[
-                styles.dot,
-                index === activeIndex ? styles.dotActive : null,
-              ]}
+        {onViewImages ? (
+          <Pressable
+            style={styles.viewImagesBtn}
+            onPress={onViewImages}
+            accessibilityRole="button"
+            accessibilityLabel="View product images"
+          >
+            <AppSymbol
+              name="photo.on.rectangle"
+              size={12}
+              tintColor={colors.textPrimary}
             />
-          ))}
-        </View>
-      ) : null}
+            <Text style={styles.viewImagesText}>View images</Text>
+          </Pressable>
+        ) : null}
+
+        {images.length > 1 ? (
+          <View style={styles.dots}>
+            {images.map((imageUri, index) => (
+              <View
+                key={`dot-${imageUri}-${index}`}
+                style={[styles.dot, index === activeIndex && styles.dotActive]}
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    alignItems: 'center',
-    gap: spacing.sm,
+    alignSelf: 'center',
   },
   stage: {
     height: STAGE_HEIGHT,
-    borderRadius: 18,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#FFFDFB',
-    boxShadow: '0 10px 28px rgba(28, 28, 30, 0.08)',
-  },
-  galleryScroll: {
-    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.accentMuted,
+    position: 'relative',
   },
   galleryRow: {
     height: STAGE_HEIGHT,
   },
   slide: {
     height: STAGE_HEIGHT,
-    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
   },
   image: {
     width: '100%',
-    height: '100%',
+    height: '88%',
   },
   discountBadge: {
     position: 'absolute',
-    top: spacing.sm,
-    left: spacing.sm,
+    top: spacing.md,
+    left: spacing.md,
     backgroundColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    boxShadow: '0 4px 10px rgba(212, 84, 60, 0.24)',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   discountText: {
     fontFamily: fonts.bold,
-    fontSize: 10,
-    lineHeight: 12,
+    fontSize: 11,
+    lineHeight: 13,
     color: colors.textInverse,
   },
-  dots: {
+  viewImagesBtn: {
+    position: 'absolute',
+    bottom: spacing.lg,
+    right: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  viewImagesText: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    lineHeight: 13,
+    color: colors.textPrimary,
+  },
+  dots: {
+    position: 'absolute',
+    bottom: spacing.lg,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
   },
   dot: {
     width: 6,
@@ -160,9 +184,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.borderStrong,
   },
   dotActive: {
-    width: 18,
+    backgroundColor: colors.primary,
+    width: 6,
     height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.textSecondary,
   },
 });

@@ -10,35 +10,44 @@ import {
 } from 'react-native';
 
 import type { Category } from '@/features/catalog/types/catalog.types';
-import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-const VISIBLE_COUNT = 6;
-const TILE_SIZE = 52;
+const TILE_SIZE = 56;
+const TILE_BACKGROUNDS = [
+  '#F1F8F2',
+  '#FFF8E8',
+  '#F3EEF8',
+  '#EEF6FF',
+  '#FCEEF5',
+  '#FFF3E8',
+  '#F2F7FF',
+  '#F8F2EA',
+] as const;
 
-type FoodCategoryStripProps = {
+type GroceryCategoryGridProps = {
   categories: Category[];
   moreHref?: Href;
 };
 
-export function FoodCategoryStrip({
+export function GroceryCategoryGrid({
   categories,
   moreHref,
-}: FoodCategoryStripProps) {
+}: GroceryCategoryGridProps) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const contentWidth = width - spacing.md * 2;
-  const itemWidth = contentWidth / VISIBLE_COUNT;
-  const visible = categories.slice(0, VISIBLE_COUNT);
+  const columns = 4;
+  const itemWidth = contentWidth / columns;
+  const visible = categories.slice(0, 12);
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Shop by Category" href={moreHref} />
       <View style={styles.grid}>
-        {visible.map((cat) => {
+        {visible.map((cat, index) => {
           const imageUri = resolveCategoryImageUri(cat.image);
           if (!imageUri) return null;
 
@@ -50,7 +59,15 @@ export function FoodCategoryStrip({
               accessibilityRole="button"
               accessibilityLabel={`Browse ${cat.name}`}
             >
-              <View style={styles.tile}>
+              <View
+                style={[
+                  styles.tile,
+                  {
+                    backgroundColor:
+                      TILE_BACKGROUNDS[index % TILE_BACKGROUNDS.length],
+                  },
+                ]}
+              >
                 <Image
                   source={{ uri: imageUri }}
                   style={styles.image}
@@ -64,6 +81,23 @@ export function FoodCategoryStrip({
             </Pressable>
           );
         })}
+
+        <Pressable
+          style={[styles.item, { width: itemWidth }]}
+          onPress={() => moreHref && router.push(moreHref)}
+          disabled={!moreHref}
+          accessibilityRole="button"
+          accessibilityLabel="View all categories"
+        >
+          <View style={[styles.tile, styles.moreTile]}>
+            <AppSymbol
+              name="circle.grid.2x2.fill"
+              size={22}
+              tintColor={colors.primary}
+            />
+          </View>
+          <Text style={styles.label}>View All</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -71,37 +105,40 @@ export function FoodCategoryStrip({
 
 const styles = StyleSheet.create({
   wrap: {
+    paddingHorizontal: spacing.md,
     marginTop: spacing.md,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.md,
   },
   item: {
     alignItems: 'center',
-    gap: 4,
-    marginBottom: spacing.xs,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   tile: {
     width: TILE_SIZE,
     height: TILE_SIZE,
     borderRadius: TILE_SIZE / 2,
-    borderCurve: 'continuous',
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 4,
-    overflow: 'hidden',
+    overflow: 'visible',
+  },
+  moreTile: {
+    backgroundColor: colors.successLight,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   image: {
-    width: 40,
-    height: 40,
+    width: 46,
+    height: 46,
   },
   label: {
     fontFamily: fonts.medium,
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 10,
+    lineHeight: 13,
     color: colors.textPrimary,
     textAlign: 'center',
   },

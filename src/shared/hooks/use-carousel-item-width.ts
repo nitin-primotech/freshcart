@@ -23,5 +23,5 @@ export function useCarouselItemWidth({
   const gaps = gap * Math.max(visibleCount - 1, 0);
   const available = width - paddingStart - paddingEnd - gaps;
   const slots = visibleCount + peek;
-  return Math.max(Math.floor(available / slots), 120);
+  return Math.max(Math.floor(available / slots), 96);
 }

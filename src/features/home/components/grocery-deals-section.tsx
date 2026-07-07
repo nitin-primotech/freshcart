@@ -17,9 +17,10 @@ export function GroceryDealsSection({
   viewAllHref,
 }: GroceryDealsSectionProps) {
   const cardWidth = useCarouselItemWidth({
-    visibleCount: 1.55,
-    peek: 0.05,
-    gap: spacing.md,
+    visibleCount: 2.55,
+    peek: 0.12,
+    gap: spacing.sm,
+    paddingStart: spacing.md,
     paddingEnd: spacing.md,
   });
 
@@ -49,7 +50,7 @@ export function GroceryDealsSection({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: spacing.lg,
+    marginTop: spacing.md,
   },
   row: {
     paddingLeft: spacing.md,

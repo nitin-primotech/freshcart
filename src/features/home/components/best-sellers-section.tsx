@@ -1,26 +1,25 @@
 import type { Href } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { BestSellerCard } from '@/features/home/components/best-seller-card';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
-import { PopularProductCard } from '@/features/home/components/popular-product-card';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { spacing } from '@/theme/spacing';
 
-type PopularNearYouSectionProps = {
+type BestSellersSectionProps = {
   dishes: RecommendedDish[];
   viewAllHref?: Href;
 };
 
-export function PopularNearYouSection({
+export function BestSellersSection({
   dishes,
   viewAllHref,
-}: PopularNearYouSectionProps) {
+}: BestSellersSectionProps) {
   const cardWidth = useCarouselItemWidth({
-    visibleCount: 2.65,
-    peek: 0.1,
-    gap: spacing.sm,
-    paddingStart: spacing.md,
+    visibleCount: 2.35,
+    peek: 0.05,
+    gap: spacing.md,
     paddingEnd: spacing.md,
   });
 
@@ -28,7 +27,7 @@ export function PopularNearYouSection({
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Popular Near You" href={viewAllHref} />
+      <HomeSectionHeader title="Best Sellers" href={viewAllHref} />
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -36,12 +35,7 @@ export function PopularNearYouSection({
         contentContainerStyle={styles.row}
       >
         {dishes.map((dish) => (
-          <PopularProductCard
-            key={dish.item.id}
-            dish={dish}
-            width={cardWidth}
-            showDescription
-          />
+          <BestSellerCard key={dish.item.id} dish={dish} width={cardWidth} />
         ))}
       </ScrollView>
     </View>
@@ -50,7 +44,7 @@ export function PopularNearYouSection({
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
   },
   row: {
     paddingLeft: spacing.md,
