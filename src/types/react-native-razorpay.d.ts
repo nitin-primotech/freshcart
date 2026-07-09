@@ -17,6 +17,23 @@ declare module 'react-native-razorpay' {
       color?: string;
       hide_topbar?: boolean;
     };
+    config?: {
+      display?: {
+        blocks?: Record<
+          string,
+          {
+            name: string;
+            instruments: Array<Record<string, unknown>>;
+          }
+        >;
+        sequence?: string[];
+        hide?: Array<{ method: string }>;
+        preferences?: {
+          show_default_blocks?: boolean;
+        };
+      };
+    };
+    method?: 'card' | 'netbanking' | 'wallet' | 'upi' | 'emi';
     [key: string]: unknown;
   };
 

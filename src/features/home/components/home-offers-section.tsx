@@ -44,7 +44,7 @@ export function HomeOffersSection() {
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Offers for you" href="/(tabs)/offers" />
+      <HomeSectionHeader title="Offers for you" href="/profile/offers" />
       <ScrollView
         horizontal
         nestedScrollEnabled

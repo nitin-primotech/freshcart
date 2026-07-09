@@ -1,3 +1,5 @@
+import { RAZORPAY_CURRENCY } from '@/features/checkout/constants/razorpay.constants';
+
 /**
  * Creates a Razorpay order on your backend (requires secret key server-side).
  * Set EXPO_PUBLIC_API_URL and implement POST /payments/razorpay/order → { id: string }.
@@ -14,7 +16,7 @@ export async function fetchRazorpayOrderId(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         amount: amountPaise,
-        currency: 'INR',
+        currency: RAZORPAY_CURRENCY,
       }),
     });
 

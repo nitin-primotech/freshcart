@@ -21,14 +21,6 @@ export function AppTabs() {
         <NativeTabs.Trigger.Label>Categories</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="offers">
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'tag', selected: 'tag.fill' }}
-          md="local_offer"
-        />
-        <NativeTabs.Trigger.Label>Offers</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-
       <NativeTabs.Trigger name="orders">
         <NativeTabs.Trigger.Icon
           sf={{ default: 'bag', selected: 'bag.fill' }}

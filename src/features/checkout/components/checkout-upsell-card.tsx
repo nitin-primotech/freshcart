@@ -1,11 +1,20 @@
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { formatInr } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
-import { hapticAddToCart } from '@/shared/haptics/feedback';
-import { addToCart } from '@/store/cart.store';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
+import {
+  hapticAddToCart,
+  hapticPrimaryAction,
+  hapticSoftTap,
+} from '@/shared/haptics/feedback';
+import {
+  addToCart,
+  selectCartLineQuantity,
+  updateCartQuantity,
+  useCartStore,
+} from '@/store/cart.store';
 import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 
@@ -16,10 +25,25 @@ type CheckoutUpsellCardProps = {
 
 export function CheckoutUpsellCard({ dish, width }: CheckoutUpsellCardProps) {
   const { item, restaurantId, restaurantName } = dish;
+  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
   function handleAdd() {
-    hapticAddToCart();
+    hapticPrimaryAction();
     addToCart(item, restaurantId, restaurantName);
+  }
+
+  function handleIncrease() {
+    hapticAddToCart();
+    if (quantity === 0) {
+      addToCart(item, restaurantId, restaurantName);
+      return;
+    }
+    updateCartQuantity(item.id, quantity + 1, restaurantId);
+  }
+
+  function handleDecrease() {
+    hapticSoftTap();
+    updateCartQuantity(item.id, quantity - 1, restaurantId);
   }
 
   return (
@@ -38,20 +62,17 @@ export function CheckoutUpsellCard({ dish, width }: CheckoutUpsellCardProps) {
         >
           {item.name}
         </PremiumText>
-        <View style={styles.footer}>
-          <PremiumText variant="captionMedium" color={colors.textPrimary}>
-            {formatInr(item.price)}
-          </PremiumText>
-          <Pressable
-            onPress={handleAdd}
-            style={styles.addBtn}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${item.name}`}
-          >
-            <AppSymbol name="plus" size={14} tintColor={colors.textInverse} />
-          </Pressable>
-        </View>
+        <PremiumText variant="captionMedium" color={colors.textPrimary}>
+          {formatInr(item.price)}
+        </PremiumText>
+        <ProductCardAddAction
+          quantity={quantity}
+          onAdd={handleAdd}
+          onIncrease={handleIncrease}
+          onDecrease={handleDecrease}
+          itemLabel={item.name}
+          variant="solid"
+        />
       </View>
     </View>
   );
@@ -75,19 +96,5 @@ const styles = StyleSheet.create({
   },
   name: {
     minHeight: 36,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  addBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderCurve: 'continuous',
   },
 });

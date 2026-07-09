@@ -10,11 +10,13 @@ import { spacing } from '@/theme/spacing';
 type RecommendedForYouSectionProps = {
   dishes: RecommendedDish[];
   viewAllHref?: Href;
+  title?: string;
 };
 
 export function RecommendedForYouSection({
   dishes,
   viewAllHref,
+  title = 'Recommended for You',
 }: RecommendedForYouSectionProps) {
   const cardWidth = useCarouselItemWidth({
     visibleCount: 2.65,
@@ -28,7 +30,7 @@ export function RecommendedForYouSection({
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Recommended for You" href={viewAllHref} />
+      <HomeSectionHeader title={title} href={viewAllHref} />
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -40,7 +42,6 @@ export function RecommendedForYouSection({
             key={dish.item.id}
             dish={dish}
             width={cardWidth}
-            addPosition="bottom-right"
             showDescription
           />
         ))}

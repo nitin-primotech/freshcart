@@ -8,6 +8,7 @@ type CartLineStepperProps = {
   quantity: number;
   onDecrease: () => void;
   onIncrease: () => void;
+  fullWidth?: boolean;
 };
 
 /** Compact outline stepper for cart rows — Swiggy-style inline control. */
@@ -15,9 +16,10 @@ export function CartLineStepper({
   quantity,
   onDecrease,
   onIncrease,
+  fullWidth = false,
 }: CartLineStepperProps) {
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, fullWidth && styles.rootFullWidth]}>
       <Pressable
         onPress={onDecrease}
         style={styles.btn}
@@ -56,6 +58,11 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     minWidth: 76,
   },
+  rootFullWidth: {
+    width: '100%',
+    minWidth: 0,
+    justifyContent: 'space-between',
+  },
   btn: {
     width: 26,
     height: 26,
@@ -64,6 +71,7 @@ const styles = StyleSheet.create({
   },
   qtyWrap: {
     minWidth: 18,
+    flex: 1,
     alignItems: 'center',
   },
   qty: {

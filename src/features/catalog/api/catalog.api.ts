@@ -74,7 +74,7 @@ export function fetchCategories(signal?: AbortSignal) {
   if (usesLiveCatalog()) {
     return getLiveCategories();
   }
-  return simulateRequest(mockCategories, { delayMs: 600 });
+  return simulateRequest(mockCategories, { delayMs: 120, jitterMs: 60 });
 }
 
 export function fetchPromos(signal?: AbortSignal) {
@@ -84,7 +84,7 @@ export function fetchPromos(signal?: AbortSignal) {
   if (usesLiveCatalog()) {
     return getLivePromos();
   }
-  return simulateRequest(mockPromos, { delayMs: 700 });
+  return simulateRequest(mockPromos, { delayMs: 140, jitterMs: 60 });
 }
 
 async function getLivePromos(): Promise<Promo[]> {
@@ -99,7 +99,7 @@ export function fetchRestaurants(signal?: AbortSignal) {
   if (usesLiveCatalog()) {
     return getLiveRestaurant().then((restaurant) => [restaurant]);
   }
-  return simulateRequest(mockRestaurants, { delayMs: 1000 });
+  return simulateRequest(mockRestaurants, { delayMs: 180, jitterMs: 80 });
 }
 
 export async function fetchRestaurantById(id: string, signal?: AbortSignal) {
@@ -119,7 +119,7 @@ export async function fetchRestaurantById(id: string, signal?: AbortSignal) {
   if (!restaurant) {
     throw new Error('Restaurant not found');
   }
-  return simulateRequest(restaurant, { delayMs: 800 });
+  return simulateRequest(restaurant, { delayMs: 160, jitterMs: 70 });
 }
 
 export type MenuItemContext = {
@@ -173,7 +173,7 @@ export async function fetchMenuItemContext(
     throw new Error('Product not found');
   }
 
-  return simulateRequest(context, { delayMs: 650 });
+  return simulateRequest(context, { delayMs: 120, jitterMs: 50 });
 }
 
 export function getRelatedMenuItems(
@@ -217,7 +217,7 @@ export async function searchRestaurants(query: string, signal?: AbortSignal) {
   if (usesLiveCatalog()) {
     return results;
   }
-  return simulateRequest(results, { delayMs: 700 });
+  return simulateRequest(results, { delayMs: 140, jitterMs: 60 });
 }
 
 export async function fetchCategoryById(id: string, signal?: AbortSignal) {
@@ -244,7 +244,7 @@ export async function fetchCategoryById(id: string, signal?: AbortSignal) {
   if (usesLiveCatalog()) {
     return category;
   }
-  return simulateRequest(category, { delayMs: 400 });
+  return simulateRequest(category, { delayMs: 100, jitterMs: 40 });
 }
 
 export async function fetchRestaurantsByCategory(
@@ -266,7 +266,7 @@ export async function fetchRestaurantsByCategory(
   if (usesLiveCatalog()) {
     return results;
   }
-  return simulateRequest(results, { delayMs: 850 });
+  return simulateRequest(results, { delayMs: 160, jitterMs: 70 });
 }
 
 export function getCatalogSnapshot() {

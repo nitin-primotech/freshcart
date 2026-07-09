@@ -1,10 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -15,21 +14,19 @@ import {
   fetchRestaurants,
   searchRestaurants,
 } from '@/features/catalog/api/catalog.api';
-import type {
-  Category,
-  Restaurant,
-} from '@/features/catalog/types/catalog.types';
-import { HomeSectionHeader } from '@/features/home/components/home-section-header';
+import type { Category } from '@/features/catalog/types/catalog.types';
+import { GroceryDealsSection } from '@/features/home/components/grocery-deals-section';
 import { RecommendedSection } from '@/features/home/components/recommended-section';
+import { getRecommendedDishes } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
-import { SearchCategoryStrip } from '@/features/search/components/search-category-strip';
-import { SearchCuisineCarousel } from '@/features/search/components/search-cuisine-carousel';
-import { SearchRestaurantRow } from '@/features/search/components/search-restaurant-row';
+import { SearchPopularCategoriesGrid } from '@/features/search/components/search-popular-categories-grid';
+import { SearchRecentChipsSection } from '@/features/search/components/search-recent-chips-section';
+import { SearchRecentlyViewedSection } from '@/features/search/components/search-recently-viewed-section';
+import { SearchRequestBanner } from '@/features/search/components/search-request-banner';
+import { SearchScreenHeader } from '@/features/search/components/search-screen-header';
 import { SearchSuggestionList } from '@/features/search/components/search-suggestion-list';
-import {
-  SEARCH_FILTERS,
-  type SearchFilterId,
-} from '@/features/search/constants/search.constants';
+import { SearchTopBrandsSection } from '@/features/search/components/search-top-brands-section';
+import { SearchTrendingSection } from '@/features/search/components/search-trending-section';
 import { resolveSearchDestination } from '@/features/search/utils/resolve-search-destination';
 import { searchDishes } from '@/features/search/utils/search-dishes';
 import {
@@ -41,7 +38,7 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { EmptyState } from '@/shared/components/empty-state';
 import { ErrorState } from '@/shared/components/error-state';
 import { Shimmer } from '@/shared/components/shimmer';
-import { hapticSelection, hapticSoftTap } from '@/shared/haptics/feedback';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { formTextInputProps } from '@/shared/utils/keyboard';
 import {
@@ -51,46 +48,23 @@ import {
 } from '@/store/app.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
-import { tabBarContentPadding } from '@/theme/tab-bar';
 import { fonts, typography } from '@/theme/typography';
-
-function applyBrowseFilters(
-  restaurants: Restaurant[],
-  filter: SearchFilterId | null,
-  categoryId: string | null,
-): Restaurant[] {
-  const list = categoryId
-    ? restaurants.filter((restaurant) =>
-        restaurant.categoryIds.includes(categoryId),
-      )
-    : restaurants;
-
-  if (!filter) return list;
-
-  switch (filter) {
-    case 'top_rated':
-      return [...list].sort((a, b) => b.rating - a.rating);
-    case 'fastest':
-      return [...list].sort((a, b) => a.deliveryTimeMin - b.deliveryTimeMin);
-    case 'free_delivery':
-      return list.filter((restaurant) => restaurant.isFreeDelivery);
-    case 'offers':
-      return list.filter(
-        (restaurant) => restaurant.offerLabel || restaurant.isPromoted,
-      );
-  }
-}
 
 export function SearchScreen() {
   const router = useRouter();
-  const { q } = useLocalSearchParams<{ q?: string | string[] }>();
+  const { q, autoFocus } = useLocalSearchParams<{
+    q?: string | string[];
+    autoFocus?: string | string[];
+  }>();
   const insets = useSafeAreaInsets();
+  const inputRef = useRef<TextInput>(null);
   const recent = useAppStore(selectRecentSearches);
   const [query, setQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<SearchFilterId | null>(
-    'top_rated',
-  );
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+
+  const shouldAutoFocus =
+    autoFocus === '1' ||
+    autoFocus === 'true' ||
+    (Array.isArray(autoFocus) && autoFocus[0] === '1');
 
   useEffect(() => {
     const incoming = Array.isArray(q) ? q[0] : q;
@@ -100,6 +74,16 @@ export function SearchScreen() {
     setQuery(incoming);
     addRecentSearch(incoming);
   }, [q]);
+
+  useEffect(() => {
+    if (!shouldAutoFocus) {
+      return;
+    }
+    const handle = requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(handle);
+  }, [shouldAutoFocus]);
 
   const categoriesQuery = useSimulatedQuery(
     (signal) => fetchCategories(signal),
@@ -124,21 +108,21 @@ export function SearchScreen() {
   const trimmedQuery = query.trim();
   const showSuggestions = trimmedQuery.length >= 1;
   const showResults = trimmedQuery.length >= 2;
+  const showBrowse = !showSuggestions;
+
+  const recommendedDishes = useMemo(
+    () => getRecommendedDishes(restaurants, 8),
+    [restaurants],
+  );
+  const recentlyViewed = useMemo(
+    () => getRecommendedDishes(restaurants, 6),
+    [restaurants],
+  );
 
   const suggestions = useMemo(
     () => buildSearchSuggestions(trimmedQuery, recent, categories, restaurants),
     [trimmedQuery, recent, categories, restaurants],
   );
-
-  const browseRestaurants = useMemo(
-    () => applyBrowseFilters(restaurants, activeFilter, activeCategoryId),
-    [restaurants, activeFilter, activeCategoryId],
-  );
-
-  const searchResults = useMemo(() => {
-    if (!searchQuery.data) return [];
-    return applyBrowseFilters(searchQuery.data, activeFilter, activeCategoryId);
-  }, [searchQuery.data, activeFilter, activeCategoryId]);
 
   const dishResults = useMemo(
     () => (showResults ? searchDishes(trimmedQuery, restaurants, 8) : []),
@@ -168,7 +152,6 @@ export function SearchScreen() {
           return;
         case 'query':
           setQuery(destination.query);
-          setActiveCategoryId(null);
           return;
       }
     },
@@ -181,18 +164,9 @@ export function SearchScreen() {
     }
   }, [trimmedQuery, navigateFromSearch]);
 
-  function handleCategorySelect(category: Category | null) {
-    if (category) {
-      hapticSoftTap();
-      navigateFromSearch(category.name);
-      return;
-    }
-    setActiveCategoryId(null);
-    setQuery('');
-  }
-
-  function handleCuisineSelect(category: Category) {
-    handleCategorySelect(category);
+  function handleCategorySelect(category: Category) {
+    hapticSoftTap();
+    router.push(`/category/${category.id}`);
   }
 
   function handleSuggestionSelect(suggestion: SearchSuggestion) {
@@ -221,11 +195,6 @@ export function SearchScreen() {
     navigateFromSearch(suggestion.query);
   }
 
-  function handleRecentSelect(term: string) {
-    hapticSoftTap();
-    navigateFromSearch(term);
-  }
-
   return (
     <View style={styles.root}>
       <AppStatusBar style="dark" />
@@ -238,27 +207,29 @@ export function SearchScreen() {
           styles.content,
           {
             paddingTop: insets.top + spacing.sm,
-            paddingBottom: tabBarContentPadding(insets.bottom),
+            paddingBottom: insets.bottom + spacing.xl,
           },
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Search</Text>
+        <SearchScreenHeader />
 
         <View style={styles.searchWrap}>
           <AppSymbol
             name="magnifyingglass"
             size={18}
-            tintColor={colors.textTertiary}
+            tintColor={colors.textSecondary}
           />
           <TextInput
+            ref={inputRef}
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={submit}
-            placeholder="Restaurants, cuisines, dishes..."
+            placeholder="Search for products, brands and more..."
             placeholderTextColor={colors.textTertiary}
             style={styles.input}
             returnKeyType="search"
+            autoFocus={shouldAutoFocus}
             {...formTextInputProps}
           />
           {query.length > 0 ? (
@@ -266,7 +237,6 @@ export function SearchScreen() {
               onPress={() => {
                 hapticSoftTap();
                 setQuery('');
-                setActiveCategoryId(null);
               }}
               hitSlop={8}
               accessibilityRole="button"
@@ -278,156 +248,98 @@ export function SearchScreen() {
                 tintColor={colors.textTertiary}
               />
             </Pressable>
-          ) : null}
+          ) : (
+            <>
+              <Pressable
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Voice search"
+              >
+                <AppSymbol
+                  name="mic.fill"
+                  size={18}
+                  tintColor={colors.textSecondary}
+                />
+              </Pressable>
+              <Pressable
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Scan barcode"
+              >
+                <AppSymbol
+                  name="qrcode.viewfinder"
+                  size={18}
+                  tintColor={colors.primary}
+                />
+              </Pressable>
+            </>
+          )}
         </View>
 
         {isBootLoading ? (
           <View style={styles.loading}>
-            <Shimmer height={72} borderRadius={14} />
-            <Shimmer height={40} borderRadius={14} />
-            <Shimmer height={180} borderRadius={14} />
+            <Shimmer height={88} borderRadius={14} />
+            <Shimmer height={36} borderRadius={14} />
+            <Shimmer height={160} borderRadius={14} />
           </View>
-        ) : (
+        ) : null}
+
+        {showSuggestions ? (
+          <SearchSuggestionList
+            suggestions={suggestions}
+            onSelect={handleSuggestionSelect}
+          />
+        ) : null}
+
+        {showBrowse && !isBootLoading ? (
           <>
-            <SearchCategoryStrip
+            <SearchRequestBanner />
+            <SearchRecentChipsSection
+              items={recent}
+              onSelect={navigateFromSearch}
+            />
+            <SearchPopularCategoriesGrid
               categories={categories}
-              activeCategoryId={activeCategoryId}
               onSelect={handleCategorySelect}
             />
-
-            <ScrollView
-              horizontal
-              nestedScrollEnabled
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filters}
-            >
-              {SEARCH_FILTERS.map((filter) => {
-                const active = activeFilter === filter.id;
-                return (
-                  <Pressable
-                    key={filter.id}
-                    onPress={() => {
-                      hapticSelection();
-                      setActiveFilter(active ? null : filter.id);
-                    }}
-                    style={[styles.filterChip, active && styles.filterActive]}
-                    accessibilityRole="button"
-                    accessibilityLabel={filter.label}
-                  >
-                    <AppSymbol
-                      name={filter.icon}
-                      size={12}
-                      tintColor={active ? colors.primary : colors.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        styles.filterText,
-                        active && styles.filterTextActive,
-                      ]}
-                    >
-                      {filter.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-
-            {showSuggestions ? (
-              <SearchSuggestionList
-                suggestions={suggestions}
-                onSelect={handleSuggestionSelect}
-              />
-            ) : null}
-
-            {!showSuggestions && recent.length > 0 ? (
-              <View style={styles.recent}>
-                <Text style={styles.sectionTitle}>Recent</Text>
-                {recent.map((term) => (
-                  <Pressable
-                    key={term}
-                    onPress={() => handleRecentSelect(term)}
-                    style={styles.recentRow}
-                  >
-                    <AppSymbol
-                      name="clock.arrow.circlepath"
-                      size={16}
-                      tintColor={colors.textTertiary}
-                    />
-                    <Text style={styles.recentText}>{term}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-
-            {!showSuggestions ? (
-              <>
-                <View style={styles.section}>
-                  <HomeSectionHeader title="Popular cuisines" />
-                  <SearchCuisineCarousel
-                    categories={categories}
-                    restaurants={restaurants}
-                    onSelect={handleCuisineSelect}
-                  />
-                </View>
-
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Recommended for you</Text>
-                  <View style={styles.resultList}>
-                    {browseRestaurants.map((restaurant) => (
-                      <SearchRestaurantRow
-                        key={restaurant.id}
-                        restaurant={restaurant}
-                      />
-                    ))}
-                  </View>
-                </View>
-              </>
-            ) : null}
-
-            {showResults && dishResults.length > 0 ? (
-              <RecommendedSection title="Dishes" dishes={dishResults} />
-            ) : null}
-
-            {showResults && searchQuery.status === 'loading' ? (
-              <View style={styles.loading}>
-                {[1, 2, 3].map((item) => (
-                  <Shimmer key={item} height={108} borderRadius={14} />
-                ))}
-              </View>
-            ) : null}
-
-            {showResults && searchQuery.status === 'error' ? (
-              <ErrorState
-                message="Search failed. Please try again."
-                onRetry={searchQuery.refetch}
-              />
-            ) : null}
-
-            {showResults &&
-            searchQuery.status === 'success' &&
-            searchResults.length === 0 &&
-            dishResults.length === 0 ? (
-              <EmptyState
-                title="No matches"
-                message={`Nothing found for "${trimmedQuery}". Try a different search.`}
-              />
-            ) : null}
-
-            {showResults && searchResults.length > 0 ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Results</Text>
-                <View style={styles.resultList}>
-                  {searchResults.map((restaurant) => (
-                    <SearchRestaurantRow
-                      key={restaurant.id}
-                      restaurant={restaurant}
-                    />
-                  ))}
-                </View>
-              </View>
-            ) : null}
+            <GroceryDealsSection
+              title="Recommended for You"
+              dishes={recommendedDishes}
+              viewAllHref="/(tabs)/categories"
+            />
+            <SearchTrendingSection />
+            <SearchTopBrandsSection />
+            <SearchRecentlyViewedSection dishes={recentlyViewed} />
           </>
-        )}
+        ) : null}
+
+        {showResults && dishResults.length > 0 ? (
+          <RecommendedSection title="Matching products" dishes={dishResults} />
+        ) : null}
+
+        {showResults && searchQuery.status === 'loading' ? (
+          <View style={styles.loading}>
+            {[1, 2, 3].map((item) => (
+              <Shimmer key={item} height={108} borderRadius={14} />
+            ))}
+          </View>
+        ) : null}
+
+        {showResults && searchQuery.status === 'error' ? (
+          <ErrorState
+            message="Search failed. Please try again."
+            onRetry={searchQuery.refetch}
+          />
+        ) : null}
+
+        {showResults &&
+        searchQuery.status === 'success' &&
+        dishResults.length === 0 ? (
+          <EmptyState
+            title="No matches"
+            message={`Nothing found for "${trimmedQuery}". Try a different search.`}
+          />
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -436,32 +348,27 @@ export function SearchScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.background,
   },
   screen: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     gap: spacing.md,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    lineHeight: 30,
-    color: colors.textPrimary,
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.backgroundElevated,
-    borderRadius: 14,
+    borderRadius: 12,
     borderCurve: 'continuous',
-    paddingHorizontal: spacing.md,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    gap: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
+    minHeight: 44,
   },
   input: {
     flex: 1,
@@ -471,63 +378,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.textPrimary,
     paddingVertical: spacing.sm,
-  },
-  filters: {
-    gap: spacing.xs,
-    paddingVertical: spacing.xxs,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderCurve: 'continuous',
-    backgroundColor: colors.backgroundElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  filterActive: {
-    backgroundColor: 'rgba(212, 84, 60, 0.1)',
-    borderColor: 'rgba(212, 84, 60, 0.25)',
-  },
-  filterText: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    lineHeight: 14,
-    color: colors.textPrimary,
-  },
-  filterTextActive: {
-    color: colors.primary,
-    fontFamily: fonts.semibold,
-  },
-  recent: {
-    gap: spacing.xs,
-  },
-  recentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  recentText: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 17,
-    color: colors.textPrimary,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.textPrimary,
-  },
-  resultList: {
-    gap: spacing.sm,
   },
   loading: {
     gap: spacing.sm,

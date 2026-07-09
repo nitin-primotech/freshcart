@@ -9,8 +9,7 @@ import {
 } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
-import { AppSymbol } from '@/shared/components/app-symbol';
-import { QuantityStepper } from '@/shared/components/quantity-stepper';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
 import {
   hapticAddToCart,
   hapticPrimaryAction,
@@ -69,7 +68,7 @@ export function GroceryDealCard({ dish, width, index }: GroceryDealCardProps) {
           </View>
         ) : null}
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.imagePress}>
+          <Pressable style={styles.imagePress} accessibilityRole="link">
             <Image
               source={{ uri: item.image }}
               style={styles.image}
@@ -82,7 +81,7 @@ export function GroceryDealCard({ dish, width, index }: GroceryDealCardProps) {
 
       <View style={styles.body}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable>
+          <Pressable accessibilityRole="link">
             <Text style={styles.name} numberOfLines={2}>
               {item.name}
             </Text>
@@ -92,37 +91,21 @@ export function GroceryDealCard({ dish, width, index }: GroceryDealCardProps) {
           </Pressable>
         </Link>
 
-        <View style={styles.bottomRow}>
-          <View style={styles.priceCol}>
-            <Text style={styles.price}>{formatUsd(item.price)}</Text>
-            {discount > 0 ? (
-              <Text style={styles.mrp}>{formatUsd(mrp)}</Text>
-            ) : null}
-          </View>
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{formatUsd(item.price)}</Text>
+          {discount > 0 ? (
+            <Text style={styles.mrp}>{formatUsd(mrp)}</Text>
+          ) : null}
+        </View>
 
-          {quantity === 0 ? (
-            <Pressable
-              style={styles.addBtn}
-              onPress={handleAdd}
-              accessibilityRole="button"
-              accessibilityLabel={`Add ${item.name} to cart`}
-            >
-              <AppSymbol
-                name="plus"
-                size={13}
-                tintColor={colors.textInverse}
-                weight="semibold"
-              />
-            </Pressable>
-          ) : (
-            <QuantityStepper
-              quantity={quantity}
-              onDecrease={handleDecrease}
-              onIncrease={handleIncrease}
-              minQuantity={0}
-              compact
-            />
-          )}
+        <View style={styles.actionRow}>
+          <ProductCardAddAction
+            quantity={quantity}
+            onAdd={handleAdd}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            itemLabel={item.name}
+          />
         </View>
       </View>
     </View>
@@ -135,7 +118,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderCurve: 'continuous',
     overflow: 'hidden',
-    minHeight: 188,
+    minHeight: 200,
   },
   imageWrap: {
     height: 102,
@@ -173,7 +156,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingBottom: spacing.sm,
     paddingTop: 2,
-    justifyContent: 'space-between',
     gap: spacing.xs,
   },
   name: {
@@ -181,6 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 15,
     color: colors.textPrimary,
+    minHeight: 30,
   },
   unit: {
     fontFamily: fonts.regular,
@@ -189,19 +172,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
-  bottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
-  },
-  priceCol: {
+  priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 5,
-    flex: 1,
-    minWidth: 0,
-    paddingRight: spacing.xs,
+    marginTop: 2,
   },
   price: {
     fontFamily: fonts.bold,
@@ -216,13 +191,8 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     textDecorationLine: 'line-through',
   },
-  addBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  actionRow: {
+    marginTop: spacing.xs,
+    width: '100%',
   },
 });

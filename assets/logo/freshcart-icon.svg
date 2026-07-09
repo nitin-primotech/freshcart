@@ -1,0 +1,35 @@
+<svg viewBox="0 0 160 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FreshCart">
+  <g transform="translate(20,20)">
+    <path
+      d="M20 58 L118 58 Q126 58 124 66 L110 122 Q108 130 100 130 L44 130 Q36 130 34 122 L20 58 Z"
+      fill="none"
+      stroke="#1F3D2B"
+      stroke-width="9"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+    <circle cx="56" cy="150" r="11" fill="#1F3D2B" />
+    <circle cx="98" cy="150" r="11" fill="#1F3D2B" />
+    <path
+      d="M20 58 L8 58 Q0 58 2 48 L10 14"
+      fill="none"
+      stroke="#1F3D2B"
+      stroke-width="9"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <g transform="translate(10,14)">
+      <path
+        d="M0 0 C -22 -6 -34 -28 -18 -46 C -2 -40 8 -18 0 0 Z"
+        fill="#3EAE5C"
+      />
+      <path
+        d="M0 0 C 6 -20 2 -36 -18 -46"
+        fill="none"
+        stroke="#1F3D2B"
+        stroke-width="3.5"
+        stroke-linecap="round"
+      />
+    </g>
+  </g>
+</svg>

@@ -220,6 +220,8 @@ const styles = StyleSheet.create({
   },
   headerBlock: {
     backgroundColor: colors.background,
+    zIndex: 2,
+    elevation: 2,
   },
   searchWrap: {
     paddingTop: spacing.xs,

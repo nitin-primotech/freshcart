@@ -88,6 +88,11 @@ export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
   'square.and.arrow.up': icon('square.and.arrow.up', 'share'),
   'arrow.2.circlepath': icon('arrow.2.circlepath', 'sync'),
   'star.leadinghalf.filled': icon('star.leadinghalf.filled', 'star_half'),
+  'square.and.pencil': icon('square.and.pencil', 'edit'),
+  globe: icon('globe', 'language'),
+  'moon.fill': icon('moon.fill', 'dark_mode'),
+  'shippingbox.fill': icon('shippingbox.fill', 'inventory_2'),
+  person: icon('person', 'person_outline'),
 };
 
 export function resolveSymbol(name: string): CrossPlatformSymbol | null {

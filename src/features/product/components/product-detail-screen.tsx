@@ -171,7 +171,7 @@ export function ProductDetailScreen() {
 
         <View style={styles.headerActions}>
           <Pressable
-            onPress={() => router.push('/(tabs)/search')}
+            onPress={() => router.push('/search')}
             style={styles.headerBtn}
             accessibilityRole="button"
             accessibilityLabel="Search"

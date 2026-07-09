@@ -1,15 +1,32 @@
+import { Image } from 'expo-image';
 import { type Href, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { OrderTabId } from '@/features/orders/constants/orders.constants';
+import {
+  filterOrdersByTab,
+  type OrderTabId,
+} from '@/features/orders/constants/orders.constants';
+import { mergeOrdersWithDemo } from '@/features/orders/mocks/demo-orders';
 import {
   formatProfilePhone,
-  PROFILE_MENU_ITEMS,
+  PROFILE_ACCOUNT_ITEMS,
+  PROFILE_AVATAR_URI,
   PROFILE_ORDER_SHORTCUTS,
-  PROFILE_QUICK_STATS,
-  profileInitials,
+  PROFILE_PREFERENCE_ITEMS,
+  PROFILE_SUPPORT_ITEMS,
+  PROFILE_WALLET_STATS,
+  type ProfileLinkItem,
+  profileDisplayName,
+  profileEmailFromName,
 } from '@/features/profile/constants/profile.constants';
 import { AppConfirmModal } from '@/shared/components/app-confirm-modal';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
@@ -17,7 +34,6 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   resetAppProfile,
-  selectAddress,
   selectUserName,
   useAppStore,
 } from '@/store/app.store';
@@ -26,39 +42,78 @@ import {
   selectUserPhone,
   useAuthStore,
 } from '@/store/auth.store';
-import {
-  openCartSheet,
-  selectCartItemCount,
-  useCartStore,
-} from '@/store/cart.store';
 import { selectOrders, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radius, spacing } from '@/theme/spacing';
 import { tabBarContentPadding } from '@/theme/tab-bar';
 import { fonts } from '@/theme/typography';
 
-const H_PAD = spacing.lg;
+function ProfileMenuRow({
+  item,
+  darkMode,
+  onDarkModeChange,
+  onPress,
+  isLast,
+}: {
+  item: ProfileLinkItem;
+  darkMode: boolean;
+  onDarkModeChange: (value: boolean) => void;
+  onPress: () => void;
+  isLast?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={item.toggle ? undefined : onPress}
+      style={[styles.menuRow, !isLast && styles.menuRowBorder]}
+      accessibilityRole={item.toggle ? 'none' : 'button'}
+      accessibilityLabel={item.title}
+    >
+      <View style={styles.menuIconWrap}>
+        <AppSymbol name={item.icon} size={18} tintColor={colors.primary} />
+      </View>
+      <Text style={styles.menuTitle}>{item.title}</Text>
+      {item.trailing ? (
+        <Text style={styles.menuTrailing}>{item.trailing}</Text>
+      ) : null}
+      {item.toggle ? (
+        <Switch
+          value={darkMode}
+          onValueChange={onDarkModeChange}
+          trackColor={{ false: colors.border, true: colors.primaryLight }}
+          thumbColor={colors.backgroundElevated}
+        />
+      ) : (
+        <AppSymbol
+          name="chevron.right"
+          size={12}
+          tintColor={colors.textTertiary}
+        />
+      )}
+    </Pressable>
+  );
+}
 
 export function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const phone = useAuthStore(selectUserPhone);
   const userName = useAppStore(selectUserName);
-  const address = useAppStore(selectAddress);
-  const orders = useOrdersStore(selectOrders);
-  const cartCount = useCartStore(selectCartItemCount);
+  const storeOrders = useOrdersStore(selectOrders);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
-  const trackableOrder = useMemo(
-    () =>
-      orders.find(
-        (order) => order.status !== 'delivered' && order.status !== 'cancelled',
-      ) ?? null,
+  const displayName = profileDisplayName(userName);
+  const displayPhone = formatProfilePhone(phone);
+  const displayEmail = profileEmailFromName(displayName);
+
+  const orders = useMemo(() => mergeOrdersWithDemo(storeOrders), [storeOrders]);
+  const orderBadges = useMemo(
+    () => ({
+      all: orders.length,
+      ongoing: filterOrdersByTab(orders, 'ongoing').length,
+    }),
     [orders],
   );
-
-  const displayName = userName;
-  const displayPhone = phone ? formatProfilePhone(phone) : '+1 ••• ••• ••••';
 
   async function performLogout() {
     setLogoutModalVisible(false);
@@ -80,58 +135,47 @@ export function ProfileScreen() {
     });
   }
 
-  function handleTrackOrder() {
-    if (!trackableOrder) return;
+  function openRoute(href?: string) {
+    if (!href) return;
     hapticSoftTap();
-    router.push(`/order/${trackableOrder.id}`);
+    router.push(href as Href);
   }
 
-  function openProfileHub(route: Href) {
-    hapticSoftTap();
-    router.push(route);
+  function handleMenuPress(item: ProfileLinkItem) {
+    if (item.href) {
+      openRoute(item.href);
+    }
   }
 
   return (
     <View style={styles.root}>
       <AppStatusBar style="dark" />
 
-      <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
-        <Text style={styles.headerTitle}>My Profile</Text>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
+        <Text style={styles.headerTitle}>Profile</Text>
         <View style={styles.headerActions}>
           <Pressable
-            onPress={() => {
-              hapticSoftTap();
-              router.push('/(tabs)/search');
-            }}
+            onPress={() => openRoute('/(tabs)/profile')}
             hitSlop={10}
             style={styles.iconBtn}
             accessibilityRole="button"
-            accessibilityLabel="Search"
+            accessibilityLabel="Notifications"
+          >
+            <AppSymbol name="bell" size={20} tintColor={colors.textPrimary} />
+            <View style={styles.notifDot} />
+          </Pressable>
+          <Pressable
+            onPress={() => openRoute('/profile/edit')}
+            hitSlop={10}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
           >
             <AppSymbol
-              name="magnifyingglass"
+              name="gearshape.fill"
               size={20}
               tintColor={colors.textPrimary}
             />
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              hapticSoftTap();
-              openCartSheet();
-            }}
-            hitSlop={10}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Cart"
-          >
-            <AppSymbol name="cart" size={20} tintColor={colors.textPrimary} />
-            {cartCount > 0 ? (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>
-                  {cartCount > 9 ? '9+' : cartCount}
-                </Text>
-              </View>
-            ) : null}
           </Pressable>
         </View>
       </View>
@@ -144,275 +188,179 @@ export function ProfileScreen() {
           { paddingBottom: tabBarContentPadding(insets.bottom) },
         ]}
       >
-        <View style={styles.profileRow}>
-          <View style={styles.avatar}>
-            <AppSymbol
-              name="person.fill"
-              size={26}
-              tintColor={colors.primary}
-            />
-            <View style={styles.avatarBadge}>
-              <Text style={styles.avatarInitials}>
-                {profileInitials(displayName)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.profileCopy}>
-            <Text numberOfLines={1} style={styles.profileName}>
-              {displayName}
-            </Text>
-            <Text style={styles.profilePhone}>{displayPhone}</Text>
-            <View style={styles.verifiedBadge}>
-              <AppSymbol
-                name="checkmark.circle.fill"
-                size={11}
-                tintColor={colors.success}
-              />
-              <Text style={styles.verifiedText}>Verified Account</Text>
-            </View>
-          </View>
-
+        <View style={styles.userCard}>
           <Pressable
-            onPress={() => openProfileHub('/profile/edit')}
-            style={styles.editBtn}
+            onPress={() => openRoute('/profile/edit')}
+            style={styles.userTop}
             accessibilityRole="button"
             accessibilityLabel="Edit profile"
           >
-            <Text style={styles.editText}>Edit Profile</Text>
+            <View style={styles.avatarWrap}>
+              <Image
+                source={{ uri: PROFILE_AVATAR_URI }}
+                style={styles.avatar}
+                contentFit="cover"
+                transition={200}
+              />
+              <View style={styles.editBadge}>
+                <AppSymbol
+                  name="square.and.pencil"
+                  size={11}
+                  tintColor={colors.textInverse}
+                  weight="semibold"
+                />
+              </View>
+            </View>
+
+            <View style={styles.userCopy}>
+              <Text style={styles.userName}>{displayName}</Text>
+              <Text style={styles.userMeta}>{displayPhone}</Text>
+              <Text style={styles.userMeta}>{displayEmail}</Text>
+              <View style={styles.clubBadge}>
+                <AppSymbol
+                  name="crown.fill"
+                  size={10}
+                  tintColor={colors.primary}
+                />
+                <Text style={styles.clubBadgeText}>FreshCart Club</Text>
+              </View>
+            </View>
+
             <AppSymbol
               name="chevron.right"
-              size={12}
-              tintColor={colors.primary}
+              size={14}
+              tintColor={colors.textTertiary}
             />
           </Pressable>
-        </View>
 
-        <View style={styles.statsPanel}>
-          {PROFILE_QUICK_STATS.map((stat, index) => (
-            <Pressable
-              key={stat.id}
-              onPress={() => {
-                if (stat.id === 'wallet') openProfileHub('/profile/wallet');
-                else if (stat.id === 'offers')
-                  openProfileHub('/profile/offers');
-                else if (stat.id === 'premium')
-                  openProfileHub('/profile/membership');
-              }}
-              style={[styles.statCol, index > 0 && styles.statColDivider]}
-              accessibilityRole="button"
-              accessibilityLabel={`${stat.label}, ${stat.value}`}
-            >
-              <AppSymbol
-                name={stat.icon}
-                size={18}
-                tintColor={colors.primary}
-              />
-              <Text style={styles.statLabel}>{stat.label}</Text>
-              <View style={styles.statValueRow}>
+          <View style={styles.statsRow}>
+            {PROFILE_WALLET_STATS.map((stat, index) => (
+              <Pressable
+                key={stat.id}
+                onPress={() => openRoute(stat.href)}
+                style={[styles.statCol, index > 0 && styles.statDivider]}
+                accessibilityRole="button"
+                accessibilityLabel={`${stat.label}, ${stat.value}`}
+              >
+                <AppSymbol
+                  name={stat.icon}
+                  size={18}
+                  tintColor={colors.primary}
+                />
+                <Text style={styles.statLabel}>{stat.label}</Text>
                 <Text style={styles.statValue} numberOfLines={1}>
                   {stat.value}
                 </Text>
-                <AppSymbol
-                  name="chevron.right"
-                  size={12}
-                  tintColor={colors.textTertiary}
-                />
-              </View>
-            </Pressable>
-          ))}
+              </Pressable>
+            ))}
+          </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Orders</Text>
+            <Text style={styles.sectionHeaderTitle}>My Orders</Text>
             <Pressable
               onPress={() => openOrders('all')}
-              style={styles.sectionLink}
+              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="View all orders"
             >
-              <Text style={styles.sectionLinkText}>View all orders</Text>
-              <AppSymbol
-                name="chevron.right"
-                size={11}
-                tintColor={colors.primary}
-              />
+              <Text style={styles.sectionLink}>View All Orders {'>'}</Text>
             </Pressable>
           </View>
 
           <View style={styles.orderShortcuts}>
-            {PROFILE_ORDER_SHORTCUTS.map((shortcut) => (
-              <Pressable
-                key={shortcut.id}
-                onPress={() => openOrders(shortcut.id)}
-                style={styles.orderShortcut}
-                accessibilityRole="button"
-                accessibilityLabel={shortcut.label}
-              >
-                <View style={styles.orderShortcutIcon}>
-                  <AppSymbol
-                    name={shortcut.icon}
-                    size={17}
-                    tintColor={colors.primary}
-                  />
-                </View>
-                <Text style={styles.orderShortcutLabel} numberOfLines={2}>
-                  {shortcut.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+            {PROFILE_ORDER_SHORTCUTS.map((shortcut) => {
+              const badge =
+                shortcut.id === 'all'
+                  ? orderBadges.all
+                  : shortcut.id === 'ongoing'
+                    ? orderBadges.ongoing
+                    : 0;
 
-          {trackableOrder ? (
-            <View style={styles.trackBanner}>
-              <View style={styles.trackBannerIcon}>
-                <AppSymbol
-                  name="location.fill"
-                  size={16}
-                  tintColor={colors.primary}
-                />
-              </View>
-              <View style={styles.trackBannerCopy}>
-                <Text style={styles.trackBannerTitle}>Track your order</Text>
-                <Text style={styles.trackBannerSubtitle}>
-                  Get real-time updates on your order
-                </Text>
-              </View>
-              <Pressable
-                onPress={handleTrackOrder}
-                style={styles.trackBtn}
-                accessibilityRole="button"
-                accessibilityLabel="Track order"
-              >
-                <Text style={styles.trackBtnText}>Track Order</Text>
-              </Pressable>
-            </View>
-          ) : null}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account & Settings</Text>
-
-          <View style={styles.menuList}>
-            {PROFILE_MENU_ITEMS.map((item, index) => (
-              <Pressable
-                key={item.id}
-                onPress={() => {
-                  hapticSoftTap();
-                  if (item.id === 'addresses') {
-                    router.push('/location');
-                    return;
-                  }
-                  if (item.id === 'payments') {
-                    openProfileHub('/profile/payments');
-                    return;
-                  }
-                  if (item.id === 'premium') {
-                    openProfileHub('/profile/membership');
-                    return;
-                  }
-                  if (item.id === 'support') {
-                    openProfileHub('/profile/support');
-                  }
-                }}
-                style={[
-                  styles.menuRow,
-                  index < PROFILE_MENU_ITEMS.length - 1 && styles.menuRowBorder,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={item.title}
-              >
-                <View style={styles.menuIcon}>
-                  <AppSymbol
-                    name={item.icon}
-                    size={16}
-                    tintColor={colors.primary}
-                  />
-                </View>
-                <View style={styles.menuCopy}>
-                  <View style={styles.menuTitleRow}>
-                    <Text style={styles.menuTitle}>{item.title}</Text>
-                    {item.badge ? (
-                      <View
-                        style={[
-                          styles.menuBadge,
-                          item.badgeTone === 'success'
-                            ? styles.menuBadgeSuccess
-                            : styles.menuBadgePrimary,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.menuBadgeText,
-                            item.badgeTone === 'success'
-                              ? styles.menuBadgeTextSuccess
-                              : styles.menuBadgeTextPrimary,
-                          ]}
-                        >
-                          {item.badge}
-                        </Text>
+              return (
+                <Pressable
+                  key={shortcut.id}
+                  onPress={() => openOrders(shortcut.id)}
+                  style={styles.orderShortcut}
+                  accessibilityRole="button"
+                  accessibilityLabel={shortcut.label}
+                >
+                  <View style={styles.orderShortcutIconWrap}>
+                    <AppSymbol
+                      name={shortcut.icon}
+                      size={20}
+                      tintColor={colors.primary}
+                    />
+                    {badge > 0 ? (
+                      <View style={styles.orderBadge}>
+                        <Text style={styles.orderBadgeText}>{badge}</Text>
                       </View>
                     ) : null}
                   </View>
-                  <Text style={styles.menuSubtitle} numberOfLines={1}>
-                    {item.id === 'addresses' ? address.line2 : item.subtitle}
+                  <Text style={styles.orderShortcutLabel} numberOfLines={2}>
+                    {shortcut.label}
                   </Text>
-                </View>
-                <AppSymbol
-                  name="chevron.right"
-                  size={12}
-                  tintColor={colors.textTertiary}
-                />
-              </Pressable>
-            ))}
+                </Pressable>
+              );
+            })}
           </View>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          {PROFILE_ACCOUNT_ITEMS.map((item, index) => (
+            <ProfileMenuRow
+              key={item.id}
+              item={item}
+              darkMode={darkMode}
+              onDarkModeChange={setDarkMode}
+              onPress={() => handleMenuPress(item)}
+              isLast={index === PROFILE_ACCOUNT_ITEMS.length - 1}
+            />
+          ))}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Preferences</Text>
+          {PROFILE_PREFERENCE_ITEMS.map((item, index) => (
+            <ProfileMenuRow
+              key={item.id}
+              item={item}
+              darkMode={darkMode}
+              onDarkModeChange={setDarkMode}
+              onPress={() => handleMenuPress(item)}
+              isLast={index === PROFILE_PREFERENCE_ITEMS.length - 1}
+            />
+          ))}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Support & More</Text>
+          {PROFILE_SUPPORT_ITEMS.map((item, index) => (
+            <ProfileMenuRow
+              key={item.id}
+              item={item}
+              darkMode={darkMode}
+              onDarkModeChange={setDarkMode}
+              onPress={() => handleMenuPress(item)}
+              isLast={index === PROFILE_SUPPORT_ITEMS.length - 1}
+            />
+          ))}
         </View>
 
         <Pressable
           onPress={handleLogout}
-          style={styles.logoutRow}
+          style={styles.logoutBtn}
           accessibilityRole="button"
           accessibilityLabel="Logout"
         >
-          <View style={styles.logoutIcon}>
-            <AppSymbol
-              name="rectangle.portrait.and.arrow.right"
-              size={16}
-              tintColor={colors.danger}
-            />
-          </View>
-          <View style={styles.logoutCopy}>
-            <Text style={styles.logoutTitle}>Logout</Text>
-            <Text style={styles.logoutSubtitle}>Log out from your account</Text>
-          </View>
           <AppSymbol
-            name="chevron.right"
-            size={12}
-            tintColor={colors.textTertiary}
+            name="rectangle.portrait.and.arrow.right"
+            size={16}
+            tintColor={colors.danger}
           />
-        </Pressable>
-
-        <Pressable
-          onPress={() => openProfileHub('/profile/delete')}
-          style={styles.deleteRow}
-          accessibilityRole="button"
-          accessibilityLabel="Delete account"
-        >
-          <View style={styles.logoutIcon}>
-            <AppSymbol name="trash" size={16} tintColor={colors.danger} />
-          </View>
-          <View style={styles.logoutCopy}>
-            <Text style={styles.logoutTitle}>Delete Account</Text>
-            <Text style={styles.logoutSubtitle}>
-              Permanently remove your profile and data
-            </Text>
-          </View>
-          <AppSymbol
-            name="chevron.right"
-            size={12}
-            tintColor={colors.textTertiary}
-          />
+          <Text style={styles.logoutText}>Logout</Text>
         </Pressable>
       </ScrollView>
 
@@ -435,16 +383,15 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
+    backgroundColor: colors.backgroundMuted,
   },
   screen: {
     flex: 1,
-    backgroundColor: colors.backgroundElevated,
   },
   content: {
-    paddingHorizontal: H_PAD,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    gap: spacing.lg,
+    gap: spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -452,14 +399,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.backgroundElevated,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    backgroundColor: colors.background,
+    minHeight: 44,
   },
   headerTitle: {
     fontFamily: fonts.bold,
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 19,
     color: colors.textPrimary,
   },
   headerActions: {
@@ -468,122 +414,97 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   iconBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cartBadge: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  cartBadgeText: {
-    fontFamily: fonts.bold,
-    fontSize: 9,
-    lineHeight: 11,
-    color: colors.textInverse,
-  },
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
-  },
-  avatar: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderCurve: 'continuous',
-    backgroundColor: 'rgba(212, 84, 60, 0.1)',
-    borderWidth: 2,
-    borderColor: 'rgba(212, 84, 60, 0.15)',
+    width: 34,
+    height: 34,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
-  avatarBadge: {
+  notifDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.danger,
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  userCard: {
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: 16,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  userTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  avatarWrap: {
+    position: 'relative',
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.full,
+    backgroundColor: colors.backgroundMuted,
+  },
+  editBadge: {
     position: 'absolute',
     right: -2,
     bottom: -2,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    paddingHorizontal: 5,
-    backgroundColor: colors.backgroundElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: 24,
+    height: 24,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.backgroundElevated,
   },
-  avatarInitials: {
-    fontFamily: fonts.bold,
-    fontSize: 9,
-    lineHeight: 11,
-    color: colors.primary,
-  },
-  profileCopy: {
+  userCopy: {
     flex: 1,
     gap: 2,
     minWidth: 0,
   },
-  profileName: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    lineHeight: 19,
+  userName: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    lineHeight: 17,
     color: colors.textPrimary,
   },
-  profilePhone: {
+  userMeta: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    lineHeight: 14,
+    lineHeight: 13,
     color: colors.textSecondary,
   },
-  verifiedBadge: {
+  clubBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 3,
     alignSelf: 'flex-start',
+    marginTop: 4,
     backgroundColor: colors.successLight,
-    borderRadius: 4,
-    borderCurve: 'continuous',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    borderRadius: radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  verifiedText: {
-    fontFamily: fonts.medium,
-    fontSize: 9,
-    lineHeight: 12,
-    color: colors.success,
-  },
-  editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    maxWidth: 100,
-  },
-  editText: {
+  clubBadgeText: {
     fontFamily: fonts.semibold,
     fontSize: 10,
-    lineHeight: 13,
+    lineHeight: 12,
     color: colors.primary,
   },
-  statsPanel: {
+  statsRow: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(212, 84, 60, 0.05)',
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
   statCol: {
     flex: 1,
@@ -591,16 +512,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 4,
   },
-  statColDivider: {
+  statDivider: {
     borderLeftWidth: StyleSheet.hairlineWidth,
-    borderLeftColor: 'rgba(212, 84, 60, 0.15)',
+    borderLeftColor: colors.border,
   },
   statLabel: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     fontSize: 10,
-    lineHeight: 13,
+    lineHeight: 12,
     color: colors.textSecondary,
     textAlign: 'center',
   },
@@ -609,221 +530,135 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     color: colors.primary,
-    flexShrink: 1,
+    textAlign: 'center',
   },
-  statValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    marginTop: 1,
-  },
-  section: {
-    gap: spacing.sm,
+  sectionCard: {
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: 16,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  sectionHeaderTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 15,
+    lineHeight: 19,
+    color: colors.textPrimary,
   },
   sectionTitle: {
     fontFamily: fonts.bold,
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 19,
     color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
   sectionLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  sectionLinkText: {
-    fontFamily: fonts.semibold,
-    fontSize: 11,
-    lineHeight: 14,
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    lineHeight: 15,
     color: colors.primary,
   },
   orderShortcuts: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.xs,
+    paddingBottom: spacing.sm,
   },
   orderShortcut: {
     flex: 1,
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 2,
   },
-  orderShortcutIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderCurve: 'continuous',
-    backgroundColor: 'rgba(212, 84, 60, 0.08)',
+  orderShortcutIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.full,
+    backgroundColor: colors.successLight,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  orderBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: colors.backgroundElevated,
+  },
+  orderBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    lineHeight: 11,
+    color: colors.textInverse,
   },
   orderShortcutLabel: {
     fontFamily: fonts.medium,
-    fontSize: 9,
+    fontSize: 10,
     lineHeight: 12,
     color: colors.textSecondary,
     textAlign: 'center',
-  },
-  trackBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: 'rgba(212, 84, 60, 0.07)',
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    padding: spacing.sm,
-    marginTop: spacing.xxs,
-  },
-  trackBannerIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderCurve: 'continuous',
-    backgroundColor: colors.backgroundElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  trackBannerCopy: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
-  trackBannerTitle: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.textPrimary,
-  },
-  trackBannerSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 13,
-    color: colors.textSecondary,
-  },
-  trackBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    borderCurve: 'continuous',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 9,
-  },
-  trackBtnText: {
-    fontFamily: fonts.semibold,
-    fontSize: 10,
-    lineHeight: 12,
-    color: colors.textInverse,
-  },
-  menuList: {
-    marginTop: spacing.xxs,
   },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
   },
   menuRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.divider,
   },
-  menuIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderCurve: 'continuous',
-    backgroundColor: 'rgba(212, 84, 60, 0.07)',
+  menuIconWrap: {
+    width: 28,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuCopy: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
-  menuTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    flexWrap: 'wrap',
   },
   menuTitle: {
-    fontFamily: fonts.semibold,
+    flex: 1,
+    fontFamily: fonts.medium,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 15,
     color: colors.textPrimary,
   },
-  menuBadge: {
-    borderRadius: 10,
-    borderCurve: 'continuous',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  menuBadgePrimary: {
-    backgroundColor: 'rgba(212, 84, 60, 0.1)',
-  },
-  menuBadgeSuccess: {
-    backgroundColor: colors.successLight,
-  },
-  menuBadgeText: {
-    fontFamily: fonts.semibold,
-    fontSize: 9,
-    lineHeight: 11,
-  },
-  menuBadgeTextPrimary: {
-    color: colors.primary,
-  },
-  menuBadgeTextSuccess: {
-    color: colors.success,
-  },
-  menuSubtitle: {
+  menuTrailing: {
     fontFamily: fonts.regular,
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 13,
     color: colors.textSecondary,
+    marginRight: 4,
   },
-  logoutRow: {
+  logoutBtn: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.divider,
-  },
-  deleteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingTop: spacing.xs,
-  },
-  logoutIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderCurve: 'continuous',
-    backgroundColor: colors.dangerLight,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: 14,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.md,
+    marginTop: spacing.xxs,
   },
-  logoutTitle: {
+  logoutText: {
     fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     color: colors.danger,
-  },
-  logoutSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 13,
-    color: colors.textSecondary,
-  },
-  logoutCopy: {
-    flex: 1,
-    gap: 2,
   },
 });

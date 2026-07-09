@@ -8,7 +8,7 @@ import {
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
 import { isHttpImageUrl } from '@/lib/firebase/category-images';
-import { AppSymbol } from '@/shared/components/app-symbol';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
 import { WishlistToggle } from '@/shared/components/wishlist-toggle';
 import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
 import {
@@ -18,7 +18,7 @@ import {
   useCartStore,
 } from '@/store/cart.store';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 type TopPicksProductCardProps = {
@@ -110,52 +110,18 @@ export function TopPicksProductCard({
           </Pressable>
         </Link>
 
-        {quantity === 0 ? (
-          <Pressable
-            style={styles.actionBtn}
-            onPress={handleAdd}
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${item.name} to cart`}
-          >
-            <View style={styles.addLabelWrap}>
-              <Text style={styles.addLabel}>Add</Text>
-            </View>
-            <View style={styles.addDivider} />
-            <View style={styles.cartIconWrap}>
-              <AppSymbol
-                name="cart.fill"
-                size={11}
-                tintColor={colors.textInverse}
-              />
-            </View>
-          </Pressable>
-        ) : (
-          <View style={styles.actionBtn}>
-            <Pressable
-              style={styles.stepperHit}
-              onPress={handleDecrease}
-              accessibilityRole="button"
-              accessibilityLabel="Decrease quantity"
-            >
-              <Text style={styles.stepperSymbol}>−</Text>
-            </Pressable>
-            <Text style={styles.stepperQty}>{quantity}</Text>
-            <Pressable
-              style={styles.stepperHit}
-              onPress={handleIncrease}
-              accessibilityRole="button"
-              accessibilityLabel="Increase quantity"
-            >
-              <Text style={styles.stepperSymbol}>+</Text>
-            </Pressable>
-          </View>
-        )}
+        <ProductCardAddAction
+          quantity={quantity}
+          onAdd={handleAdd}
+          onIncrease={handleIncrease}
+          onDecrease={handleDecrease}
+          itemLabel={item.name}
+          variant="solid"
+        />
       </View>
     </View>
   );
 }
-
-const ACTION_HEIGHT = 30;
 
 const IMAGE_HEIGHT = 112;
 const CARD_RADIUS = 14;
@@ -234,55 +200,5 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: colors.textTertiary,
     textDecorationLine: 'line-through',
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    height: ACTION_HEIGHT,
-    borderCurve: 'continuous',
-  },
-  addLabelWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 15,
-    color: colors.textInverse,
-  },
-  addDivider: {
-    width: 1,
-    height: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  cartIconWrap: {
-    width: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperHit: {
-    flex: 1,
-    height: ACTION_HEIGHT,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperQty: {
-    fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 15,
-    color: colors.textInverse,
-    minWidth: 18,
-    textAlign: 'center',
-  },
-  stepperSymbol: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    lineHeight: 16,
-    color: colors.textInverse,
   },
 });

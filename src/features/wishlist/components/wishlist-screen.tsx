@@ -46,7 +46,7 @@ export function WishlistScreen({ showBack }: WishlistScreenProps) {
   }
 
   function onExplore() {
-    router.push('/(tabs)/search');
+    router.push('/search');
   }
 
   return (
@@ -76,7 +76,7 @@ export function WishlistScreen({ showBack }: WishlistScreenProps) {
           <Pressable
             onPress={() => {
               hapticSoftTap();
-              router.push('/(tabs)/search');
+              router.push('/search');
             }}
             hitSlop={10}
             style={styles.iconBtn}

@@ -2,19 +2,23 @@ import type { OrderStatus } from '@/features/catalog/types/catalog.types';
 
 export type OrderTabId =
   | 'all'
-  | 'to_pay'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled';
+  | 'ongoing'
+  | 'completed'
+  | 'cancelled'
+  | 'returned';
 
-export const ORDER_TABS: { id: OrderTabId; label: string }[] = [
-  { id: 'all', label: 'All Orders' },
-  { id: 'to_pay', label: 'To Pay' },
-  { id: 'processing', label: 'Processing' },
-  { id: 'shipped', label: 'Shipped' },
-  { id: 'delivered', label: 'Delivered' },
-  { id: 'cancelled', label: 'Cancelled' },
+export type OrderTab = {
+  id: OrderTabId;
+  label: string;
+  icon: string;
+};
+
+export const ORDER_TABS: OrderTab[] = [
+  { id: 'all', label: 'All Orders', icon: 'bag.fill' },
+  { id: 'ongoing', label: 'Ongoing', icon: 'clock' },
+  { id: 'completed', label: 'Completed', icon: 'checkmark.circle.fill' },
+  { id: 'cancelled', label: 'Cancelled', icon: 'xmark.circle.fill' },
+  { id: 'returned', label: 'Returned', icon: 'arrow.2.circlepath' },
 ];
 
 export type OrderStatusUi = {
@@ -28,62 +32,66 @@ export const ORDER_STATUS_UI: Record<OrderStatus, OrderStatusUi> = {
   confirmed: {
     label: 'Processing',
     icon: 'clock',
-    color: '#D97706',
-    bg: 'rgba(217, 119, 6, 0.12)',
+    color: '#2D8B3F',
+    bg: '#E8F5E9',
   },
   preparing: {
     label: 'Processing',
     icon: 'clock',
-    color: '#D97706',
-    bg: 'rgba(217, 119, 6, 0.12)',
+    color: '#2D8B3F',
+    bg: '#E8F5E9',
   },
   ready: {
-    label: 'Ready',
+    label: 'Ready to Ship',
     icon: 'shippingbox.fill',
-    color: '#D4543C',
-    bg: 'rgba(212, 84, 60, 0.12)',
+    color: '#2D8B3F',
+    bg: '#E8F5E9',
   },
   on_the_way: {
-    label: 'Shipped',
-    icon: 'truck.box.fill',
-    color: '#2563EB',
-    bg: 'rgba(37, 99, 235, 0.12)',
+    label: 'Out for Delivery',
+    icon: 'bicycle',
+    color: '#2D8B3F',
+    bg: '#E8F5E9',
   },
   delivered: {
     label: 'Delivered',
     icon: 'checkmark.circle.fill',
-    color: '#2D6A4F',
-    bg: 'rgba(45, 106, 79, 0.12)',
+    color: '#2D8B3F',
+    bg: '#E8F5E9',
   },
   cancelled: {
     label: 'Cancelled',
-    icon: 'xmark.circle.fill',
-    color: '#B91C1C',
-    bg: 'rgba(185, 28, 28, 0.12)',
+    icon: 'exclamationmark.circle.fill',
+    color: '#DC2626',
+    bg: '#FEE2E2',
   },
 };
 
 export function formatOrderId(orderId: string): string {
   const compact = orderId.replace(/\D/g, '').slice(-8).padStart(8, '0');
-  return `#ORD${compact}`;
+  return `#FC${compact}`;
 }
 
 export function formatOrderDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
-    day: 'numeric',
+  const date = new Date(iso);
+  const day = date.toLocaleDateString('en-US', {
     month: 'short',
+    day: 'numeric',
     year: 'numeric',
+  });
+  const time = date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
   });
+  return `${day} • ${time}`;
 }
 
 export function formatDeliveryLine(
   status: OrderStatus,
   estimatedDelivery: string,
 ): string {
-  const date = new Date(estimatedDelivery).toLocaleDateString('en-IN', {
+  const date = new Date(estimatedDelivery).toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -99,7 +107,7 @@ export function countOrderItems(items: { quantity: number }[]): number {
 
 export function formatPlacedOn(iso: string): string {
   const date = new Date(iso);
-  return `Placed on ${date.toLocaleString('en-IN', {
+  return `Placed on ${date.toLocaleString('en-US', {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
@@ -124,10 +132,10 @@ export function formatEstimatedWindow(
     eta.getFullYear() === now.getFullYear();
   const dayLabel = isToday
     ? 'Today'
-    : eta.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    : eta.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString('en-IN', {
+    date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
@@ -143,6 +151,12 @@ export function formatEstimatedWindow(
     );
     const deliveryStart = prepEnd;
     const deliveryEnd = eta;
+    return `${dayLabel}, ${formatTime(deliveryStart)} - ${formatTime(deliveryEnd)}`;
+  }
+
+  if (options?.status === 'on_the_way') {
+    const deliveryEnd = eta;
+    const deliveryStart = new Date(eta.getTime() - 60 * 60 * 1000);
     return `${dayLabel}, ${formatTime(deliveryStart)} - ${formatTime(deliveryEnd)}`;
   }
 
@@ -205,44 +219,8 @@ export const CANCELLED_TRACKING_STEP = {
   icon: 'xmark.circle.fill',
 } as const;
 
-export const TRACKING_STATUS_BADGE: Record<OrderStatus, OrderStatusUi> = {
-  confirmed: {
-    label: 'Confirmed',
-    icon: 'checkmark',
-    color: '#D4543C',
-    bg: 'rgba(212, 84, 60, 0.12)',
-  },
-  preparing: {
-    label: 'Preparing',
-    icon: 'flame.fill',
-    color: '#D97706',
-    bg: 'rgba(217, 119, 6, 0.12)',
-  },
-  ready: {
-    label: 'Packed',
-    icon: 'shippingbox.fill',
-    color: '#D4543C',
-    bg: 'rgba(212, 84, 60, 0.12)',
-  },
-  on_the_way: {
-    label: 'In transit',
-    icon: 'truck.box.fill',
-    color: '#D4543C',
-    bg: 'rgba(212, 84, 60, 0.12)',
-  },
-  delivered: {
-    label: 'Delivered',
-    icon: 'checkmark.circle.fill',
-    color: '#2D6A4F',
-    bg: 'rgba(45, 106, 79, 0.12)',
-  },
-  cancelled: {
-    label: 'Cancelled',
-    icon: 'xmark.circle.fill',
-    color: '#B91C1C',
-    bg: 'rgba(185, 28, 28, 0.12)',
-  },
-};
+export const TRACKING_STATUS_BADGE: Record<OrderStatus, OrderStatusUi> =
+  ORDER_STATUS_UI;
 
 export function getCancelledProgressIndex(
   timestamps: TrackingTimestamps,
@@ -285,7 +263,7 @@ export function resolveTrackingStepState(
 }
 
 export function formatCancelledOn(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
+  return new Date(iso).toLocaleString('en-US', {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',
@@ -311,7 +289,7 @@ export function formatTrackingStepTime(
   if (state === 'pending') return null;
 
   const format = (iso: string) =>
-    new Date(iso).toLocaleString('en-IN', {
+    new Date(iso).toLocaleString('en-US', {
       day: 'numeric',
       month: 'short',
       hour: 'numeric',
@@ -345,5 +323,32 @@ export function formatTrackingStepTime(
       return timestamps.updatedAt ? format(timestamps.updatedAt) : null;
     default:
       return null;
+  }
+}
+
+export function isOngoingOrder(status: OrderStatus): boolean {
+  return (
+    status === 'confirmed' ||
+    status === 'preparing' ||
+    status === 'ready' ||
+    status === 'on_the_way'
+  );
+}
+
+export function filterOrdersByTab(
+  orders: import('@/features/catalog/types/catalog.types').Order[],
+  tab: OrderTabId,
+) {
+  switch (tab) {
+    case 'all':
+      return orders;
+    case 'ongoing':
+      return orders.filter((order) => isOngoingOrder(order.status));
+    case 'completed':
+      return orders.filter((order) => order.status === 'delivered');
+    case 'cancelled':
+      return orders.filter((order) => order.status === 'cancelled');
+    case 'returned':
+      return [];
   }
 }

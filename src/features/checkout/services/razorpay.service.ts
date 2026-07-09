@@ -9,7 +9,9 @@ import type {
 import { fetchRazorpayOrderId } from '@/features/checkout/api/razorpay.api';
 import {
   RAZORPAY_BRAND,
+  RAZORPAY_CHECKOUT_CONFIG,
   RAZORPAY_KEY_ID,
+  USD_TO_INR_RATE,
 } from '@/features/checkout/constants/razorpay.constants';
 
 export type RazorpayPrefill = {
@@ -61,6 +63,14 @@ function formatContact(phone?: string | null): string | undefined {
   return digits.length > 0 ? `+${digits}` : undefined;
 }
 
+function toRazorpayMinorUnits(amountUsd: number): number {
+  if (RAZORPAY_BRAND.currency === 'INR') {
+    return Math.max(Math.round(amountUsd * USD_TO_INR_RATE * 100), 100);
+  }
+
+  return Math.max(Math.round(amountUsd * 100), 100);
+}
+
 function isUserCancelled(error: PaymentErrorData): boolean {
   const description = error.description?.toLowerCase() ?? '';
   return (
@@ -71,7 +81,7 @@ function isUserCancelled(error: PaymentErrorData): boolean {
 }
 
 export async function openFoodRushCheckout(input: {
-  amountInr: number;
+  amount: number;
   prefill: RazorpayPrefill;
   description?: string;
 }): Promise<PaymentSuccessData> {
@@ -87,24 +97,25 @@ export async function openFoodRushCheckout(input: {
 
   const RazorpayCheckout = await loadRazorpayCheckout();
 
-  const amountPaise = Math.max(Math.round(input.amountInr * 100), 100);
-  const orderId = await fetchRazorpayOrderId(amountPaise);
+  const amountMinorUnits = toRazorpayMinorUnits(input.amount);
+  const orderId = await fetchRazorpayOrderId(amountMinorUnits);
 
   const options: RazorpayOptions = {
     key: RAZORPAY_KEY_ID,
-    amount: amountPaise,
+    amount: amountMinorUnits,
     currency: RAZORPAY_BRAND.currency,
     name: RAZORPAY_BRAND.name,
     description: input.description ?? RAZORPAY_BRAND.description,
     image: RAZORPAY_BRAND.logoUrl,
     theme: { color: RAZORPAY_BRAND.themeColor },
+    config: RAZORPAY_CHECKOUT_CONFIG,
     prefill: {
       name: input.prefill.name?.trim() || undefined,
       email: input.prefill.email?.trim() || undefined,
       contact: formatContact(input.prefill.contact),
     },
     notes: {
-      app: 'foodRush',
+      app: 'FreshCart',
       platform: Platform.OS,
     },
   };

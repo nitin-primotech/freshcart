@@ -5,8 +5,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatUsd } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
-import { AppSymbol } from '@/shared/components/app-symbol';
-import { hapticAddToCart } from '@/shared/haptics/feedback';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
+import {
+  hapticAddToCart,
+  hapticPrimaryAction,
+  hapticSoftTap,
+} from '@/shared/haptics/feedback';
 import {
   addToCart,
   selectCartLineQuantity,
@@ -14,28 +18,29 @@ import {
   useCartStore,
 } from '@/store/cart.store';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 type PopularProductCardProps = {
   dish: RecommendedDish;
   width: number;
-  addPosition?: 'top-right' | 'bottom-right';
-  outlinedAdd?: boolean;
   showDescription?: boolean;
 };
 
 export function PopularProductCard({
   dish,
   width,
-  addPosition = 'top-right',
-  outlinedAdd = false,
   showDescription = false,
 }: PopularProductCardProps) {
   const { item, restaurantId, restaurantName } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
   function handleAdd() {
+    hapticPrimaryAction();
+    addToCart(item, restaurantId, restaurantName);
+  }
+
+  function handleIncrease() {
     hapticAddToCart();
     if (quantity === 0) {
       addToCart(item, restaurantId, restaurantName);
@@ -44,17 +49,16 @@ export function PopularProductCard({
     updateCartQuantity(item.id, quantity + 1, restaurantId);
   }
 
-  const addBtnStyle = [
-    styles.addBtn,
-    addPosition === 'bottom-right' ? styles.addBtnBottom : styles.addBtnTop,
-    outlinedAdd ? styles.addBtnOutlined : styles.addBtnSolid,
-  ];
+  function handleDecrease() {
+    hapticSoftTap();
+    updateCartQuantity(item.id, quantity - 1, restaurantId);
+  }
 
   return (
     <View style={[styles.card, { width }]}>
       <View style={styles.imageWrap}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.imagePress}>
+          <Pressable style={styles.imagePress} accessibilityRole="link">
             <Image
               source={{ uri: item.image }}
               style={styles.image}
@@ -63,26 +67,11 @@ export function PopularProductCard({
             />
           </Pressable>
         </Link>
-        {addPosition === 'top-right' ? (
-          <Pressable
-            style={addBtnStyle}
-            onPress={handleAdd}
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${item.name} to cart`}
-          >
-            <AppSymbol
-              name="plus"
-              size={12}
-              tintColor={outlinedAdd ? colors.primary : colors.textInverse}
-              weight="semibold"
-            />
-          </Pressable>
-        ) : null}
       </View>
 
-      <View style={styles.footer}>
+      <View style={styles.body}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.meta}>
+          <Pressable accessibilityRole="link">
             <Text style={styles.name} numberOfLines={2}>
               {item.name}
             </Text>
@@ -95,21 +84,15 @@ export function PopularProductCard({
           </Pressable>
         </Link>
 
-        {addPosition === 'bottom-right' ? (
-          <Pressable
-            style={addBtnStyle}
-            onPress={handleAdd}
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${item.name} to cart`}
-          >
-            <AppSymbol
-              name="plus"
-              size={12}
-              tintColor={outlinedAdd ? colors.primary : colors.textInverse}
-              weight="semibold"
-            />
-          </Pressable>
-        ) : null}
+        <View style={styles.actionRow}>
+          <ProductCardAddAction
+            quantity={quantity}
+            onAdd={handleAdd}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            itemLabel={item.name}
+          />
+        </View>
       </View>
     </View>
   );
@@ -129,7 +112,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
-    position: 'relative',
   },
   imagePress: {
     width: '70%',
@@ -139,42 +121,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  addBtn: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnTop: {
-    top: spacing.xs,
-    right: spacing.xs,
-  },
-  addBtnBottom: {
-    position: 'relative',
-    top: undefined,
-    right: undefined,
-    flexShrink: 0,
-    alignSelf: 'flex-end',
-  },
-  addBtnSolid: {
-    backgroundColor: colors.primary,
-  },
-  addBtnOutlined: {
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  meta: {
-    flex: 1,
-    minWidth: 0,
-    gap: 1,
+  body: {
+    gap: spacing.xs,
   },
   name: {
     fontFamily: fonts.medium,
@@ -194,5 +142,9 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: colors.textPrimary,
     marginTop: 1,
+  },
+  actionRow: {
+    marginTop: 2,
+    width: '100%',
   },
 });

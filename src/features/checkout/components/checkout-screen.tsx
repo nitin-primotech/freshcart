@@ -22,15 +22,22 @@ import {
   PLATFORM_FEE,
 } from '@/features/checkout/constants/checkout.constants';
 import {
+  openFoodRushCheckout,
+  RazorpayPaymentCancelledError,
+  RazorpayUnavailableError,
+} from '@/features/checkout/services/razorpay.service';
+import {
   deriveMrp,
   formatUsd,
 } from '@/features/checkout/utils/format-currency';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
-import { selectAddress, useAppStore } from '@/store/app.store';
+import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
+import { selectUserPhone, useAuthStore } from '@/store/auth.store';
 import {
   cartLineKey,
+  clearCart,
   handleCheckoutBack,
   removeFromCart,
   selectCartItems,
@@ -43,7 +50,11 @@ import {
   selectMerchantReady,
   useMerchantStore,
 } from '@/store/merchant.store';
-import { selectIsPlacing, useOrdersStore } from '@/store/orders.store';
+import {
+  placeOrder,
+  selectIsPlacing,
+  useOrdersStore,
+} from '@/store/orders.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -65,6 +76,8 @@ export function CheckoutScreen() {
   const items = useCartStore(selectCartItems);
   const subtotal = useCartStore(selectCartSubtotal);
   const savedAddress = useAppStore(selectAddress);
+  const userName = useAppStore(selectUserName);
+  const userPhone = useAuthStore(selectUserPhone);
   const isPlacing = useOrdersStore(selectIsPlacing);
   const merchantReady = useMerchantStore(selectMerchantReady);
   const merchantIsOnline = useMerchantStore(selectMerchantIsOnline);
@@ -123,7 +136,48 @@ export function CheckoutScreen() {
     }
 
     hapticSoftTap();
-    router.push('/payment' as never);
+    try {
+      await openFoodRushCheckout({
+        amount: total,
+        prefill: {
+          name: userName,
+          contact: userPhone,
+        },
+        description: `FreshCart order from ${restaurant.restaurantName}`,
+      });
+
+      await placeOrder({
+        items,
+        subtotal,
+        deliveryFee: deliveryFee + PLATFORM_FEE,
+        tip: 0,
+        address: fullAddress,
+        restaurantId: restaurant.restaurantId,
+        restaurantName: restaurant.restaurantName,
+        restaurantLogo: '',
+        customerId: userPhone ?? undefined,
+        customerName: userName ?? undefined,
+        customerPhone: userPhone ?? undefined,
+      });
+      clearCart();
+      router.replace('/order-success');
+    } catch (error) {
+      if (error instanceof RazorpayPaymentCancelledError) {
+        return;
+      }
+
+      if (error instanceof RazorpayUnavailableError) {
+        Alert.alert('Razorpay unavailable', error.message);
+        return;
+      }
+
+      Alert.alert(
+        'Unable to place order',
+        error instanceof Error
+          ? error.message
+          : 'Please try again in a moment.',
+      );
+    }
   }
 
   return (
@@ -481,7 +535,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: 'rgba(212, 84, 60, 0.08)',
+    backgroundColor: colors.successLight,
     borderRadius: 12,
     borderCurve: 'continuous',
     padding: spacing.md,
@@ -518,7 +572,7 @@ const styles = StyleSheet.create({
   },
   paymentRowSelected: {
     borderColor: colors.primary,
-    backgroundColor: 'rgba(212, 84, 60, 0.04)',
+    backgroundColor: colors.accentMuted,
   },
   paymentCenter: {
     flex: 1,

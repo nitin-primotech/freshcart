@@ -50,7 +50,7 @@ export function FlashDealsBanner({ dishes }: FlashDealsBannerProps) {
           </Text>
           <Pressable
             style={styles.cta}
-            onPress={() => router.push('/(tabs)/offers')}
+            onPress={() => router.push('/profile/offers')}
             accessibilityRole="button"
             accessibilityLabel="Shop flash deals"
           >

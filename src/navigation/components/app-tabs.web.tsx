@@ -39,13 +39,6 @@ export function AppTabs() {
         }}
       />
       <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color }) => <TabIcon name="search" color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="orders"
         options={{
           title: 'Orders',

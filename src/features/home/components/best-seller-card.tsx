@@ -5,8 +5,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { formatUsd } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
-import { AppSymbol } from '@/shared/components/app-symbol';
-import { hapticAddToCart } from '@/shared/haptics/feedback';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
+import {
+  hapticAddToCart,
+  hapticPrimaryAction,
+  hapticSoftTap,
+} from '@/shared/haptics/feedback';
 import {
   addToCart,
   selectCartLineQuantity,
@@ -32,12 +36,22 @@ export function BestSellerCard({
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
   function handleAdd() {
+    hapticPrimaryAction();
+    addToCart(item, restaurantId, restaurantName);
+  }
+
+  function handleIncrease() {
     hapticAddToCart();
     if (quantity === 0) {
       addToCart(item, restaurantId, restaurantName);
       return;
     }
     updateCartQuantity(item.id, quantity + 1, restaurantId);
+  }
+
+  function handleDecrease() {
+    hapticSoftTap();
+    updateCartQuantity(item.id, quantity - 1, restaurantId);
   }
 
   return (
@@ -49,7 +63,7 @@ export function BestSellerCard({
           </View>
         ) : null}
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.imagePress}>
+          <Pressable style={styles.imagePress} accessibilityRole="link">
             <Image
               source={{ uri: item.image }}
               style={styles.image}
@@ -58,32 +72,31 @@ export function BestSellerCard({
             />
           </Pressable>
         </Link>
-        <Pressable
-          style={styles.addBtn}
-          onPress={handleAdd}
-          accessibilityRole="button"
-          accessibilityLabel={`Add ${item.name} to cart`}
-        >
-          <AppSymbol
-            name="plus"
-            size={14}
-            tintColor={colors.textInverse}
-            weight="semibold"
-          />
-        </Pressable>
       </View>
 
-      <Link href={productDetailPath(restaurantId, item.id)} asChild>
-        <Pressable style={styles.meta}>
-          <Text style={styles.name} numberOfLines={2}>
-            {item.name}
-          </Text>
-          <Text style={styles.unit} numberOfLines={1}>
-            {item.description}
-          </Text>
-          <Text style={styles.price}>{formatUsd(item.price)}</Text>
-        </Pressable>
-      </Link>
+      <View style={styles.body}>
+        <Link href={productDetailPath(restaurantId, item.id)} asChild>
+          <Pressable accessibilityRole="link">
+            <Text style={styles.name} numberOfLines={2}>
+              {item.name}
+            </Text>
+            <Text style={styles.unit} numberOfLines={1}>
+              {item.description}
+            </Text>
+            <Text style={styles.price}>{formatUsd(item.price)}</Text>
+          </Pressable>
+        </Link>
+
+        <View style={styles.actionRow}>
+          <ProductCardAddAction
+            quantity={quantity}
+            onAdd={handleAdd}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            itemLabel={item.name}
+          />
+        </View>
+      </View>
     </View>
   );
 }
@@ -103,7 +116,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
     position: 'relative',
-    overflow: 'visible',
   },
   badge: {
     position: 'absolute',
@@ -131,19 +143,8 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  addBtn: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    right: spacing.sm,
-    width: 28,
-    height: 28,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  meta: {
-    gap: 2,
+  body: {
+    gap: spacing.xs,
   },
   name: {
     fontFamily: fonts.semibold,
@@ -162,6 +163,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 17,
     color: colors.textPrimary,
-    marginTop: spacing.xxs,
+  },
+  actionRow: {
+    marginTop: 2,
+    width: '100%',
   },
 });

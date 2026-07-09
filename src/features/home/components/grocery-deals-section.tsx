@@ -10,11 +10,13 @@ import { spacing } from '@/theme/spacing';
 type GroceryDealsSectionProps = {
   dishes: RecommendedDish[];
   viewAllHref?: Href;
+  title?: string;
 };
 
 export function GroceryDealsSection({
   dishes,
   viewAllHref,
+  title = 'Best Deals for You',
 }: GroceryDealsSectionProps) {
   const cardWidth = useCarouselItemWidth({
     visibleCount: 2.55,
@@ -28,7 +30,7 @@ export function GroceryDealsSection({
 
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Best Deals for You" href={viewAllHref} />
+      <HomeSectionHeader title={title} href={viewAllHref} />
       <ScrollView
         horizontal
         nestedScrollEnabled

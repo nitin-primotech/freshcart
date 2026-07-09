@@ -1,35 +1,50 @@
-import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import {
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchCategories } from '@/features/catalog/api/catalog.api';
-import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
+import { CategoriesDeliveryPromo } from '@/features/category/components/categories-delivery-promo';
+import { CategoryGridTile } from '@/features/category/components/category-grid-tile';
+import { DietLifestyleSection } from '@/features/category/components/diet-lifestyle-section';
+import { TopCategoryBannersSection } from '@/features/category/components/top-category-banners-section';
+import { HomeHeader } from '@/features/home/components/home-header';
+import { HomeSearchBar } from '@/features/home/components/home-search-bar';
+import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { ErrorState } from '@/shared/components/error-state';
 import { Shimmer } from '@/shared/components/shimmer';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
-import { colors, shadows } from '@/theme/colors';
-import { screenTopPadding } from '@/theme/screen-edge';
-import { radius, spacing } from '@/theme/spacing';
+import { colors } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import { tabBarContentPadding } from '@/theme/tab-bar';
-import { fonts } from '@/theme/typography';
+
+const GRID_COLUMNS = 5;
+const GRID_GAP = 8;
+
+function CategoriesGridSkeleton({ tileWidth }: { tileWidth: number }) {
+  return (
+    <View style={styles.skeletonGrid}>
+      {Array.from({ length: 10 }).map((_, index) => (
+        <View key={`cat-skel-${index}`} style={{ width: tileWidth }}>
+          <Shimmer height={92} borderRadius={10} />
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export function CategoriesScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const gap = spacing.md;
-  const tileWidth = (width - spacing.md * 2 - gap) / 2;
+  const contentWidth = width - spacing.md * 2;
+  const tileWidth =
+    (contentWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
 
   const categoriesQuery = useSimulatedQuery(
     (signal) => fetchCategories(signal),
@@ -42,22 +57,28 @@ export function CategoriesScreen() {
 
   const isLoading = categoriesQuery.status === 'loading';
   const hasError = categoriesQuery.status === 'error';
+  const categories = categoriesQuery.data ?? [];
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} collapsable={false}>
       <AppStatusBar style="dark" />
+
       <View
-        style={[styles.header, { paddingTop: screenTopPadding(insets.top) }]}
+        style={[styles.headerBlock, { paddingTop: insets.top + spacing.xs }]}
       >
-        <Text style={styles.title}>Categories</Text>
-        <Text style={styles.subtitle}>Browse all grocery departments</Text>
+        <HomeHeader />
+        <View style={styles.searchWrap}>
+          <HomeSearchBar placeholder="Search for products, categories..." />
+        </View>
       </View>
 
       <ScrollView
-        contentContainerStyle={[
-          styles.grid,
-          { paddingBottom: tabBarContentPadding(insets.bottom) },
-        ]}
+        style={styles.screen}
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: tabBarContentPadding(insets.bottom),
+        }}
         refreshControl={
           <RefreshControl
             refreshing={categoriesQuery.isRefreshing}
@@ -66,48 +87,38 @@ export function CategoriesScreen() {
           />
         }
       >
-        {isLoading ? (
-          <View style={styles.skeletonRow}>
-            <Shimmer height={140} borderRadius={radius.lg} />
-            <Shimmer height={140} borderRadius={radius.lg} />
-          </View>
-        ) : null}
+        <CategoriesDeliveryPromo />
 
-        {hasError ? (
-          <ErrorState
-            message="Could not load categories."
-            onRetry={onRefresh}
-          />
-        ) : null}
+        <View style={styles.section}>
+          <HomeSectionHeader title="All Categories" />
+          {isLoading ? <CategoriesGridSkeleton tileWidth={tileWidth} /> : null}
 
-        <View style={styles.tiles}>
-          {(categoriesQuery.data ?? []).map((category) => {
-            const imageUri = resolveCategoryImageUri(category.image);
-            return (
-              <Pressable
-                key={category.id}
-                style={[styles.tile, { width: tileWidth }, shadows.soft]}
-                onPress={() => router.push(`/category/${category.id}`)}
-                accessibilityRole="button"
-                accessibilityLabel={`Browse ${category.name}`}
-              >
-                {imageUri ? (
-                  <Image
-                    source={{ uri: imageUri }}
-                    style={styles.image}
-                    contentFit="cover"
-                    transition={200}
-                  />
-                ) : null}
-                <View style={styles.tileOverlay}>
-                  <Text style={styles.tileLabel} numberOfLines={2}>
-                    {category.name}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
+          {hasError ? (
+            <ErrorState
+              message="Could not load categories."
+              onRetry={onRefresh}
+            />
+          ) : null}
+
+          {!isLoading && !hasError ? (
+            <View style={styles.grid}>
+              {categories.map((category) => (
+                <CategoryGridTile
+                  key={category.id}
+                  category={category}
+                  width={tileWidth}
+                />
+              ))}
+            </View>
+          ) : null}
         </View>
+
+        {!isLoading && !hasError ? (
+          <>
+            <DietLifestyleSection />
+            <TopCategoryBannersSection />
+          </>
+        ) : null}
       </ScrollView>
     </View>
   );
@@ -118,57 +129,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    gap: spacing.xxs,
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    lineHeight: 30,
-    color: colors.textPrimary,
+  headerBlock: {
+    backgroundColor: colors.background,
+    zIndex: 2,
+    elevation: 2,
   },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 18,
-    color: colors.textSecondary,
+  searchWrap: {
+    paddingTop: spacing.xs,
+    paddingBottom: 2,
+  },
+  section: {
+    marginTop: spacing.xs,
   },
   grid: {
-    paddingHorizontal: spacing.md,
-  },
-  skeletonRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  tiles: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    gap: GRID_GAP,
   },
-  tile: {
-    height: 140,
-    borderRadius: radius.lg,
-    borderCurve: 'continuous',
-    overflow: 'hidden',
-    backgroundColor: colors.backgroundMuted,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  tileOverlay: {
-    ...StyleSheet.absoluteFill,
-    justifyContent: 'flex-end',
-    padding: spacing.sm,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  tileLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    lineHeight: 18,
-    color: colors.textInverse,
+  skeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.md,
+    gap: GRID_GAP,
   },
 });

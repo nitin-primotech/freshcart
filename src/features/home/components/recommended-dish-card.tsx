@@ -5,10 +5,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { formatInr } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
-import { AnimatedCartAction } from '@/shared/components/animated-cart-action';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PremiumText } from '@/shared/components/premium-text';
-import { hapticAddToCart } from '@/shared/haptics/feedback';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
+import {
+  hapticAddToCart,
+  hapticPrimaryAction,
+  hapticSoftTap,
+} from '@/shared/haptics/feedback';
 import {
   addToCart,
   selectCartLineQuantity,
@@ -32,6 +36,7 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
   function handleAdd() {
+    hapticPrimaryAction();
     addToCart(item, restaurantId, restaurantName);
   }
 
@@ -41,18 +46,19 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
       addToCart(item, restaurantId, restaurantName);
       return;
     }
-    updateCartQuantity(item.id, quantity + 1);
+    updateCartQuantity(item.id, quantity + 1, restaurantId);
   }
 
   function handleDecrease() {
-    updateCartQuantity(item.id, quantity - 1);
+    hapticSoftTap();
+    updateCartQuantity(item.id, quantity - 1, restaurantId);
   }
 
   return (
     <View style={[styles.card, { width }]}>
       <View style={styles.imageWrap}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.imagePress}>
+          <Pressable style={styles.imagePress} accessibilityRole="link">
             <Image
               source={{ uri: item.image }}
               style={styles.image}
@@ -61,8 +67,45 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
             />
           </Pressable>
         </Link>
-        <View style={styles.actionWrap}>
-          <AnimatedCartAction
+      </View>
+
+      <View style={styles.body}>
+        <View style={styles.titleRow}>
+          <Link href={productDetailPath(restaurantId, item.id)} asChild>
+            <Pressable style={styles.titlePress} accessibilityRole="link">
+              <PremiumText
+                variant="bodyMedium"
+                color={colors.textPrimary}
+                numberOfLines={1}
+                style={styles.title}
+              >
+                {item.name}
+              </PremiumText>
+            </Pressable>
+          </Link>
+          <View style={styles.rating}>
+            <AppSymbol name="star.fill" size={12} tintColor={colors.star} />
+            <PremiumText variant="captionMedium" color={colors.textPrimary}>
+              {rating.toFixed(1)}
+            </PremiumText>
+          </View>
+        </View>
+
+        <PremiumText
+          variant="bodySmall"
+          color={colors.textSecondary}
+          numberOfLines={2}
+          style={styles.description}
+        >
+          {item.description}
+        </PremiumText>
+
+        <PremiumText variant="price" color={colors.textPrimary}>
+          {formatPrice(item.price)}
+        </PremiumText>
+
+        <View style={styles.actionRow}>
+          <ProductCardAddAction
             quantity={quantity}
             onAdd={handleAdd}
             onIncrease={handleIncrease}
@@ -71,40 +114,6 @@ export function RecommendedDishCard({ dish, width }: RecommendedDishCardProps) {
           />
         </View>
       </View>
-
-      <View style={styles.titleRow}>
-        <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.titlePress}>
-            <PremiumText
-              variant="bodyMedium"
-              color={colors.textPrimary}
-              numberOfLines={1}
-              style={styles.title}
-            >
-              {item.name}
-            </PremiumText>
-          </Pressable>
-        </Link>
-        <View style={styles.rating}>
-          <AppSymbol name="star.fill" size={12} tintColor={colors.star} />
-          <PremiumText variant="captionMedium" color={colors.textPrimary}>
-            {rating.toFixed(1)}
-          </PremiumText>
-        </View>
-      </View>
-
-      <PremiumText
-        variant="bodySmall"
-        color={colors.textSecondary}
-        numberOfLines={2}
-        style={styles.description}
-      >
-        {item.description}
-      </PremiumText>
-
-      <PremiumText variant="price" color={colors.textPrimary}>
-        {formatPrice(item.price)}
-      </PremiumText>
     </View>
   );
 }
@@ -131,17 +140,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  actionWrap: {
-    position: 'absolute',
-    bottom: spacing.sm,
-    right: spacing.sm,
+  body: {
+    gap: spacing.xxs,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
-    marginBottom: spacing.xxs,
   },
   title: {
     flex: 1,
@@ -155,7 +161,10 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   description: {
-    marginBottom: spacing.xs,
-    minHeight: 44,
+    minHeight: 36,
+  },
+  actionRow: {
+    marginTop: spacing.xs,
+    width: '100%',
   },
 });

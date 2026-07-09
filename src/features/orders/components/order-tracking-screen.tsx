@@ -24,6 +24,7 @@ import {
   formatPlacedOn,
   TRACKING_STATUS_BADGE,
 } from '@/features/orders/constants/orders.constants';
+import { findOrderById } from '@/features/orders/mocks/demo-orders';
 import {
   DEFAULT_DELIVERY_COORDS,
   RESTAURANT_COORDS,
@@ -207,7 +208,7 @@ export function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const orders = useOrdersStore(selectOrders);
-  const order = orders.find((o) => o.id === id);
+  const order = id ? findOrderById(orders, id) : undefined;
   const [showDetails, setShowDetails] = useState(false);
 
   if (!order) {

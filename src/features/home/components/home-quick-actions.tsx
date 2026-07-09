@@ -24,7 +24,7 @@ const ACTIONS = [
     icon: 'tag.fill' as const,
     tint: '#DC2626',
     bg: '#FEE2E2',
-    href: '/(tabs)/offers' as const,
+    href: '/profile/offers' as const,
   },
   {
     id: 'buy-again',

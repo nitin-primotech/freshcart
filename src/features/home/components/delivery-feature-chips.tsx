@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minWidth: 0,
+    marginBottom: spacing.sm,
   },
   iconWrap: {
     width: 24,

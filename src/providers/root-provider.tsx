@@ -23,7 +23,6 @@ export function RootProvider({ children }: RootProviderProps) {
         : colors.backgroundElevated,
     );
   }, []);
-
   return (
     <SafeAreaProvider>
       <KeyboardProvider preload={false}>

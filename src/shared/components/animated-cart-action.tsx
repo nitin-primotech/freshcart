@@ -4,7 +4,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { QuantityStepper } from '@/shared/components/quantity-stepper';
 import { hapticPrimaryAction, hapticSoftTap } from '@/shared/haptics/feedback';
-import { colors } from '@/theme/colors';
+import { colors, shadows } from '@/theme/colors';
 import { radius } from '@/theme/spacing';
 
 type AnimatedCartActionProps = {
@@ -48,7 +48,7 @@ export function AnimatedCartAction({
             <AppSymbol
               name="plus"
               size={small ? 14 : 18}
-              tintColor={colors.textInverse}
+              tintColor={colors.primary}
             />
           </Pressable>
         </Animated.View>
@@ -69,6 +69,7 @@ export function AnimatedCartAction({
             }}
             minQuantity={0}
             compact={compact}
+            small={small}
           />
         </Animated.View>
       )}
@@ -82,10 +83,12 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderCurve: 'continuous',
-    boxShadow: '0 4px 14px rgba(212, 84, 60, 0.32)',
+    ...shadows.soft,
   },
 });

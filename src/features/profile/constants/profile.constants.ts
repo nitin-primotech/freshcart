@@ -7,77 +7,156 @@ export type ProfileOrderShortcut = {
 };
 
 export const PROFILE_ORDER_SHORTCUTS: ProfileOrderShortcut[] = [
-  { id: 'all', label: 'All Orders', icon: 'doc.text.fill' },
-  { id: 'processing', label: 'Processing', icon: 'bag.fill' },
-  { id: 'shipped', label: 'In Transit', icon: 'truck.box.fill' },
-  { id: 'delivered', label: 'Delivered', icon: 'checkmark.circle.fill' },
+  { id: 'all', label: 'All Orders', icon: 'bag.fill' },
+  { id: 'ongoing', label: 'Ongoing', icon: 'clock' },
+  { id: 'completed', label: 'Completed', icon: 'shippingbox.fill' },
   { id: 'cancelled', label: 'Cancelled', icon: 'xmark.circle.fill' },
+  { id: 'returned', label: 'Returned', icon: 'arrow.2.circlepath' },
 ];
 
-export type ProfileQuickStat = {
+export type ProfileWalletStat = {
   id: string;
   label: string;
   value: string;
   icon: string;
+  href?: string;
 };
 
-export const PROFILE_QUICK_STATS: ProfileQuickStat[] = [
-  { id: 'wallet', label: 'Wallet', value: '₹250', icon: 'wallet.pass.fill' },
-  { id: 'offers', label: 'Offers', value: '12 Available', icon: 'tag.fill' },
+export const PROFILE_WALLET_STATS: ProfileWalletStat[] = [
   {
-    id: 'premium',
-    label: 'foodRush Gold',
-    value: 'Member',
+    id: 'freshcash',
+    label: 'FreshCash',
+    value: '$24.50',
+    icon: 'wallet.pass.fill',
+    href: '/profile/wallet',
+  },
+  {
+    id: 'coupons',
+    label: 'Coupons',
+    value: '8 Available',
+    icon: 'tag.fill',
+    href: '/profile/offers',
+  },
+  {
+    id: 'rewards',
+    label: 'Rewards',
+    value: '120 Points',
+    icon: 'star.fill',
+  },
+  {
+    id: 'club',
+    label: 'Club Access',
+    value: 'Active',
     icon: 'crown.fill',
+    href: '/profile/membership',
   },
 ];
 
-export type ProfileMenuItem = {
+export type ProfileLinkItem = {
   id: string;
   title: string;
-  subtitle: string;
   icon: string;
-  badge?: string;
-  badgeTone?: 'primary' | 'success';
+  href?: string;
+  trailing?: string;
+  toggle?: boolean;
 };
 
-export const PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
+export const PROFILE_ACCOUNT_ITEMS: ProfileLinkItem[] = [
+  {
+    id: 'personal',
+    title: 'Personal Information',
+    icon: 'person',
+    href: '/profile/edit',
+  },
   {
     id: 'addresses',
-    title: 'Manage Addresses',
-    subtitle: 'Home, work and saved places',
+    title: 'Addresses',
     icon: 'location.fill',
+    href: '/location',
   },
   {
     id: 'payments',
     title: 'Payment Methods',
-    subtitle: 'Cards, UPI and wallets',
     icon: 'creditcard.fill',
+    href: '/profile/payments',
   },
   {
-    id: 'premium',
-    title: 'Premium Status',
-    subtitle: 'foodRush Gold membership',
+    id: 'saved-cards',
+    title: 'Saved Cards',
+    icon: 'wallet.pass.fill',
+    href: '/profile/payments',
+  },
+  {
+    id: 'club',
+    title: 'FreshCart Club',
     icon: 'crown.fill',
-    badge: 'Active',
-    badgeTone: 'success',
-  },
-  {
-    id: 'support',
-    title: 'Help & Support',
-    subtitle: 'FAQs, chat and call support',
-    icon: 'headphones',
+    href: '/profile/membership',
   },
 ];
 
-export function formatProfilePhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '').slice(-10);
-  if (digits.length !== 10) return `+91 ${phone}`;
-  return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+export const PROFILE_PREFERENCE_ITEMS: ProfileLinkItem[] = [
+  { id: 'notifications', title: 'Notifications', icon: 'bell.fill' },
+  {
+    id: 'language',
+    title: 'Language',
+    icon: 'globe',
+    trailing: 'English',
+  },
+  { id: 'dark-mode', title: 'Dark Mode', icon: 'moon.fill', toggle: true },
+];
+
+export const PROFILE_SUPPORT_ITEMS: ProfileLinkItem[] = [
+  {
+    id: 'help',
+    title: 'Help Center',
+    icon: 'questionmark.circle.fill',
+    href: '/profile/support',
+  },
+  {
+    id: 'contact',
+    title: 'Contact Us',
+    icon: 'headphones',
+    href: '/profile/support',
+  },
+  {
+    id: 'about',
+    title: 'About FreshCart',
+    icon: 'info.circle.fill',
+  },
+  {
+    id: 'privacy',
+    title: 'Privacy Policy',
+    icon: 'shield.fill',
+    href: '/privacy',
+  },
+  {
+    id: 'terms',
+    title: 'Terms & Conditions',
+    icon: 'doc.text.fill',
+    href: '/terms',
+  },
+];
+
+export const PROFILE_AVATAR_URI =
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop';
+
+export function formatProfilePhone(phone: string | null): string {
+  if (!phone?.trim()) return '+1 (555) 123-4567';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length >= 10) {
+    const local = digits.slice(-10);
+    return `+1 (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
+  }
+  return phone;
+}
+
+export function profileEmailFromName(name: string): string {
+  const slug = name.trim().toLowerCase().replace(/\s+/g, '.');
+  return `${slug || 'john.doe'}@example.com`;
 }
 
 export function profileInitials(name: string | null): string {
-  if (!name?.trim()) return 'FR';
+  if (!name?.trim()) return 'JD';
   return name
     .trim()
     .split(/\s+/)
@@ -85,4 +164,8 @@ export function profileInitials(name: string | null): string {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+}
+
+export function profileDisplayName(name: string | null): string {
+  return name?.trim() || 'John Doe';
 }

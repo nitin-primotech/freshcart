@@ -2,7 +2,7 @@
 module.exports = {
   project: {
     android: {
-      packageName: 'com.dev.primotech.foodRush',
+      packageName: 'com.dev.primotech.freshcart',
     },
   },
 };

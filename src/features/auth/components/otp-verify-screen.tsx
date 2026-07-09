@@ -164,16 +164,6 @@ export function OtpVerifyScreen() {
             { paddingBottom: insets.bottom + spacing.xl },
           ]}
         >
-          <View style={styles.logoRow}>
-            <AppSymbol name="leaf.fill" size={22} tintColor={colors.primary} />
-            <AppSymbol
-              name="leaf.fill"
-              size={18}
-              tintColor={colors.primaryLight}
-              style={styles.logoLeafSecond}
-            />
-          </View>
-
           <View style={styles.header}>
             <Text style={styles.title}>Verify your number</Text>
             <Text style={styles.subtitle}>
@@ -290,16 +280,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     gap: spacing.lg,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  logoLeafSecond: {
-    marginLeft: -6,
-    marginTop: 4,
-    opacity: 0.85,
   },
   header: {
     gap: spacing.xs,

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -6,30 +6,35 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-export function HomeSearchBar() {
-  const router = useRouter();
+type HomeSearchBarProps = {
+  placeholder?: string;
+};
 
+export function HomeSearchBar({
+  placeholder = "Search 'milk, eggs, fruits...'",
+}: HomeSearchBarProps) {
   return (
-    <Pressable
-      style={styles.search}
-      onPress={() => router.push('/(tabs)/search')}
-      accessibilityRole="button"
-      accessibilityLabel="Search groceries"
-    >
-      <AppSymbol
-        name="magnifyingglass"
-        size={16}
-        tintColor={colors.textSecondary}
-      />
-      <Text style={styles.placeholder} numberOfLines={1}>
-        Search 'milk, eggs, fruits...'
-      </Text>
-      <AppSymbol
-        name="qrcode.viewfinder"
-        size={18}
-        tintColor={colors.primary}
-      />
-    </Pressable>
+    <Link href={{ pathname: '/search', params: { autoFocus: '1' } }} asChild>
+      <Pressable
+        style={styles.search}
+        accessibilityRole="button"
+        accessibilityLabel="Search groceries"
+      >
+        <AppSymbol
+          name="magnifyingglass"
+          size={16}
+          tintColor={colors.textSecondary}
+        />
+        <Text style={styles.placeholder} numberOfLines={1}>
+          {placeholder}
+        </Text>
+        <AppSymbol
+          name="qrcode.viewfinder"
+          size={18}
+          tintColor={colors.primary}
+        />
+      </Pressable>
+    </Link>
   );
 }
 
@@ -47,6 +52,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 40,
+    marginBottom: spacing.sm,
   },
   placeholder: {
     flex: 1,

@@ -28,7 +28,7 @@ export const useAppStore = create<AppState>(() => ({
   address: DEFAULT_PROFILE.address,
   userName: DEFAULT_PROFILE.userName,
   preferences: DEFAULT_PREFERENCES,
-  recentSearches: ['Milk', 'Eggs', 'Strawberries'],
+  recentSearches: ['Organic Milk', 'Bananas', 'Chicken Breast'],
   profileSavedToken: null,
 }));
 
@@ -97,6 +97,10 @@ export function addRecentSearch(query: string) {
   useAppStore.setState({
     recentSearches: [trimmed, ...current].slice(0, 6),
   });
+}
+
+export function clearRecentSearches() {
+  useAppStore.setState({ recentSearches: [] });
 }
 
 export const selectHydrationStatus = (s: AppState) => s.hydrationStatus;

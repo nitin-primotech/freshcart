@@ -6,10 +6,20 @@ import { formatUsd } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { hapticAddToCart } from '@/shared/haptics/feedback';
-import { addToCart } from '@/store/cart.store';
+import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
+import {
+  hapticAddToCart,
+  hapticPrimaryAction,
+  hapticSoftTap,
+} from '@/shared/haptics/feedback';
+import {
+  addToCart,
+  selectCartLineQuantity,
+  updateCartQuantity,
+  useCartStore,
+} from '@/store/cart.store';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 type CustomerTopPickCardProps = {
@@ -28,17 +38,32 @@ function formatReviewLabel(dish: RecommendedDish): string {
 
 export function CustomerTopPickCard({ dish, width }: CustomerTopPickCardProps) {
   const { item, restaurantId, restaurantName, rating } = dish;
+  const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
 
   function handleAdd() {
-    hapticAddToCart();
+    hapticPrimaryAction();
     addToCart(item, restaurantId, restaurantName);
+  }
+
+  function handleIncrease() {
+    hapticAddToCart();
+    if (quantity === 0) {
+      addToCart(item, restaurantId, restaurantName);
+      return;
+    }
+    updateCartQuantity(item.id, quantity + 1, restaurantId);
+  }
+
+  function handleDecrease() {
+    hapticSoftTap();
+    updateCartQuantity(item.id, quantity - 1, restaurantId);
   }
 
   return (
     <View style={[styles.card, { width }]}>
       <View style={styles.imageWrap}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable style={styles.imagePress}>
+          <Pressable style={styles.imagePress} accessibilityRole="link">
             <Image
               source={{ uri: item.image }}
               style={styles.image}
@@ -51,7 +76,7 @@ export function CustomerTopPickCard({ dish, width }: CustomerTopPickCardProps) {
 
       <View style={styles.body}>
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
-          <Pressable>
+          <Pressable accessibilityRole="link">
             <Text style={styles.name} numberOfLines={2}>
               {item.name}
             </Text>
@@ -71,21 +96,16 @@ export function CustomerTopPickCard({ dish, width }: CustomerTopPickCardProps) {
           </Pressable>
         </Link>
 
-        <View style={styles.bottomRow}>
-          <Text style={styles.price}>{formatUsd(item.price)}</Text>
-          <Pressable
-            style={styles.addBtn}
-            onPress={handleAdd}
-            accessibilityRole="button"
-            accessibilityLabel={`Add ${item.name} to cart`}
-          >
-            <AppSymbol
-              name="plus"
-              size={13}
-              tintColor={colors.primary}
-              weight="semibold"
-            />
-          </Pressable>
+        <Text style={styles.price}>{formatUsd(item.price)}</Text>
+
+        <View style={styles.actionRow}>
+          <ProductCardAddAction
+            quantity={quantity}
+            onAdd={handleAdd}
+            onIncrease={handleIncrease}
+            onDecrease={handleDecrease}
+            itemLabel={item.name}
+          />
         </View>
       </View>
     </View>
@@ -95,7 +115,7 @@ export function CustomerTopPickCard({ dish, width }: CustomerTopPickCardProps) {
 const styles = StyleSheet.create({
   card: {
     marginRight: spacing.sm,
-    minHeight: 210,
+    minHeight: 230,
   },
   imageWrap: {
     height: 108,
@@ -118,7 +138,6 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    justifyContent: 'space-between',
     gap: spacing.xs,
   },
   name: {
@@ -152,28 +171,14 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     color: colors.textSecondary,
   },
-  bottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
-  },
   price: {
     fontFamily: fonts.bold,
     fontSize: 14,
     lineHeight: 17,
     color: colors.textPrimary,
-    flex: 1,
   },
-  addBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: radius.full,
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
+  actionRow: {
+    marginTop: 2,
+    width: '100%',
   },
 });

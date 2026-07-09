@@ -1,9 +1,11 @@
 import { useFonts } from 'expo-font';
+import { Image } from 'expo-image';
 import { Stack, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { getStartupCatalogImageUrls } from '@/features/catalog/startup-images';
 import { RootProvider } from '@/providers/root-provider';
 import { CartBottomSheet } from '@/shared/components/cart-bottom-sheet';
 import { CartDropAnimation } from '@/shared/components/cart-drop-animation';
@@ -38,13 +40,22 @@ export default function RootLayout() {
   const onLegal = segments[0] === 'terms' || segments[0] === 'privacy';
   const hideCartRoute =
     segments[0] === 'checkout' ||
-    (segments[0] as string) === 'payment' ||
+    segments[0] === 'search' ||
     segments[0] === 'order-success' ||
     segments[0] === 'order';
 
   useEffect(() => {
     preloadAppHaptics();
     void Promise.all([hydrateAuthState(), hydrateAppProfile()]);
+  }, []);
+
+  useEffect(() => {
+    const startupImages = getStartupCatalogImageUrls();
+    if (startupImages.length === 0) {
+      return;
+    }
+
+    void Image.prefetch(startupImages, 'memory-disk').catch(() => false);
   }, []);
 
   useEffect(() => {
@@ -92,7 +103,6 @@ export default function RootLayout() {
     segments[0] === '(tabs)' &&
     tabSegment !== 'profile' &&
     tabSegment !== 'orders' &&
-    tabSegment !== 'search' &&
     tabSegment !== 'wishlist';
   const showFloatingCartBar = showCartChrome && isHomeTab;
   const showCartSheet = showCartChrome;
@@ -171,14 +181,14 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
-            name="profile"
+            name="search"
             options={{
               headerShown: false,
               animation: 'slide_from_right',
             }}
           />
           <Stack.Screen
-            name="payment"
+            name="profile"
             options={{
               headerShown: false,
               animation: 'slide_from_right',
