@@ -1,5 +1,5 @@
-import { WalletScreen } from '@/features/profile/components/wallet-screen';
+import { WalletScreen } from "@/features/profile/components/wallet-screen";
 
 export default function WalletRoute() {
-  return <WalletScreen />;
+	return <WalletScreen />;
 }

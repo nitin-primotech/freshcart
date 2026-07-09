@@ -1,9 +1,9 @@
-export { strings } from './strings';
+export { strings } from "./strings";
 export {
-  BottomTabInset,
-  Colors,
-  Fonts,
-  MaxContentWidth,
-  Spacing,
-  type ThemeColor,
-} from './theme';
+	BottomTabInset,
+	Colors,
+	Fonts,
+	MaxContentWidth,
+	Spacing,
+	type ThemeColor,
+} from "./theme";

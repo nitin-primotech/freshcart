@@ -1,7 +1,7 @@
-export { API_CONFIG, API_ENDPOINTS } from './config';
+export { API_CONFIG, API_ENDPOINTS } from "./config";
 export {
-  ApiAuthenticationError,
-  ApiNetworkError,
-  ApiRequestError,
-  ApiTimeoutError,
-} from './errors';
+	ApiAuthenticationError,
+	ApiNetworkError,
+	ApiRequestError,
+	ApiTimeoutError,
+} from "./errors";

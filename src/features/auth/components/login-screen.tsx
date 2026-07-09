@@ -1,406 +1,443 @@
-import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TextInput,
+	View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
+import { LOGIN_HERO } from "@/constants/brand-assets";
+import { AuthContinueButton } from "@/features/auth/components/auth-continue-button";
 import {
-  isValidIndianMobile,
-  sanitizeIndianPhoneInput,
-} from '@/features/auth/utils/format-indian-phone';
-import { AppStatusBar } from '@/shared/components/app-status-bar';
-import { AppSymbol } from '@/shared/components/app-symbol';
-import { GoogleGIcon } from '@/shared/components/google-g-icon';
-import { hapticSoftTap } from '@/shared/haptics/feedback';
-import { formTextInputProps } from '@/shared/utils/keyboard';
-import { signInWithPhone } from '@/store/auth.store';
-import { colors, shadows } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
-import { fonts } from '@/theme/typography';
+	isValidIndianMobile,
+	sanitizeIndianPhoneInput,
+} from "@/features/auth/utils/format-indian-phone";
+import { AppStatusBar } from "@/shared/components/app-status-bar";
+import { AppSymbol } from "@/shared/components/app-symbol";
+import { AuthKeyboardWrapper } from "@/shared/components/auth-keyboard-wrapper";
+import { FreshCartLogo } from "@/shared/components/freshcart-logo";
+import { GoogleGIcon } from "@/shared/components/google-g-icon";
+import { hapticSoftTap } from "@/shared/haptics/feedback";
+import { formTextInputProps } from "@/shared/utils/keyboard";
+import { signInWithPhone } from "@/store/auth.store";
+import { colors } from "@/theme/colors";
+import { spacing } from "@/theme/spacing";
+import { fonts } from "@/theme/typography";
+
+const HERO_BG = "#FAFCF8";
+const H_PAD = spacing.lg;
 
 export function LoginScreen() {
-  const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+	const router = useRouter();
+	const insets = useSafeAreaInsets();
+	const [phone, setPhone] = useState("");
+	const [error, setError] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
 
-  const digits = sanitizeIndianPhoneInput(phone);
-  const canContinue = isValidIndianMobile(digits);
+	const digits = sanitizeIndianPhoneInput(phone);
+	const canContinue = isValidIndianMobile(digits);
 
-  function handleContinue() {
-    if (!canContinue || loading) return;
-    setError(null);
-    router.push({
-      pathname: '/verify',
-      params: { phone: digits },
-    });
-  }
+	const systemBottom =
+		insets.bottom > 0
+			? insets.bottom
+			: process.env.EXPO_OS === "android"
+				? 56
+				: spacing.md;
 
-  async function handleGoogleSignIn() {
-    hapticSoftTap();
-    setLoading(true);
-    try {
-      await signInWithPhone('9876543210');
-      router.replace('/(tabs)');
-    } finally {
-      setLoading(false);
-    }
-  }
+	function handleContinue() {
+		if (!canContinue || loading) return;
+		setError(null);
+		router.push({
+			pathname: "/verify",
+			params: { phone: digits },
+		});
+	}
 
-  return (
-    <View style={styles.root}>
-      <AppStatusBar style="dark" />
+	async function handleGoogleSignIn() {
+		hapticSoftTap();
+		setLoading(true);
+		try {
+			await signInWithPhone("9876543210");
+			router.replace("/(tabs)");
+		} finally {
+			setLoading(false);
+		}
+	}
 
-      <View
-        style={[
-          styles.hero,
-          {
-            paddingTop: insets.top + spacing.md,
-            minHeight: windowHeight * 0.4,
-          },
-        ]}
-      >
-        <View style={styles.logoRow}>
-          <AppSymbol name="leaf.fill" size={22} tintColor={colors.primary} />
-          <AppSymbol
-            name="leaf.fill"
-            size={18}
-            tintColor={colors.primaryLight}
-            style={styles.logoLeafSecond}
-          />
-        </View>
+	return (
+		<AuthKeyboardWrapper style={styles.root}>
+			<AppStatusBar style="dark" />
 
-        <View style={styles.heroContent}>
-          <View style={styles.heroCopy}>
-            <Text style={styles.heroTitle}>
-              Fresh groceries,{'\n'}delivered{' '}
-              <Text style={styles.heroAccent}>fast.</Text>
-            </Text>
-            <Text style={styles.heroSubtitle}>
-              Everything you need, delivered in 15–30 mins.
-            </Text>
-          </View>
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				keyboardShouldPersistTaps="handled"
+				style={styles.scrollView}
+				contentContainerStyle={styles.scrollContent}
+			>
+				{/* Top Hero Section */}
+				<View
+					style={[styles.topSection, { paddingTop: insets.top + spacing.xl }]}
+				>
+					{/* Absolute Background Hero Image */}
+					<View style={styles.heroVisualAbsolute}>
+						<Image
+							source={LOGIN_HERO}
+							style={styles.heroImage}
+							contentFit="cover"
+							contentPosition="right center"
+							cachePolicy="memory-disk"
+							priority="high"
+							accessibilityLabel="Fresh groceries bag"
+						/>
+					</View>
 
-          <Image
-            source={require('@/assets/images/login-hero-basket.png')}
-            style={styles.heroImage}
-            contentFit="contain"
-            transition={200}
-          />
-        </View>
-      </View>
+					<View style={styles.logo}>
+						<FreshCartLogo height={44} />
+					</View>
 
-      <View style={[styles.card, shadows.card]}>
-        <KeyboardAwareScrollView
-          bottomOffset={insets.bottom + spacing.lg}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.cardContent,
-            { paddingBottom: insets.bottom + spacing.lg },
-          ]}
-        >
-          <View style={styles.formHeader}>
-            <Text style={styles.formTitle}>Enter your mobile number</Text>
-            <Text style={styles.formSubtitle}>
-              We&apos;ll send you a One Time Password (OTP)
-            </Text>
-          </View>
+					<View style={styles.heroCopy}>
+						<Text style={styles.heroTitle}>
+							{"Fresh\ngroceries,\ndelivered "}
+							<Text style={styles.heroAccent}>fast.</Text>
+						</Text>
+						<Text style={styles.heroSubtitle}>
+							{"Everything you need,\ndelivered in "}
+							<Text style={styles.heroSubtitleAccent}>15–30 mins.</Text>
+						</Text>
+					</View>
+				</View>
 
-          <View style={styles.inputWrap}>
-            <Pressable
-              style={styles.countryBtn}
-              onPress={hapticSoftTap}
-              accessibilityRole="button"
-              accessibilityLabel="Country code India plus 91"
-            >
-              <Text style={styles.flag}>🇮🇳</Text>
-              <Text style={styles.countryCode}>+91</Text>
-              <AppSymbol
-                name="chevron.down"
-                size={11}
-                tintColor={colors.textSecondary}
-              />
-            </Pressable>
-            <View style={styles.inputDivider} />
-            <TextInput
-              value={phone}
-              onChangeText={(value) => {
-                setPhone(sanitizeIndianPhoneInput(value));
-                if (error) setError(null);
-              }}
-              placeholder="Mobile number"
-              placeholderTextColor={colors.textTertiary}
-              keyboardType="number-pad"
-              maxLength={10}
-              style={styles.input}
-              accessibilityLabel="Mobile number"
-              {...formTextInputProps}
-            />
-          </View>
+				{/* Bottom Form Card */}
+				<View
+					style={[
+						styles.formCard,
+						{ paddingBottom: systemBottom + spacing.md },
+					]}
+				>
+					<View style={styles.formHeader}>
+						<Text style={styles.formTitle}>Enter your mobile number</Text>
+						<Text style={styles.formSubtitle}>
+							We&apos;ll send you a One Time Password (OTP)
+						</Text>
+					</View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+					<View style={styles.inputWrap}>
+						<Pressable
+							style={styles.countryBtn}
+							onPress={hapticSoftTap}
+							accessibilityRole="button"
+							accessibilityLabel="Country code India plus 91"
+						>
+							<Text style={styles.flag}>🇮🇳</Text>
+							<Text style={styles.countryCode}>+91</Text>
+							<AppSymbol
+								name="chevron.down"
+								size={11}
+								tintColor={colors.textSecondary}
+							/>
+						</Pressable>
+						<View style={styles.inputDivider} />
+						<TextInput
+							value={phone}
+							onChangeText={(value) => {
+								setPhone(sanitizeIndianPhoneInput(value));
+								if (error) setError(null);
+							}}
+							placeholder="Mobile number"
+							placeholderTextColor={colors.textTertiary}
+							keyboardType="number-pad"
+							maxLength={10}
+							style={styles.input}
+							accessibilityLabel="Mobile number"
+							{...formTextInputProps}
+						/>
+					</View>
 
-          <AuthContinueButton
-            label="Continue →"
-            onPress={handleContinue}
-            disabled={!canContinue}
-            loading={loading}
-            showTrailingIcon={false}
-          />
+					{error ? <Text style={styles.error}>{error}</Text> : null}
 
-          <View style={styles.orRow}>
-            <View style={styles.orLine} />
-            <Text style={styles.orText}>or continue with</Text>
-            <View style={styles.orLine} />
-          </View>
+					<AuthContinueButton
+						label="Continue"
+						onPress={handleContinue}
+						disabled={!canContinue}
+						loading={loading}
+						showTrailingIcon
+						inlineArrow
+						tone="brand"
+					/>
 
-          <Pressable
-            style={styles.googleBtn}
-            onPress={handleGoogleSignIn}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel="Continue with Google"
-          >
-            <GoogleGIcon size={22} />
-            <Text style={styles.googleLabel}>Continue with Google</Text>
-          </Pressable>
+					<View style={styles.orRow}>
+						<View style={styles.orLine} />
+						<Text style={styles.orText}>or continue with</Text>
+						<View style={styles.orLine} />
+					</View>
 
-          <View style={styles.trustRow}>
-            <AppSymbol
-              name="checkmark.shield.fill"
-              size={16}
-              tintColor={colors.primary}
-            />
-            <Text style={styles.trustText}>
-              Secure login. We never share your number.
-            </Text>
-          </View>
+					<Pressable
+						style={styles.googleBtn}
+						onPress={handleGoogleSignIn}
+						disabled={loading}
+						accessibilityRole="button"
+						accessibilityLabel="Continue with Google"
+					>
+						<GoogleGIcon size={20} />
+						<Text style={styles.googleLabel}>Continue with Google</Text>
+					</Pressable>
 
-          <Text style={styles.legal}>
-            By continuing, you agree to our{' '}
-            <Text
-              style={styles.legalLink}
-              onPress={() => router.push('/terms')}
-            >
-              Terms of Service
-            </Text>{' '}
-            and{' '}
-            <Text
-              style={styles.legalLink}
-              onPress={() => router.push('/privacy')}
-            >
-              Privacy Policy.
-            </Text>
-          </Text>
-        </KeyboardAwareScrollView>
-      </View>
-    </View>
-  );
+					{/* Footer Block pushed to the bottom */}
+					<View style={styles.footerBlock}>
+						<View style={styles.trustRow}>
+							<View style={styles.padlockCircle}>
+								<AppSymbol
+									name="lock.fill"
+									size={12}
+									tintColor={colors.brandGreen}
+								/>
+							</View>
+							<Text style={styles.trustText}>
+								Secure login. We never share your number.
+							</Text>
+						</View>
+
+						<Text style={styles.legal}>
+							By continuing, you agree to our{" "}
+							<Text
+								style={styles.legalLink}
+								onPress={() => router.push("/terms")}
+							>
+								Terms of Service
+							</Text>{" "}
+							and{" "}
+							<Text
+								style={styles.legalLink}
+								onPress={() => router.push("/privacy")}
+							>
+								Privacy Policy.
+							</Text>
+						</Text>
+					</View>
+				</View>
+			</ScrollView>
+		</AuthKeyboardWrapper>
+	);
 }
 
-const CARD_RADIUS = 32;
-
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  hero: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  logoLeafSecond: {
-    marginLeft: -6,
-    marginTop: 4,
-    opacity: 0.85,
-  },
-  heroContent: {
-    minHeight: 210,
-    justifyContent: 'flex-end',
-  },
-  heroCopy: {
-    width: '56%',
-    paddingBottom: spacing.lg,
-    zIndex: 1,
-  },
-  heroTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 30,
-    lineHeight: 36,
-    color: colors.textPrimary,
-    letterSpacing: -0.5,
-  },
-  heroAccent: {
-    color: colors.primary,
-  },
-  heroSubtitle: {
-    marginTop: spacing.sm,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.textSecondary,
-  },
-  heroImage: {
-    position: 'absolute',
-    right: -spacing.md,
-    bottom: -spacing.lg,
-    width: 210,
-    height: 230,
-  },
-  card: {
-    flex: 1,
-    marginTop: -CARD_RADIUS,
-    backgroundColor: colors.backgroundElevated,
-    borderTopLeftRadius: CARD_RADIUS,
-    borderTopRightRadius: CARD_RADIUS,
-    borderCurve: 'continuous',
-  },
-  cardContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    gap: spacing.md,
-    flexGrow: 1,
-  },
-  formHeader: {
-    gap: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  formTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-    lineHeight: 28,
-    color: colors.textPrimary,
-  },
-  formSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.textSecondary,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 54,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    borderCurve: 'continuous',
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.backgroundElevated,
-  },
-  countryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-    paddingRight: spacing.sm,
-  },
-  flag: {
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  countryCode: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    lineHeight: 20,
-    color: colors.textPrimary,
-  },
-  inputDivider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    backgroundColor: colors.borderStrong,
-    marginRight: spacing.sm,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 16,
-    lineHeight: 20,
-    color: colors.textPrimary,
-    paddingVertical: 0,
-  },
-  error: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.danger,
-    marginTop: -spacing.xs,
-  },
-  orRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginVertical: spacing.xs,
-  },
-  orLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-  },
-  orText: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.textTertiary,
-  },
-  googleBtn: {
-    minHeight: 52,
-    borderRadius: 14,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.backgroundElevated,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  googleLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 16,
-    lineHeight: 20,
-    color: colors.textPrimary,
-  },
-  trustRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  trustText: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.textSecondary,
-  },
-  legal: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-  legalLink: {
-    fontFamily: fonts.semibold,
-    color: colors.primary,
-  },
+	root: {
+		flex: 1,
+		backgroundColor: "#FFFFFF",
+	},
+	scrollView: {
+		flex: 1,
+		backgroundColor: "#FFFFFF",
+	},
+	scrollContent: {
+		flexGrow: 1,
+		backgroundColor: "#FFFFFF",
+	},
+	topSection: {
+		backgroundColor: HERO_BG,
+		paddingHorizontal: H_PAD,
+		paddingBottom: 80,
+		minHeight: 340,
+		position: "relative",
+		overflow: "visible",
+	},
+	heroVisualAbsolute: {
+		position: "absolute",
+		bottom: -5,
+		right: 0,
+		width: "90%",
+		height: 380,
+		zIndex: 1,
+	},
+	heroImage: {
+		width: "100%",
+		height: "100%",
+	},
+	logo: {
+		alignSelf: "flex-start",
+		marginBottom: spacing.md,
+		zIndex: 3,
+	},
+	heroCopy: {
+		width: "58%",
+		gap: spacing.md,
+		zIndex: 2,
+	},
+	heroTitle: {
+		fontFamily: fonts.poppinsBold,
+		fontSize: 32,
+		lineHeight: 38,
+		letterSpacing: -0.6,
+		color: colors.onboardingTitle,
+	},
+	heroAccent: {
+		fontFamily: fonts.poppinsBold,
+		color: colors.brandGreen,
+	},
+	heroSubtitle: {
+		fontFamily: fonts.poppinsRegular,
+		fontSize: 14,
+		lineHeight: 21,
+		color: colors.onboardingBody,
+	},
+	heroSubtitleAccent: {
+		fontFamily: fonts.poppinsSemibold,
+		color: colors.brandGreen,
+	},
+	formCard: {
+		flex: 1,
+		backgroundColor: colors.backgroundElevated,
+		borderTopLeftRadius: 32,
+		borderTopRightRadius: 32,
+		borderCurve: "continuous",
+		paddingHorizontal: H_PAD,
+		paddingTop: 32,
+		marginTop: -32,
+		gap: spacing.md,
+		boxShadow: "0 -4px 20px rgba(28, 28, 30, 0.04)",
+		zIndex: 3,
+	},
+	formHeader: {
+		gap: spacing.xxs,
+	},
+	formTitle: {
+		fontFamily: fonts.poppinsBold,
+		fontSize: 20,
+		lineHeight: 26,
+		color: colors.onboardingTitle,
+	},
+	formSubtitle: {
+		fontFamily: fonts.poppinsRegular,
+		fontSize: 13,
+		lineHeight: 18,
+		color: colors.onboardingBody,
+	},
+	inputWrap: {
+		flexDirection: "row",
+		alignItems: "center",
+		height: 52,
+		borderWidth: 1,
+		borderColor: colors.border,
+		borderRadius: 14,
+		borderCurve: "continuous",
+		paddingHorizontal: spacing.md,
+		backgroundColor: colors.backgroundElevated,
+		boxShadow: "0 4px 18px rgba(28, 28, 30, 0.03)",
+	},
+	countryBtn: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.xxs,
+		paddingRight: spacing.sm,
+	},
+	flag: {
+		fontSize: 20,
+		lineHeight: 24,
+	},
+	countryCode: {
+		fontFamily: fonts.poppinsSemibold,
+		fontSize: 16,
+		lineHeight: 20,
+		color: colors.onboardingTitle,
+	},
+	inputDivider: {
+		width: StyleSheet.hairlineWidth,
+		alignSelf: "stretch",
+		backgroundColor: colors.borderStrong,
+		marginRight: spacing.sm,
+	},
+	input: {
+		flex: 1,
+		height: "100%",
+		fontFamily: fonts.poppinsMedium,
+		fontSize: 16,
+		color: colors.onboardingTitle,
+		paddingVertical: 0,
+		textAlignVertical: "center",
+		...(process.env.EXPO_OS === "android" ? { includeFontPadding: false } : {}),
+	},
+	error: {
+		fontFamily: fonts.poppinsMedium,
+		fontSize: 12,
+		lineHeight: 16,
+		color: colors.danger,
+		marginTop: -spacing.xxs,
+	},
+	orRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: spacing.sm,
+	},
+	orLine: {
+		flex: 1,
+		height: StyleSheet.hairlineWidth,
+		backgroundColor: colors.border,
+	},
+	orText: {
+		fontFamily: fonts.poppinsRegular,
+		fontSize: 13,
+		lineHeight: 18,
+		color: colors.textTertiary,
+	},
+	googleBtn: {
+		minHeight: 52,
+		borderRadius: 14,
+		borderCurve: "continuous",
+		borderWidth: 1,
+		borderColor: colors.border,
+		backgroundColor: colors.backgroundElevated,
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: spacing.sm,
+		paddingHorizontal: spacing.md,
+	},
+	googleLabel: {
+		fontFamily: fonts.poppinsSemibold,
+		fontSize: 15,
+		lineHeight: 20,
+		color: colors.onboardingTitle,
+	},
+	footerBlock: {
+		marginTop: "auto",
+		paddingTop: spacing.lg,
+		gap: spacing.xs,
+	},
+	trustRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: spacing.xs,
+		marginTop: spacing.xs,
+	},
+	padlockCircle: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: colors.onboardingCurve,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	trustText: {
+		fontFamily: fonts.poppinsRegular,
+		fontSize: 12,
+		lineHeight: 16,
+		color: colors.textSecondary,
+	},
+	legal: {
+		fontFamily: fonts.poppinsRegular,
+		fontSize: 11,
+		lineHeight: 16,
+		color: colors.textSecondary,
+		textAlign: "center",
+	},
+	legalLink: {
+		fontFamily: fonts.poppinsSemibold,
+		color: colors.brandGreenDark,
+	},
 });

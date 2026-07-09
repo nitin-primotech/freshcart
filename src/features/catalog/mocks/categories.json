@@ -1,122 +1,122 @@
 [
-  {
-    "id": "cat-fruits-veg",
-    "name": "Fruits & Vegetables",
-    "icon": "leaf.fill",
-    "image": "https://pngimg.com/uploads/apple/apple_PNG12439.png"
-  },
-  {
-    "id": "cat-dairy-eggs",
-    "name": "Dairy, Eggs & Cheese",
-    "icon": "drop.fill",
-    "image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
-  },
-  {
-    "id": "cat-meat-seafood",
-    "name": "Meat, Poultry & Seafood",
-    "icon": "fish.fill",
-    "image": "https://pngimg.com/uploads/meat/meat_PNG13111.png"
-  },
-  {
-    "id": "cat-bakery",
-    "name": "Bakery & Bread",
-    "icon": "birthday.cake.fill",
-    "image": "https://pngimg.com/uploads/bread/bread_PNG2253.png"
-  },
-  {
-    "id": "cat-pantry",
-    "name": "Pantry & Staples",
-    "icon": "cabinet.fill",
-    "image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png"
-  },
-  {
-    "id": "cat-beverages",
-    "name": "Beverages",
-    "icon": "cup.and.saucer.fill",
-    "image": "https://pngimg.com/uploads/orange/orange_PNG789.png"
-  },
-  {
-    "id": "cat-snacks",
-    "name": "Snacks & Munchies",
-    "icon": "bag.fill",
-    "image": "https://pngimg.com/uploads/potato_chips/potato_chips_PNG6.png"
-  },
-  {
-    "id": "cat-cereals",
-    "name": "Breakfast & Cereal",
-    "icon": "leaf.circle.fill",
-    "image": "https://pngimg.com/uploads/cookie/cookie_PNG13664.png"
-  },
-  {
-    "id": "cat-frozen",
-    "name": "Frozen Food",
-    "icon": "snowflake",
-    "image": "https://pngimg.com/uploads/blueberries/blueberries_PNG4.png"
-  },
-  {
-    "id": "cat-canned",
-    "name": "Canned Goods & Packaged Food",
-    "icon": "shippingbox.fill",
-    "image": "https://pngimg.com/uploads/tomato/tomato_PNG12563.png"
-  },
-  {
-    "id": "cat-baby",
-    "name": "Baby Care",
-    "icon": "figure.and.child.holdinghands",
-    "image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
-  },
-  {
-    "id": "cat-personal-care",
-    "name": "Personal Care & Hygiene",
-    "icon": "heart.fill",
-    "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
-  },
-  {
-    "id": "cat-household",
-    "name": "Household Essentials",
-    "icon": "house.fill",
-    "image": "https://pngimg.com/uploads/olive_oil/olive_oil_PNG9.png"
-  },
-  {
-    "id": "cat-cleaning",
-    "name": "Cleaning Supplies",
-    "icon": "sparkles",
-    "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
-  },
-  {
-    "id": "cat-health",
-    "name": "Health & Wellness",
-    "icon": "cross.case.fill",
-    "image": "https://pngimg.com/uploads/orange/orange_PNG789.png"
-  },
-  {
-    "id": "cat-organic",
-    "name": "Organic & Natural",
-    "icon": "leaf.circle.fill",
-    "image": "https://pngimg.com/uploads/broccoli/broccoli_PNG10.png"
-  },
-  {
-    "id": "cat-gluten-free",
-    "name": "Gluten Free",
-    "icon": "leaf.fill",
-    "image": "https://pngimg.com/uploads/bread/bread_PNG2253.png"
-  },
-  {
-    "id": "cat-pet",
-    "name": "Pet Supplies",
-    "icon": "pawprint.fill",
-    "image": "https://pngimg.com/uploads/cheese/cheese_PNG25332.png"
-  },
-  {
-    "id": "cat-international",
-    "name": "International Foods",
-    "icon": "globe",
-    "image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png"
-  },
-  {
-    "id": "cat-flowers",
-    "name": "Flowers & Plants",
-    "icon": "camera.macro",
-    "image": "https://pngimg.com/uploads/broccoli/broccoli_PNG10.png"
-  }
+	{
+		"id": "cat-fruits-veg",
+		"name": "Fruits & Vegetables",
+		"icon": "leaf.fill",
+		"image": "https://pngimg.com/uploads/apple/apple_PNG12439.png"
+	},
+	{
+		"id": "cat-dairy-eggs",
+		"name": "Dairy, Eggs & Cheese",
+		"icon": "drop.fill",
+		"image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
+	},
+	{
+		"id": "cat-meat-seafood",
+		"name": "Meat, Poultry & Seafood",
+		"icon": "fish.fill",
+		"image": "https://pngimg.com/uploads/meat/meat_PNG13111.png"
+	},
+	{
+		"id": "cat-bakery",
+		"name": "Bakery & Bread",
+		"icon": "birthday.cake.fill",
+		"image": "https://pngimg.com/uploads/bread/bread_PNG2253.png"
+	},
+	{
+		"id": "cat-pantry",
+		"name": "Pantry & Staples",
+		"icon": "cabinet.fill",
+		"image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png"
+	},
+	{
+		"id": "cat-beverages",
+		"name": "Beverages",
+		"icon": "cup.and.saucer.fill",
+		"image": "https://pngimg.com/uploads/orange/orange_PNG789.png"
+	},
+	{
+		"id": "cat-snacks",
+		"name": "Snacks & Munchies",
+		"icon": "bag.fill",
+		"image": "https://pngimg.com/uploads/potato_chips/potato_chips_PNG6.png"
+	},
+	{
+		"id": "cat-cereals",
+		"name": "Breakfast & Cereal",
+		"icon": "leaf.circle.fill",
+		"image": "https://pngimg.com/uploads/cookie/cookie_PNG13664.png"
+	},
+	{
+		"id": "cat-frozen",
+		"name": "Frozen Food",
+		"icon": "snowflake",
+		"image": "https://pngimg.com/uploads/blueberries/blueberries_PNG4.png"
+	},
+	{
+		"id": "cat-canned",
+		"name": "Canned Goods & Packaged Food",
+		"icon": "shippingbox.fill",
+		"image": "https://pngimg.com/uploads/tomato/tomato_PNG12563.png"
+	},
+	{
+		"id": "cat-baby",
+		"name": "Baby Care",
+		"icon": "figure.and.child.holdinghands",
+		"image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
+	},
+	{
+		"id": "cat-personal-care",
+		"name": "Personal Care & Hygiene",
+		"icon": "heart.fill",
+		"image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
+	},
+	{
+		"id": "cat-household",
+		"name": "Household Essentials",
+		"icon": "house.fill",
+		"image": "https://pngimg.com/uploads/olive_oil/olive_oil_PNG9.png"
+	},
+	{
+		"id": "cat-cleaning",
+		"name": "Cleaning Supplies",
+		"icon": "sparkles",
+		"image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
+	},
+	{
+		"id": "cat-health",
+		"name": "Health & Wellness",
+		"icon": "cross.case.fill",
+		"image": "https://pngimg.com/uploads/orange/orange_PNG789.png"
+	},
+	{
+		"id": "cat-organic",
+		"name": "Organic & Natural",
+		"icon": "leaf.circle.fill",
+		"image": "https://pngimg.com/uploads/broccoli/broccoli_PNG10.png"
+	},
+	{
+		"id": "cat-gluten-free",
+		"name": "Gluten Free",
+		"icon": "leaf.fill",
+		"image": "https://pngimg.com/uploads/bread/bread_PNG2253.png"
+	},
+	{
+		"id": "cat-pet",
+		"name": "Pet Supplies",
+		"icon": "pawprint.fill",
+		"image": "https://pngimg.com/uploads/cheese/cheese_PNG25332.png"
+	},
+	{
+		"id": "cat-international",
+		"name": "International Foods",
+		"icon": "globe",
+		"image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png"
+	},
+	{
+		"id": "cat-flowers",
+		"name": "Flowers & Plants",
+		"icon": "camera.macro",
+		"image": "https://pngimg.com/uploads/broccoli/broccoli_PNG10.png"
+	}
 ]

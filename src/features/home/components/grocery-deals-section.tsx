@@ -1,61 +1,61 @@
-import type { Href } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import type { Href } from "expo-router";
+import { ScrollView, StyleSheet, View } from "react-native";
 
-import { GroceryDealCard } from '@/features/home/components/grocery-deal-card';
-import { HomeSectionHeader } from '@/features/home/components/home-section-header';
-import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
-import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
-import { spacing } from '@/theme/spacing';
+import { GroceryDealCard } from "@/features/home/components/grocery-deal-card";
+import { HomeSectionHeader } from "@/features/home/components/home-section-header";
+import type { RecommendedDish } from "@/features/home/utils/get-recommended-dishes";
+import { useCarouselItemWidth } from "@/shared/hooks/use-carousel-item-width";
+import { spacing } from "@/theme/spacing";
 
 type GroceryDealsSectionProps = {
-  dishes: RecommendedDish[];
-  viewAllHref?: Href;
-  title?: string;
+	dishes: RecommendedDish[];
+	viewAllHref?: Href;
+	title?: string;
 };
 
 export function GroceryDealsSection({
-  dishes,
-  viewAllHref,
-  title = 'Best Deals for You',
+	dishes,
+	viewAllHref,
+	title = "Best Deals for You",
 }: GroceryDealsSectionProps) {
-  const cardWidth = useCarouselItemWidth({
-    visibleCount: 2.55,
-    peek: 0.12,
-    gap: spacing.sm,
-    paddingStart: spacing.md,
-    paddingEnd: spacing.md,
-  });
+	const cardWidth = useCarouselItemWidth({
+		visibleCount: 2.55,
+		peek: 0.12,
+		gap: spacing.sm,
+		paddingStart: spacing.md,
+		paddingEnd: spacing.md,
+	});
 
-  if (dishes.length === 0) return null;
+	if (dishes.length === 0) return null;
 
-  return (
-    <View style={styles.wrap}>
-      <HomeSectionHeader title={title} href={viewAllHref} />
-      <ScrollView
-        horizontal
-        nestedScrollEnabled
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-      >
-        {dishes.map((dish, index) => (
-          <GroceryDealCard
-            key={dish.item.id}
-            dish={dish}
-            width={cardWidth}
-            index={index}
-          />
-        ))}
-      </ScrollView>
-    </View>
-  );
+	return (
+		<View style={styles.wrap}>
+			<HomeSectionHeader title={title} href={viewAllHref} />
+			<ScrollView
+				horizontal
+				nestedScrollEnabled
+				showsHorizontalScrollIndicator={false}
+				contentContainerStyle={styles.row}
+			>
+				{dishes.map((dish, index) => (
+					<GroceryDealCard
+						key={dish.item.id}
+						dish={dish}
+						width={cardWidth}
+						index={index}
+					/>
+				))}
+			</ScrollView>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginTop: spacing.md,
-  },
-  row: {
-    paddingLeft: spacing.md,
-    paddingRight: spacing.xs,
-  },
+	wrap: {
+		marginTop: spacing.md,
+	},
+	row: {
+		paddingLeft: spacing.md,
+		paddingRight: spacing.xs,
+	},
 });

@@ -1,63 +1,66 @@
 {
-  "expo": {
-    "name": "FreshCart",
-    "slug": "freshcart",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/freshcart-icon.png",
-    "scheme": "freshcart",
-    "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.dev.primotech.freshcart",
-      "infoPlist": {
-        "LSApplicationQueriesSchemes": ["tez", "phonepe", "paytmmp", "bhim"]
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E8F5E9",
-        "foregroundImage": "./assets/images/freshcart-icon.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/freshcart-icon.png"
-      },
-      "predictiveBackGestureEnabled": false,
-      "softwareKeyboardLayoutMode": "resize",
-      "package": "com.dev.primotech.freshcart",
-      "androidStatusBar": {
-        "translucent": true,
-        "backgroundColor": "#00000000"
-      }
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/freshcart-icon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "FreshCart uses your location to show nearby stores and delivery times."
-        }
-      ],
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#3EAE5C",
-          "image": "./assets/images/freshcart-logo.png",
-          "imageWidth": 220,
-          "resizeMode": "contain",
-          "android": {
-            "image": "./assets/images/freshcart-logo.png",
-            "imageWidth": 220
-          }
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
-  }
+	"expo": {
+		"name": "FreshCart",
+		"slug": "freshcart",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/images/app-icon.png",
+		"scheme": "freshcart",
+		"userInterfaceStyle": "automatic",
+		"ios": {
+			"bundleIdentifier": "com.dev.primotech.freshcart",
+			"infoPlist": {
+				"LSApplicationQueriesSchemes": ["tez", "phonepe", "paytmmp", "bhim"]
+			}
+		},
+		"android": {
+			"adaptiveIcon": {
+				"backgroundColor": "#2CAD4A",
+				"foregroundImage": "./assets/images/android-icon-foreground.png"
+			},
+			"predictiveBackGestureEnabled": false,
+			"softwareKeyboardLayoutMode": "resize",
+			"package": "com.dev.primotech.freshcart",
+			"androidStatusBar": {
+				"translucent": true,
+				"backgroundColor": "#00000000"
+			}
+		},
+		"web": {
+			"output": "static",
+			"favicon": "./assets/images/favicon.png"
+		},
+		"plugins": [
+			"expo-router",
+			[
+				"expo-location",
+				{
+					"locationAlwaysAndWhenInUsePermission": "FreshCart uses your location to show nearby stores and delivery times."
+				}
+			],
+			[
+				"expo-splash-screen",
+				{
+					"backgroundColor": "#2CAD4A",
+					"image": "./assets/images/android-icon-foreground.png",
+					"imageWidth": 260,
+					"resizeMode": "contain",
+					"ios": {
+						"backgroundColor": "#2CAD4A",
+						"image": "./assets/images/android-icon-foreground.png",
+						"imageWidth": 260
+					},
+					"android": {
+						"backgroundColor": "#2CAD4A",
+						"image": "./assets/images/android-icon-foreground.png",
+						"imageWidth": 260
+					}
+				}
+			]
+		],
+		"experiments": {
+			"typedRoutes": true,
+			"reactCompiler": true
+		}
+	}
 }

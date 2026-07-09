@@ -1,0 +1,22 @@
+<svg viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FreshCart">
+  <path
+    d="M8 36C8 16 18 4 28 8C24 22 16 32 8 36Z"
+    fill="#2CAD4A"
+  />
+  <path
+    d="M20 38C20 22 30 12 38 16C34 28 26 38 20 38Z"
+    fill="#2CAD4A"
+    fill-opacity="0.9"
+  />
+  <text
+    x="46"
+    y="34"
+    font-family="Poppins, system-ui, sans-serif"
+    font-weight="700"
+    font-size="28"
+    letter-spacing="-0.5"
+  >
+    <tspan fill="#1A1A1A">Fresh</tspan>
+    <tspan fill="#2CAD4A">Cart</tspan>
+  </text>
+</svg>
