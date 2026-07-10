@@ -1,5 +1,22 @@
+prepare-commit-msg:
+  jobs:
+    - name: strip-cursor-attribution
+      run: |
+        msg_file="{1}"
+        if [ -f "$msg_file" ]; then
+          sed -i '' '/^Co-authored-by: Cursor /Id' "$msg_file"
+          sed -i '' '/^Made-with: Cursor$/Id' "$msg_file"
+        fi
+
 commit-msg:
   jobs:
+    - name: strip-cursor-attribution
+      run: |
+        msg_file="{1}"
+        if [ -f "$msg_file" ]; then
+          sed -i '' '/^Co-authored-by: Cursor /Id' "$msg_file"
+          sed -i '' '/^Made-with: Cursor$/Id' "$msg_file"
+        fi
     - name: conventional-commit
       run: |
         msg=$(cat {1})
