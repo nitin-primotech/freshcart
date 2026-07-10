@@ -1,26 +1,26 @@
 [
-	{
-		"id": "promo-1",
-		"title": "Fresh Groceries Delivered Fast",
-		"subtitle": "Get everything you need, delivered in 15–30 mins",
-		"code": "FRESH SAVINGS",
-		"gradient": ["#2D8B3F", "#1A5C2A"],
-		"image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"
-	},
-	{
-		"id": "promo-2",
-		"title": "Free delivery",
-		"subtitle": "On orders over $35 this week",
-		"code": "FREEDEL",
-		"gradient": ["#4CAF50", "#2D8B3F"],
-		"image": "https://images.unsplash.com/photo-1606787366850-de2336a7a417?w=800&q=80"
-	},
-	{
-		"id": "promo-3",
-		"title": "20% off",
-		"subtitle": "First order with code WELCOME20",
-		"code": "WELCOME20",
-		"gradient": ["#1A5C2A", "#2D8B3F"],
-		"image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80"
-	}
+  {
+    "id": "promo-1",
+    "title": "Fresh Groceries Delivered Fast",
+    "subtitle": "Get everything you need, delivered in 15–30 mins",
+    "code": "FRESH SAVINGS",
+    "gradient": ["#2D8B3F", "#1A5C2A"],
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80"
+  },
+  {
+    "id": "promo-2",
+    "title": "Free delivery",
+    "subtitle": "On orders over $35 this week",
+    "code": "FREEDEL",
+    "gradient": ["#4CAF50", "#2D8B3F"],
+    "image": "https://images.unsplash.com/photo-1606787366850-de2336a7a417?w=800&q=80"
+  },
+  {
+    "id": "promo-3",
+    "title": "20% off",
+    "subtitle": "First order with code WELCOME20",
+    "code": "WELCOME20",
+    "gradient": ["#1A5C2A", "#2D8B3F"],
+    "image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80"
+  }
 ]

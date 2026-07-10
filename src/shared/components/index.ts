@@ -1,7 +1,7 @@
-export { AnimatedIcon, AnimatedSplashOverlay } from "./animated-icon";
-export { ExternalLink } from "./external-link";
-export { HintRow } from "./hint-row";
-export { ThemedText, type ThemedTextProps } from "./themed-text";
-export { ThemedView, type ThemedViewProps } from "./themed-view";
-export { Collapsible } from "./ui/collapsible";
-export { WebBadge } from "./web-badge";
+export { AnimatedIcon, AnimatedSplashOverlay } from './animated-icon';
+export { ExternalLink } from './external-link';
+export { HintRow } from './hint-row';
+export { ThemedText, type ThemedTextProps } from './themed-text';
+export { ThemedView, type ThemedViewProps } from './themed-view';
+export { Collapsible } from './ui/collapsible';
+export { WebBadge } from './web-badge';

@@ -1,254 +1,254 @@
 [
-	{
-		"id": "freshcart",
-		"name": "FreshCart",
-		"tagline": "Premium groceries delivered fast",
-		"cuisine": "Grocery",
-		"rating": 4.8,
-		"reviewCount": 12480,
-		"deliveryTimeMin": 15,
-		"deliveryTimeMax": 25,
-		"deliveryFee": 2.99,
-		"distanceKm": 0.8,
-		"isPromoted": true,
-		"isFreeDelivery": false,
-		"coverImage": "https://pngimg.com/uploads/banana/banana_PNG843.png",
-		"logoImage": "https://pngimg.com/uploads/banana/banana_PNG843.png",
-		"categoryIds": [
-			"cat-fruits-veg",
-			"cat-dairy-eggs",
-			"cat-meat-seafood",
-			"cat-bakery",
-			"cat-pantry",
-			"cat-beverages",
-			"cat-snacks",
-			"cat-cereals",
-			"cat-frozen",
-			"cat-canned",
-			"cat-baby",
-			"cat-personal-care",
-			"cat-household",
-			"cat-cleaning",
-			"cat-health",
-			"cat-organic",
-			"cat-gluten-free",
-			"cat-pet",
-			"cat-international",
-			"cat-flowers"
-		],
-		"offerLabel": "20% OFF select items",
-		"isFastDelivery": true,
-		"menu": [
-			{
-				"id": "sec-fruits",
-				"title": "Fruits & Vegetables",
-				"items": [
-					{
-						"id": "prod-strawberries",
-						"name": "Fresh Strawberries",
-						"description": "1 lb · sweet & juicy",
-						"price": 3.99,
-						"image": "https://pngimg.com/uploads/strawberry/strawberry_PNG2630.png",
-						"isPopular": true,
-						"calories": 32
-					},
-					{
-						"id": "prod-banana",
-						"name": "Banana Cavendish",
-						"description": "1 bunch · ripe & ready",
-						"price": 1.59,
-						"image": "https://pngimg.com/uploads/banana/banana_PNG843.png",
-						"isPopular": true,
-						"calories": 89
-					},
-					{
-						"id": "prod-avocado",
-						"name": "Hass Avocado",
-						"description": "1 pc · creamy & ripe",
-						"price": 2.49,
-						"image": "https://pngimg.com/uploads/avocado/avocado_PNG15514.png",
-						"isPopular": true,
-						"isVegetarian": true,
-						"calories": 160
-					},
-					{
-						"id": "prod-tomatoes",
-						"name": "Vine Tomatoes",
-						"description": "1 lb · farm fresh",
-						"price": 2.99,
-						"image": "https://pngimg.com/uploads/tomato/tomato_PNG12563.png",
-						"isVegetarian": true,
-						"calories": 18
-					},
-					{
-						"id": "prod-blueberries",
-						"name": "Fresh Blueberries",
-						"description": "6 oz · antioxidant rich",
-						"price": 4.49,
-						"image": "https://pngimg.com/uploads/blueberries/blueberries_PNG4.png",
-						"isPopular": true,
-						"calories": 57
-					},
-					{
-						"id": "prod-carrots",
-						"name": "Baby Carrots",
-						"description": "1 lb · crunchy snack",
-						"price": 2.29,
-						"image": "https://pngimg.com/uploads/carrot/carrot_PNG4987.png",
-						"isVegetarian": true,
-						"calories": 41
-					}
-				]
-			},
-			{
-				"id": "sec-dairy",
-				"title": "Dairy & Eggs",
-				"items": [
-					{
-						"id": "prod-milk",
-						"name": "Organic Whole Milk",
-						"description": "Half gallon · pasture raised",
-						"price": 4.99,
-						"image": "https://pngimg.com/uploads/milk/milk_PNG12716.png",
-						"isPopular": true,
-						"calories": 150
-					},
-					{
-						"id": "prod-eggs",
-						"name": "Grade A Eggs",
-						"description": "12 count · cage free",
-						"price": 5.49,
-						"image": "https://pngimg.com/uploads/fried_egg/fried_egg_PNG4.png",
-						"isPopular": true,
-						"calories": 70
-					},
-					{
-						"id": "prod-butter",
-						"name": "Salted Butter",
-						"description": "8 oz · European style",
-						"price": 3.79,
-						"image": "https://pngimg.com/uploads/butter/butter_PNG32.png",
-						"calories": 100
-					},
-					{
-						"id": "prod-cheese",
-						"name": "Sharp Cheddar",
-						"description": "8 oz block · aged",
-						"price": 4.29,
-						"image": "https://pngimg.com/uploads/cheese/cheese_PNG25332.png",
-						"isPopular": true,
-						"calories": 110
-					}
-				]
-			},
-			{
-				"id": "sec-bakery",
-				"title": "Bread & Bakery",
-				"items": [
-					{
-						"id": "prod-bread",
-						"name": "Whole Wheat Bread",
-						"description": "20 oz loaf · multigrain",
-						"price": 3.29,
-						"image": "https://pngimg.com/uploads/bread/bread_PNG2253.png",
-						"isPopular": true,
-						"isVegetarian": true,
-						"calories": 80
-					}
-				]
-			},
-			{
-				"id": "sec-snacks",
-				"title": "Snacks",
-				"items": [
-					{
-						"id": "prod-lays",
-						"name": "Lay's Classic Chips",
-						"description": "7.75 oz bag",
-						"price": 3.49,
-						"image": "https://pngimg.com/uploads/potato_chips/potato_chips_PNG6.png",
-						"isPopular": true,
-						"calories": 160
-					},
-					{
-						"id": "prod-granola",
-						"name": "Honey Granola Bars",
-						"description": "6 pack · whole grain",
-						"price": 4.29,
-						"image": "https://pngimg.com/uploads/cookie/cookie_PNG13664.png",
-						"calories": 140
-					}
-				]
-			},
-			{
-				"id": "sec-beverages",
-				"title": "Beverages",
-				"items": [
-					{
-						"id": "prod-water",
-						"name": "Aquafina Water",
-						"description": "24 pack · 16.9 fl oz",
-						"price": 5.99,
-						"image": "https://pngimg.com/uploads/orange/orange_PNG789.png",
-						"isPopular": true,
-						"calories": 0
-					},
-					{
-						"id": "prod-orange-juice",
-						"name": "Fresh Orange Juice",
-						"description": "52 fl oz · no pulp",
-						"price": 4.49,
-						"image": "https://pngimg.com/uploads/orange/orange_PNG789.png",
-						"isPopular": true,
-						"calories": 110
-					}
-				]
-			},
-			{
-				"id": "sec-pantry",
-				"title": "Pantry",
-				"items": [
-					{
-						"id": "prod-pasta",
-						"name": "Organic Penne Pasta",
-						"description": "16 oz · durum wheat",
-						"price": 2.29,
-						"image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png",
-						"isVegetarian": true,
-						"calories": 200
-					},
-					{
-						"id": "prod-olive-oil",
-						"name": "Extra Virgin Olive Oil",
-						"description": "16.9 fl oz · cold pressed",
-						"price": 8.99,
-						"image": "https://pngimg.com/uploads/olive_oil/olive_oil_PNG9.png",
-						"isVegetarian": true,
-						"calories": 120
-					}
-				]
-			},
-			{
-				"id": "sec-personal-care",
-				"title": "Personal Care",
-				"items": [
-					{
-						"id": "prod-toilet-paper",
-						"name": "Scott Toilet Paper",
-						"description": "12 mega rolls · ultra soft",
-						"price": 12.99,
-						"image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png",
-						"isPopular": true
-					},
-					{
-						"id": "prod-shampoo",
-						"name": "Moisture Shampoo",
-						"description": "12 fl oz · sulfate free",
-						"price": 7.49,
-						"image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
-					}
-				]
-			}
-		]
-	}
+  {
+    "id": "freshcart",
+    "name": "FreshCart",
+    "tagline": "Premium groceries delivered fast",
+    "cuisine": "Grocery",
+    "rating": 4.8,
+    "reviewCount": 12480,
+    "deliveryTimeMin": 15,
+    "deliveryTimeMax": 25,
+    "deliveryFee": 2.99,
+    "distanceKm": 0.8,
+    "isPromoted": true,
+    "isFreeDelivery": false,
+    "coverImage": "https://pngimg.com/uploads/banana/banana_PNG843.png",
+    "logoImage": "https://pngimg.com/uploads/banana/banana_PNG843.png",
+    "categoryIds": [
+      "cat-fruits-veg",
+      "cat-dairy-eggs",
+      "cat-meat-seafood",
+      "cat-bakery",
+      "cat-pantry",
+      "cat-beverages",
+      "cat-snacks",
+      "cat-cereals",
+      "cat-frozen",
+      "cat-canned",
+      "cat-baby",
+      "cat-personal-care",
+      "cat-household",
+      "cat-cleaning",
+      "cat-health",
+      "cat-organic",
+      "cat-gluten-free",
+      "cat-pet",
+      "cat-international",
+      "cat-flowers"
+    ],
+    "offerLabel": "20% OFF select items",
+    "isFastDelivery": true,
+    "menu": [
+      {
+        "id": "sec-fruits",
+        "title": "Fruits & Vegetables",
+        "items": [
+          {
+            "id": "prod-strawberries",
+            "name": "Fresh Strawberries",
+            "description": "1 lb · sweet & juicy",
+            "price": 3.99,
+            "image": "https://pngimg.com/uploads/strawberry/strawberry_PNG2630.png",
+            "isPopular": true,
+            "calories": 32
+          },
+          {
+            "id": "prod-banana",
+            "name": "Banana Cavendish",
+            "description": "1 bunch · ripe & ready",
+            "price": 1.59,
+            "image": "https://pngimg.com/uploads/banana/banana_PNG843.png",
+            "isPopular": true,
+            "calories": 89
+          },
+          {
+            "id": "prod-avocado",
+            "name": "Hass Avocado",
+            "description": "1 pc · creamy & ripe",
+            "price": 2.49,
+            "image": "https://pngimg.com/uploads/avocado/avocado_PNG15514.png",
+            "isPopular": true,
+            "isVegetarian": true,
+            "calories": 160
+          },
+          {
+            "id": "prod-tomatoes",
+            "name": "Vine Tomatoes",
+            "description": "1 lb · farm fresh",
+            "price": 2.99,
+            "image": "https://pngimg.com/uploads/tomato/tomato_PNG12563.png",
+            "isVegetarian": true,
+            "calories": 18
+          },
+          {
+            "id": "prod-blueberries",
+            "name": "Fresh Blueberries",
+            "description": "6 oz · antioxidant rich",
+            "price": 4.49,
+            "image": "https://pngimg.com/uploads/blueberries/blueberries_PNG4.png",
+            "isPopular": true,
+            "calories": 57
+          },
+          {
+            "id": "prod-carrots",
+            "name": "Baby Carrots",
+            "description": "1 lb · crunchy snack",
+            "price": 2.29,
+            "image": "https://pngimg.com/uploads/carrot/carrot_PNG4987.png",
+            "isVegetarian": true,
+            "calories": 41
+          }
+        ]
+      },
+      {
+        "id": "sec-dairy",
+        "title": "Dairy & Eggs",
+        "items": [
+          {
+            "id": "prod-milk",
+            "name": "Organic Whole Milk",
+            "description": "Half gallon · pasture raised",
+            "price": 4.99,
+            "image": "https://pngimg.com/uploads/milk/milk_PNG12716.png",
+            "isPopular": true,
+            "calories": 150
+          },
+          {
+            "id": "prod-eggs",
+            "name": "Grade A Eggs",
+            "description": "12 count · cage free",
+            "price": 5.49,
+            "image": "https://pngimg.com/uploads/fried_egg/fried_egg_PNG4.png",
+            "isPopular": true,
+            "calories": 70
+          },
+          {
+            "id": "prod-butter",
+            "name": "Salted Butter",
+            "description": "8 oz · European style",
+            "price": 3.79,
+            "image": "https://pngimg.com/uploads/butter/butter_PNG32.png",
+            "calories": 100
+          },
+          {
+            "id": "prod-cheese",
+            "name": "Sharp Cheddar",
+            "description": "8 oz block · aged",
+            "price": 4.29,
+            "image": "https://pngimg.com/uploads/cheese/cheese_PNG25332.png",
+            "isPopular": true,
+            "calories": 110
+          }
+        ]
+      },
+      {
+        "id": "sec-bakery",
+        "title": "Bread & Bakery",
+        "items": [
+          {
+            "id": "prod-bread",
+            "name": "Whole Wheat Bread",
+            "description": "20 oz loaf · multigrain",
+            "price": 3.29,
+            "image": "https://pngimg.com/uploads/bread/bread_PNG2253.png",
+            "isPopular": true,
+            "isVegetarian": true,
+            "calories": 80
+          }
+        ]
+      },
+      {
+        "id": "sec-snacks",
+        "title": "Snacks",
+        "items": [
+          {
+            "id": "prod-lays",
+            "name": "Lay's Classic Chips",
+            "description": "7.75 oz bag",
+            "price": 3.49,
+            "image": "https://pngimg.com/uploads/potato_chips/potato_chips_PNG6.png",
+            "isPopular": true,
+            "calories": 160
+          },
+          {
+            "id": "prod-granola",
+            "name": "Honey Granola Bars",
+            "description": "6 pack · whole grain",
+            "price": 4.29,
+            "image": "https://pngimg.com/uploads/cookie/cookie_PNG13664.png",
+            "calories": 140
+          }
+        ]
+      },
+      {
+        "id": "sec-beverages",
+        "title": "Beverages",
+        "items": [
+          {
+            "id": "prod-water",
+            "name": "Aquafina Water",
+            "description": "24 pack · 16.9 fl oz",
+            "price": 5.99,
+            "image": "https://pngimg.com/uploads/orange/orange_PNG789.png",
+            "isPopular": true,
+            "calories": 0
+          },
+          {
+            "id": "prod-orange-juice",
+            "name": "Fresh Orange Juice",
+            "description": "52 fl oz · no pulp",
+            "price": 4.49,
+            "image": "https://pngimg.com/uploads/orange/orange_PNG789.png",
+            "isPopular": true,
+            "calories": 110
+          }
+        ]
+      },
+      {
+        "id": "sec-pantry",
+        "title": "Pantry",
+        "items": [
+          {
+            "id": "prod-pasta",
+            "name": "Organic Penne Pasta",
+            "description": "16 oz · durum wheat",
+            "price": 2.29,
+            "image": "https://pngimg.com/uploads/pasta/pasta_PNG58.png",
+            "isVegetarian": true,
+            "calories": 200
+          },
+          {
+            "id": "prod-olive-oil",
+            "name": "Extra Virgin Olive Oil",
+            "description": "16.9 fl oz · cold pressed",
+            "price": 8.99,
+            "image": "https://pngimg.com/uploads/olive_oil/olive_oil_PNG9.png",
+            "isVegetarian": true,
+            "calories": 120
+          }
+        ]
+      },
+      {
+        "id": "sec-personal-care",
+        "title": "Personal Care",
+        "items": [
+          {
+            "id": "prod-toilet-paper",
+            "name": "Scott Toilet Paper",
+            "description": "12 mega rolls · ultra soft",
+            "price": 12.99,
+            "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png",
+            "isPopular": true
+          },
+          {
+            "id": "prod-shampoo",
+            "name": "Moisture Shampoo",
+            "description": "12 fl oz · sulfate free",
+            "price": 7.49,
+            "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
+          }
+        ]
+      }
+    ]
+  }
 ]

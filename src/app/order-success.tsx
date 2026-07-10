@@ -1,5 +1,5 @@
-import { OrderSuccessScreen } from "@/features/checkout/components/order-success-screen";
+import { OrderSuccessScreen } from '@/features/checkout/components/order-success-screen';
 
 export default function OrderSuccessRoute() {
-	return <OrderSuccessScreen />;
+  return <OrderSuccessScreen />;
 }

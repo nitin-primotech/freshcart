@@ -1,32 +1,32 @@
-import { useEffect, useMemo, useRef } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { WebView, type WebView as WebViewType } from "react-native-webview";
+import { useEffect, useMemo, useRef } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { WebView, type WebView as WebViewType } from 'react-native-webview';
 
-import { RESTAURANT_COORDS } from "@/lib/firebase/order-mapper";
-import { colors } from "@/theme/colors";
-import { spacing } from "@/theme/spacing";
-import { fonts } from "@/theme/typography";
+import { RESTAURANT_COORDS } from '@/lib/firebase/order-mapper';
+import { colors } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
+import { fonts } from '@/theme/typography';
 
 type RiderLiveMapProps = {
-	deliveryCoords: [number, number];
-	riderCoords: [number, number];
-	status: "preparing" | "ready" | "on_the_way";
+  deliveryCoords: [number, number];
+  riderCoords: [number, number];
+  status: 'preparing' | 'ready' | 'on_the_way';
 };
 
 function buildLeafletMapHtml(
-	restaurant: [number, number],
-	delivery: [number, number],
-	rider: [number, number],
+  restaurant: [number, number],
+  delivery: [number, number],
+  rider: [number, number],
 ): string {
-	const points = [restaurant, delivery, rider];
-	const lats = points.map((point) => point[0]);
-	const lngs = points.map((point) => point[1]);
-	const minLat = Math.min(...lats) - 0.004;
-	const maxLat = Math.max(...lats) + 0.004;
-	const minLng = Math.min(...lngs) - 0.004;
-	const maxLng = Math.max(...lngs) + 0.004;
+  const points = [restaurant, delivery, rider];
+  const lats = points.map((point) => point[0]);
+  const lngs = points.map((point) => point[1]);
+  const minLat = Math.min(...lats) - 0.004;
+  const maxLat = Math.max(...lats) + 0.004;
+  const minLng = Math.min(...lngs) - 0.004;
+  const maxLng = Math.max(...lngs) + 0.004;
 
-	return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -100,153 +100,153 @@ function buildLeafletMapHtml(
 </html>`;
 }
 
-const STATUS_LABELS: Record<RiderLiveMapProps["status"], string> = {
-	preparing: "Rider heading to restaurant",
-	ready: "Rider at restaurant",
-	on_the_way: "Rider is on the way to you",
+const STATUS_LABELS: Record<RiderLiveMapProps['status'], string> = {
+  preparing: 'Rider heading to restaurant',
+  ready: 'Rider at restaurant',
+  on_the_way: 'Rider is on the way to you',
 };
 
 export function RiderLiveMap({
-	deliveryCoords,
-	riderCoords,
-	status,
+  deliveryCoords,
+  riderCoords,
+  status,
 }: RiderLiveMapProps) {
-	const webViewRef = useRef<WebViewType>(null);
-	const mapReadyRef = useRef(false);
-	const initialRiderCoordsRef = useRef(riderCoords);
-	const mapHtml = useMemo(
-		() =>
-			buildLeafletMapHtml(
-				RESTAURANT_COORDS,
-				deliveryCoords,
-				initialRiderCoordsRef.current,
-			),
-		[deliveryCoords],
-	);
+  const webViewRef = useRef<WebViewType>(null);
+  const mapReadyRef = useRef(false);
+  const initialRiderCoordsRef = useRef(riderCoords);
+  const mapHtml = useMemo(
+    () =>
+      buildLeafletMapHtml(
+        RESTAURANT_COORDS,
+        deliveryCoords,
+        initialRiderCoordsRef.current,
+      ),
+    [deliveryCoords],
+  );
 
-	useEffect(() => {
-		if (!mapReadyRef.current) return;
-		webViewRef.current?.injectJavaScript(`
+  useEffect(() => {
+    if (!mapReadyRef.current) return;
+    webViewRef.current?.injectJavaScript(`
       if (window.updateRiderPosition) {
         window.updateRiderPosition(${riderCoords[0]}, ${riderCoords[1]});
       }
       true;
     `);
-	}, [riderCoords]);
+  }, [riderCoords]);
 
-	return (
-		<View style={styles.card}>
-			<View style={styles.header}>
-				<View style={styles.headerCopy}>
-					<Text style={styles.title}>Live tracking</Text>
-					<Text style={styles.subtitle}>{STATUS_LABELS[status]}</Text>
-				</View>
-				<View style={styles.liveBadge}>
-					<View style={styles.liveDot} />
-					<Text style={styles.liveText}>Live</Text>
-				</View>
-			</View>
+  return (
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <View style={styles.headerCopy}>
+          <Text style={styles.title}>Live tracking</Text>
+          <Text style={styles.subtitle}>{STATUS_LABELS[status]}</Text>
+        </View>
+        <View style={styles.liveBadge}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveText}>Live</Text>
+        </View>
+      </View>
 
-			<View style={styles.mapWrap}>
-				<WebView
-					ref={webViewRef}
-					originWhitelist={["*"]}
-					source={{ html: mapHtml }}
-					style={styles.map}
-					scrollEnabled={false}
-					javaScriptEnabled
-					domStorageEnabled
-					startInLoadingState
-					onLoadEnd={() => {
-						mapReadyRef.current = true;
-						webViewRef.current?.injectJavaScript(`
+      <View style={styles.mapWrap}>
+        <WebView
+          ref={webViewRef}
+          originWhitelist={['*']}
+          source={{ html: mapHtml }}
+          style={styles.map}
+          scrollEnabled={false}
+          javaScriptEnabled
+          domStorageEnabled
+          startInLoadingState
+          onLoadEnd={() => {
+            mapReadyRef.current = true;
+            webViewRef.current?.injectJavaScript(`
               if (window.updateRiderPosition) {
                 window.updateRiderPosition(${riderCoords[0]}, ${riderCoords[1]});
               }
               true;
             `);
-					}}
-					renderLoading={() => (
-						<View style={styles.loader}>
-							<ActivityIndicator color={colors.primary} />
-						</View>
-					)}
-				/>
-			</View>
-		</View>
-	);
+          }}
+          renderLoading={() => (
+            <View style={styles.loader}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          )}
+        />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-	card: {
-		backgroundColor: colors.backgroundElevated,
-		borderRadius: 14,
-		borderCurve: "continuous",
-		borderWidth: 1,
-		borderColor: colors.border,
-		padding: spacing.md,
-		gap: spacing.sm,
-	},
-	header: {
-		flexDirection: "row",
-		alignItems: "flex-start",
-		justifyContent: "space-between",
-		gap: spacing.sm,
-	},
-	headerCopy: {
-		flex: 1,
-		gap: 2,
-	},
-	title: {
-		fontFamily: fonts.bold,
-		fontSize: 13,
-		lineHeight: 17,
-		color: colors.textPrimary,
-	},
-	subtitle: {
-		fontFamily: fonts.regular,
-		fontSize: 10,
-		lineHeight: 13,
-		color: colors.textSecondary,
-	},
-	liveBadge: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 4,
-		backgroundColor: "rgba(45, 106, 79, 0.12)",
-		borderRadius: 6,
-		paddingHorizontal: 6,
-		paddingVertical: 3,
-	},
-	liveDot: {
-		width: 6,
-		height: 6,
-		borderRadius: 3,
-		backgroundColor: "#2D6A4F",
-	},
-	liveText: {
-		fontFamily: fonts.semibold,
-		fontSize: 9,
-		lineHeight: 12,
-		color: "#2D6A4F",
-	},
-	mapWrap: {
-		height: 240,
-		borderRadius: 12,
-		borderCurve: "continuous",
-		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: colors.border,
-		backgroundColor: colors.backgroundMuted,
-	},
-	map: {
-		flex: 1,
-		backgroundColor: "transparent",
-	},
-	loader: {
-		...StyleSheet.absoluteFill,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: colors.backgroundMuted,
-	},
+  card: {
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: 14,
+    borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  headerCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  title: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    lineHeight: 17,
+    color: colors.textPrimary,
+  },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 10,
+    lineHeight: 13,
+    color: colors.textSecondary,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(45, 106, 79, 0.12)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2D6A4F',
+  },
+  liveText: {
+    fontFamily: fonts.semibold,
+    fontSize: 9,
+    lineHeight: 12,
+    color: '#2D6A4F',
+  },
+  mapWrap: {
+    height: 240,
+    borderRadius: 12,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundMuted,
+  },
+  map: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  loader: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.backgroundMuted,
+  },
 });

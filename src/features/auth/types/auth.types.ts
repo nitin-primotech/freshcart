@@ -1,7 +1,7 @@
 export type AuthSession = {
-	token: string;
-	phone: string;
-	expiresAt: number;
+  token: string;
+  phone: string;
+  expiresAt: number;
 };
 
-export type AuthHydrationStatus = "loading" | "ready";
+export type AuthHydrationStatus = 'loading' | 'ready';

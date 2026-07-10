@@ -13,11 +13,11 @@
  * ---------------------------------------------------------------------------
  */
 
-import { Dimensions, StatusBar } from "react-native";
-import { initialWindowMetrics } from "react-native-safe-area-context";
+import { Dimensions, StatusBar } from 'react-native';
+import { initialWindowMetrics } from 'react-native-safe-area-context';
 
 export const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
-	Dimensions.get("window");
+  Dimensions.get('window');
 
 const safeAreaTop = initialWindowMetrics?.insets.top ?? 0;
 const statusBarHeight = StatusBar.currentHeight ?? 0;
@@ -25,6 +25,6 @@ const statusBarHeight = StatusBar.currentHeight ?? 0;
 // Notched devices report >= 40 — trust the OS.
 // Non-notched / metrics-missing fallbacks need a small visual pad.
 export const topInset =
-	safeAreaTop >= 40
-		? safeAreaTop
-		: statusBarHeight + (safeAreaTop > 0 ? 30 : 20);
+  safeAreaTop >= 40
+    ? safeAreaTop
+    : statusBarHeight + (safeAreaTop > 0 ? 30 : 20);
