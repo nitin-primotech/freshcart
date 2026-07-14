@@ -60,6 +60,9 @@ export function LoginScreen() {
     setLoading(true);
     try {
       await signInWithPhone('9876543210');
+      if (router.canGoBack()) {
+        router.dismissAll();
+      }
       router.replace('/(tabs)');
     } finally {
       setLoading(false);

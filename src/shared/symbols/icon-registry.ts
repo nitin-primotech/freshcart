@@ -64,6 +64,8 @@ export const ICON_REGISTRY: Record<string, CrossPlatformSymbol> = {
   'cup.and.saucer.fill': icon('cup.and.saucer.fill', 'coffee'),
   'bag.fill': icon('bag.fill', 'shopping_bag'),
   'phone.fill': icon('phone.fill', 'phone'),
+  'phone.down.fill': icon('phone.down.fill', 'phone_disabled'),
+  'bell.slash.fill': icon('bell.slash.fill', 'notifications_off'),
   'message.fill': icon('message.fill', 'chat'),
   'envelope.fill': icon('envelope.fill', 'mail'),
   'info.circle.fill': icon('info.circle.fill', 'info'),

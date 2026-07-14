@@ -30,8 +30,7 @@ function buildOrderSuccessLottieColors() {
     { keypath: 'Element 4', color: colors.primaryDark },
     { keypath: 'Element 3', color: colors.primaryDark },
     { keypath: 'Element 2', color: colors.primary },
-    { keypath: 'Element 1', color: colors.primaryLight },
-  ] as const;
+  ];
 }
 
 export function OrderSuccessScreen() {

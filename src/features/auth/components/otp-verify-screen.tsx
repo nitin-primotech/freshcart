@@ -103,6 +103,9 @@ export function OtpVerifyScreen() {
     try {
       await signInWithPhone(phone);
       Keyboard.dismiss();
+      if (router.canGoBack()) {
+        router.dismissAll();
+      }
       router.replace('/(tabs)');
     } catch {
       verificationStatus.value = 'wrong';

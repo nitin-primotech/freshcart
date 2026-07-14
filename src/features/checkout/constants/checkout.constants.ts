@@ -16,6 +16,7 @@ export type PaymentMethodOption = {
   trailingLogos?: PaymentBrandLogo[];
   trailingSymbol?: string;
   showChevron?: boolean;
+  disabled?: boolean;
 };
 
 export type SavedCard = {
@@ -40,44 +41,39 @@ export const TAX_RATE = 0.08875;
 
 export const PAYMENT_METHODS: PaymentMethodOption[] = [
   {
-    id: 'apple-pay',
-    label: 'Apple Pay',
-    badge: 'Fast & Secure',
-    trailingSymbol: 'wave.3.right',
-  },
-  {
-    id: 'google-pay',
-    label: 'Google Pay',
-    badge: 'Fast & Secure',
+    id: 'upi',
+    label: 'UPI',
+    subtitle: 'Google Pay, PhonePe, Paytm, BHIM',
+    badge: 'Popular',
     trailingLogos: [PAYMENT_BRAND_LOGOS.gpay],
   },
   {
-    id: 'paypal',
-    label: 'PayPal',
-    showChevron: true,
-    trailingLogos: [PAYMENT_BRAND_LOGOS.paypal],
-  },
-  {
     id: 'card',
-    label: 'Credit / Debit Card',
-    trailingLogos: [
-      PAYMENT_BRAND_LOGOS.visa,
-      PAYMENT_BRAND_LOGOS.mastercard,
-      PAYMENT_BRAND_LOGOS.amex,
-      PAYMENT_BRAND_LOGOS.discover,
-    ],
+    label: 'Cards',
+    subtitle: 'Visa, Mastercard, RuPay, Maestro',
+    trailingLogos: [PAYMENT_BRAND_LOGOS.visa, PAYMENT_BRAND_LOGOS.mastercard],
   },
   {
-    id: 'klarna',
-    label: 'Klarna',
-    subtitle: 'Buy now, pay later',
-    trailingLogos: [PAYMENT_BRAND_LOGOS.klarna],
+    id: 'netbanking',
+    label: 'Netbanking',
+    subtitle: 'SBI, HDFC, ICICI, Axis & more banks',
+    showChevron: true,
   },
   {
-    id: 'afterpay',
-    label: 'Afterpay',
-    subtitle: 'Buy now, pay later',
-    trailingLogos: [PAYMENT_BRAND_LOGOS.afterpay],
+    id: 'wallet',
+    label: 'Wallet',
+    subtitle: 'PhonePe Wallet, Mobikwik & more',
+    showChevron: true,
+  },
+  {
+    id: 'emi',
+    label: 'EMI',
+    subtitle: 'Credit/Debit Card EMI available',
+  },
+  {
+    id: 'paylater',
+    label: 'Pay Later',
+    subtitle: 'LazyPay, Simple, ICICI PayLater',
   },
 ];
 

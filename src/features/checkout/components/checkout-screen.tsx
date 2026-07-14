@@ -1,25 +1,24 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   BackHandler,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CheckoutCartLineCard } from '@/features/checkout/components/checkout-cart-line-card';
-import { CheckoutPaymentTrailingLogos } from '@/features/checkout/components/checkout-payment-trailing-logos';
-import { CheckoutSavingsBanner } from '@/features/checkout/components/checkout-savings-banner';
-import { CheckoutStickyFooter } from '@/features/checkout/components/checkout-sticky-footer';
 import {
   DELIVERY_FEE,
   FREE_DELIVERY_THRESHOLD,
   PAYMENT_METHODS,
-  PLATFORM_FEE,
 } from '@/features/checkout/constants/checkout.constants';
 import {
   openFoodRushCheckout,
@@ -27,15 +26,18 @@ import {
   RazorpayUnavailableError,
 } from '@/features/checkout/services/razorpay.service';
 import {
+  deriveDiscountPercent,
   deriveMrp,
   formatUsd,
 } from '@/features/checkout/utils/format-currency';
+import { AppFooter } from '@/shared/components/app-footer';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
 import { selectUserPhone, useAuthStore } from '@/store/auth.store';
 import {
+  addToCart,
   cartLineKey,
   clearCart,
   handleCheckoutBack,
@@ -45,6 +47,10 @@ import {
   updateCartQuantity,
   useCartStore,
 } from '@/store/cart.store';
+import {
+  selectCatalogRestaurant,
+  useCatalogStore,
+} from '@/store/catalog.store';
 import {
   selectMerchantIsOnline,
   selectMerchantReady,
@@ -56,22 +62,15 @@ import {
   useOrdersStore,
 } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-function RadioMark({ selected }: { selected: boolean }) {
-  return (
-    <View style={[styles.radio, selected && styles.radioSelected]}>
-      {selected ? <View style={styles.radioDot} /> : null}
-    </View>
-  );
-}
+const _AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function CheckoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const [priceSectionY, setPriceSectionY] = useState(0);
 
   const items = useCartStore(selectCartItems);
   const subtotal = useCartStore(selectCartSubtotal);
@@ -81,13 +80,24 @@ export function CheckoutScreen() {
   const isPlacing = useOrdersStore(selectIsPlacing);
   const merchantReady = useMerchantStore(selectMerchantReady);
   const merchantIsOnline = useMerchantStore(selectMerchantIsOnline);
+  const catalogRestaurant = useCatalogStore(selectCatalogRestaurant);
 
-  const [paymentId, setPaymentId] = useState('apple-pay');
+  const [paymentId, setPaymentId] = useState('upi');
+  const [tipAmount, setTipAmount] = useState<number>(0);
+  const [avoidCalling, setAvoidCalling] = useState(false);
+  const [dontRing, setDontRing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const isProcessing = isPlacing;
   const merchantOffline = merchantReady && !merchantIsOnline;
+  const isProcessing = isPlacing;
 
   const itemCount = items.reduce((sum, line) => sum + line.quantity, 0);
+  const fullAddress = `${savedAddress.line1}, ${savedAddress.line2}`;
+
+  const freeDelivery = subtotal >= FREE_DELIVERY_THRESHOLD;
+  const deliveryFee = items.length > 0 && !freeDelivery ? DELIVERY_FEE : 0;
+  const handlingFee = items.length > 0 ? 0.49 : 0;
+  const smallCartFee = items.length > 0 && subtotal < 15 ? 0.99 : 0;
 
   const itemMrpSavings = useMemo(
     () =>
@@ -97,21 +107,22 @@ export function CheckoutScreen() {
       }, 0),
     [items],
   );
-
-  const freeDelivery = subtotal >= FREE_DELIVERY_THRESHOLD;
-  const deliveryFee = items.length > 0 && !freeDelivery ? DELIVERY_FEE : 0;
   const displaySavings = Math.round(itemMrpSavings);
-  const total = Math.max(subtotal + deliveryFee + PLATFORM_FEE, 0);
+
+  const total = Math.max(
+    subtotal + deliveryFee + handlingFee + smallCartFee + tipAmount,
+    0,
+  );
 
   const restaurant = items[0];
-  const fullAddress = `${savedAddress.line1}, ${savedAddress.line2}`;
 
-  function scrollToPriceDetails() {
-    scrollRef.current?.scrollTo({
-      y: Math.max(priceSectionY - spacing.md, 0),
-      animated: true,
-    });
-  }
+  // Get recommended products from catalog not already in cart
+  const recommendedProducts = useMemo(() => {
+    if (!catalogRestaurant) return [];
+    const allItems = catalogRestaurant.menu.flatMap((sec) => sec.items);
+    const cartItemIds = new Set(items.map((line) => line.item.id));
+    return allItems.filter((item) => !cartItemIds.has(item.id)).slice(0, 8);
+  }, [catalogRestaurant, items]);
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -149,8 +160,8 @@ export function CheckoutScreen() {
       await placeOrder({
         items,
         subtotal,
-        deliveryFee: deliveryFee + PLATFORM_FEE,
-        tip: 0,
+        deliveryFee: deliveryFee + handlingFee + smallCartFee,
+        tip: tipAmount,
         address: fullAddress,
         restaurantId: restaurant.restaurantId,
         restaurantName: restaurant.restaurantName,
@@ -180,8 +191,98 @@ export function CheckoutScreen() {
     }
   }
 
+  function toggleInstruction(type: 'calling' | 'ring') {
+    hapticSoftTap();
+    if (type === 'calling') {
+      setAvoidCalling((prev) => !prev);
+    } else {
+      setDontRing((prev) => !prev);
+    }
+  }
+
+  function handleTipSelect(amount: number) {
+    hapticSoftTap();
+    setTipAmount((prev) => (prev === amount ? 0 : amount));
+  }
+
+  function handleAddRecommended(item: any) {
+    hapticSoftTap();
+    const rId = restaurant?.restaurantId || 'freshcart';
+    const rName = restaurant?.restaurantName || 'FreshCart';
+    addToCart(item, rId, rName);
+  }
+
+  async function handleShare() {
+    hapticSoftTap();
+    try {
+      await Share.share({
+        message: `FreshCart Checkout: Ordering ${itemCount} items from ${restaurant?.restaurantName || 'FreshCart'} for a total of ${formatUsd(total)}.`,
+      });
+    } catch (_error) {
+      // no-op
+    }
+  }
+
+  const selectedPaymentMethod = useMemo(() => {
+    return (
+      PAYMENT_METHODS.find((m) => m.id === paymentId) || PAYMENT_METHODS[0]
+    );
+  }, [paymentId]);
+
+  if (items.length === 0) {
+    return (
+      <View style={styles.root}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
+          <Pressable
+            onPress={() => {
+              hapticSoftTap();
+              handleCheckoutBack(router);
+            }}
+            hitSlop={12}
+            style={styles.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <AppSymbol
+              name="chevron.left"
+              size={22}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
+        </View>
+
+        {/* Empty State Body */}
+        <View style={styles.emptyContainer}>
+          <Image
+            source={require('@/assets/images/empty-cart.png')}
+            style={styles.emptyImage}
+            contentFit="contain"
+          />
+          <Text style={styles.emptyTitle}>Your cart is getting lonely</Text>
+          <Text style={styles.emptySubtitle}>
+            Fill it up with all things good!
+          </Text>
+          <Pressable
+            onPress={() => {
+              hapticSoftTap();
+              router.replace('/(tabs)');
+            }}
+            style={({ pressed }) => [
+              styles.emptyBtn,
+              pressed && styles.emptyBtnPressed,
+            ]}
+          >
+            <Text style={styles.emptyBtnText}>Start Shopping</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
         <Pressable
           onPress={() => {
@@ -199,12 +300,28 @@ export function CheckoutScreen() {
             tintColor={colors.textPrimary}
           />
         </Pressable>
-        <Text style={styles.headerTitle}>
-          Your Cart ({itemCount} {itemCount === 1 ? 'Item' : 'Items'})
-        </Text>
-        <View style={styles.secureBadge}>
-          <AppSymbol name="shield.fill" size={14} tintColor={colors.primary} />
-          <Text style={styles.secureText}>Secure Checkout</Text>
+        <Text style={styles.headerTitle}>Checkout</Text>
+        <View style={styles.headerRight}>
+          <Pressable
+            style={styles.headerIconBtn}
+            onPress={() => {
+              hapticSoftTap();
+              router.push('/search');
+            }}
+          >
+            <AppSymbol
+              name="magnifyingglass"
+              size={18}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
+          <Pressable style={styles.headerIconBtn} onPress={handleShare}>
+            <AppSymbol
+              name="square.and.arrow.up"
+              size={18}
+              tintColor={colors.textPrimary}
+            />
+          </Pressable>
         </View>
       </View>
 
@@ -212,190 +329,481 @@ export function CheckoutScreen() {
         ref={scrollRef}
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: spacing.xl }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 90 }]}
       >
         <MerchantOfflineBanner />
-        <CheckoutSavingsBanner
-          savings={displaySavings}
-          subtotal={subtotal}
-          freeDelivery={freeDelivery}
-        />
 
-        <View style={styles.items}>
-          {items.map((line) => (
-            <CheckoutCartLineCard
-              key={cartLineKey(line.restaurantId, line.item.id)}
-              line={line}
-              onDecrease={() => {
-                hapticSoftTap();
-                updateCartQuantity(
-                  line.item.id,
-                  line.quantity - 1,
-                  line.restaurantId,
-                );
-              }}
-              onIncrease={() => {
-                hapticSoftTap();
-                updateCartQuantity(
-                  line.item.id,
-                  line.quantity + 1,
-                  line.restaurantId,
-                );
-              }}
-              onRemove={() => {
-                removeFromCart(line.item.id, line.restaurantId);
-              }}
-            />
-          ))}
+        {/* Delivery ETA Top Banner */}
+        <View style={styles.etaBanner}>
+          <AppSymbol
+            name="clock.fill"
+            size={16}
+            tintColor={colors.textInverse}
+          />
+          <Text style={styles.etaText}>
+            Delivery in 8 minutes · Shipment of {itemCount}{' '}
+            {itemCount === 1 ? 'item' : 'items'}
+          </Text>
         </View>
 
-        <View
-          onLayout={(event) => setPriceSectionY(event.nativeEvent.layout.y)}
-          style={styles.section}
-        >
-          <Text style={styles.sectionTitle}>Price Details</Text>
-          <View style={styles.priceCard}>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>
-                Item Total ({itemCount} {itemCount === 1 ? 'Item' : 'Items'})
-              </Text>
-              <Text style={styles.billValue}>{formatUsd(subtotal)}</Text>
+        {/* Cart Items List */}
+        <View style={styles.sectionCard}>
+          {items.map((line, idx) => {
+            const mrp = deriveMrp(line.item.price);
+            return (
+              <View key={cartLineKey(line.restaurantId, line.item.id)}>
+                {idx > 0 && <View style={styles.itemDivider} />}
+                <View style={styles.cartItemRow}>
+                  <Image
+                    source={{ uri: line.item.image }}
+                    style={styles.itemThumb}
+                  />
+                  <View style={styles.itemDetails}>
+                    <Text style={styles.itemName} numberOfLines={2}>
+                      {line.item.name}
+                    </Text>
+                    <Text style={styles.itemPackSize}>
+                      {line.item.description || '1 pack'}
+                    </Text>
+                    <Pressable
+                      style={styles.wishlistLink}
+                      onPress={() => {
+                        hapticSoftTap();
+                        removeFromCart(line.item.id, line.restaurantId);
+                      }}
+                    >
+                      <Text style={styles.wishlistLinkText}>
+                        Move to wishlist
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <View style={styles.cartItemRight}>
+                    <Text style={styles.itemPrice}>
+                      {formatUsd(line.item.price * line.quantity)}
+                    </Text>
+                    {mrp > line.item.price && (
+                      <Text style={styles.itemMrp}>
+                        {formatUsd(mrp * line.quantity)}
+                      </Text>
+                    )}
+                    <View style={styles.stepperContainer}>
+                      <Pressable
+                        style={styles.stepBtn}
+                        onPress={() =>
+                          updateCartQuantity(
+                            line.item.id,
+                            line.quantity - 1,
+                            line.restaurantId,
+                          )
+                        }
+                      >
+                        <AppSymbol
+                          name="minus"
+                          size={10}
+                          tintColor={colors.primary}
+                        />
+                      </Pressable>
+                      <Text style={styles.stepQty}>{line.quantity}</Text>
+                      <Pressable
+                        style={styles.stepBtn}
+                        onPress={() =>
+                          updateCartQuantity(
+                            line.item.id,
+                            line.quantity + 1,
+                            line.restaurantId,
+                          )
+                        }
+                      >
+                        <AppSymbol
+                          name="plus"
+                          size={10}
+                          tintColor={colors.primary}
+                        />
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* You Might Also Like Carousel */}
+        {recommendedProducts.length > 0 && (
+          <View style={styles.recommendedSection}>
+            <Text style={styles.sectionTitle}>You might also like</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScrollContent}
+            >
+              {recommendedProducts.map((item) => {
+                const mrp = deriveMrp(item.price);
+                const discount = deriveDiscountPercent(item.price, mrp);
+                return (
+                  <View key={item.id} style={styles.recommendCard}>
+                    <Image
+                      source={{ uri: item.image }}
+                      style={styles.recThumb}
+                    />
+                    <Text style={styles.recName} numberOfLines={2}>
+                      {item.name}
+                    </Text>
+                    <Text style={styles.recWeight}>
+                      {item.description || '1 serving'}
+                    </Text>
+                    <View style={styles.recFooter}>
+                      <View>
+                        <Text style={styles.recPrice}>
+                          {formatUsd(item.price)}
+                        </Text>
+                        {discount > 0 && (
+                          <Text style={styles.recMrp}>{formatUsd(mrp)}</Text>
+                        )}
+                      </View>
+                      <Pressable
+                        style={styles.recAddBtn}
+                        onPress={() => handleAddRecommended(item)}
+                      >
+                        <Text style={styles.recAddText}>ADD</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Bill Details */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.cardTitle}>Bill details</Text>
+          <View style={styles.billRow}>
+            <View style={styles.billLabelRow}>
+              <AppSymbol
+                name="doc.plaintext"
+                size={14}
+                tintColor={colors.textSecondary}
+              />
+              <Text style={styles.billLabel}>Items total</Text>
+              {displaySavings > 0 && (
+                <View style={styles.savingsTag}>
+                  <Text style={styles.savingsTagText}>
+                    Saved {formatUsd(displaySavings)}
+                  </Text>
+                </View>
+              )}
             </View>
+            <Text style={styles.billValue}>{formatUsd(subtotal)}</Text>
+          </View>
+
+          <View style={styles.billRow}>
+            <View style={styles.billLabelRow}>
+              <AppSymbol
+                name="bicycle"
+                size={14}
+                tintColor={colors.textSecondary}
+              />
+              <Text style={styles.billLabel}>Delivery charge</Text>
+            </View>
+            <Text
+              style={[styles.billValue, deliveryFee === 0 && styles.freeText]}
+            >
+              {deliveryFee === 0 ? 'FREE' : formatUsd(deliveryFee)}
+            </Text>
+          </View>
+
+          <View style={styles.billRow}>
+            <View style={styles.billLabelRow}>
+              <AppSymbol
+                name="hand.raised.fill"
+                size={14}
+                tintColor={colors.textSecondary}
+              />
+              <Text style={styles.billLabel}>Handling charge</Text>
+            </View>
+            <Text style={styles.billValue}>{formatUsd(handlingFee)}</Text>
+          </View>
+
+          {smallCartFee > 0 && (
             <View style={styles.billRow}>
               <View style={styles.billLabelRow}>
-                <Text style={styles.billLabel}>Delivery Charges</Text>
                 <AppSymbol
-                  name="info.circle"
-                  size={13}
-                  tintColor={colors.textTertiary}
+                  name="exclamationmark.triangle.fill"
+                  size={14}
+                  tintColor={colors.textSecondary}
                 />
+                <Text style={styles.billLabel}>Small cart charge</Text>
               </View>
-              <Text
-                style={[
-                  styles.billValue,
-                  deliveryFee === 0 && styles.billValueFree,
-                ]}
-              >
-                {deliveryFee === 0 ? 'FREE' : formatUsd(deliveryFee)}
-              </Text>
+              <Text style={styles.billValue}>{formatUsd(smallCartFee)}</Text>
             </View>
+          )}
+
+          {tipAmount > 0 && (
             <View style={styles.billRow}>
               <View style={styles.billLabelRow}>
-                <Text style={styles.billLabel}>Platform Fee</Text>
                 <AppSymbol
-                  name="info.circle"
-                  size={13}
-                  tintColor={colors.textTertiary}
+                  name="heart.fill"
+                  size={14}
+                  tintColor={colors.primary}
                 />
+                <Text style={styles.billLabel}>Rider tip</Text>
               </View>
-              <Text style={styles.billValue}>{formatUsd(PLATFORM_FEE)}</Text>
+              <Text style={styles.billValue}>{formatUsd(tipAmount)}</Text>
             </View>
-            {displaySavings > 0 ? (
-              <View style={styles.billRow}>
-                <Text style={[styles.billLabel, styles.savedLabel]}>
-                  You Saved
-                </Text>
-                <Text style={styles.savedValue}>
-                  −{formatUsd(displaySavings)}
-                </Text>
-              </View>
-            ) : null}
-            <View style={styles.billDivider} />
-            <View style={styles.billRow}>
-              <Text style={styles.toPayLabel}>To Pay</Text>
-              <Text style={styles.toPayValue}>{formatUsd(total)}</Text>
-            </View>
+          )}
+
+          <View style={styles.billDivider} />
+          <View style={styles.billRow}>
+            <Text style={styles.grandTotalLabel}>Grand total</Text>
+            <Text style={styles.grandTotalValue}>{formatUsd(total)}</Text>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.addressCard}>
-            <AppSymbol
-              name="location.fill"
-              size={20}
-              tintColor={colors.primary}
-            />
-            <View style={styles.addressBody}>
-              <Text style={styles.addressLine} numberOfLines={2}>
-                {fullAddress}
-              </Text>
-            </View>
+        {/* Delivery Instructions */}
+        <View style={styles.instructionsSection}>
+          <Text style={styles.sectionTitle}>Delivery instructions</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScrollContent}
+          >
             <Pressable
-              hitSlop={8}
+              style={[
+                styles.instructionCard,
+                isRecording && styles.instructionCardActive,
+              ]}
               onPress={() => {
                 hapticSoftTap();
-                router.push('/location');
+                setIsRecording((prev) => !prev);
               }}
             >
-              <Text style={styles.changeLink}>Change</Text>
+              <AppSymbol
+                name="mic.fill"
+                size={20}
+                tintColor={isRecording ? colors.primary : colors.textSecondary}
+              />
+              <Text style={styles.instructionTitle}>Record</Text>
+              <Text style={styles.instructionDesc}>Press here and hold</Text>
             </Pressable>
-          </View>
+
+            <Pressable
+              style={[
+                styles.instructionCard,
+                avoidCalling && styles.instructionCardActive,
+              ]}
+              onPress={() => toggleInstruction('calling')}
+            >
+              <AppSymbol
+                name="phone.down.fill"
+                size={20}
+                tintColor={avoidCalling ? colors.primary : colors.textSecondary}
+              />
+              <Text style={styles.instructionTitle}>Avoid calling</Text>
+              <View style={styles.checkRow}>
+                <Text style={styles.instructionDesc}>
+                  Avoid call verification
+                </Text>
+                {avoidCalling && (
+                  <AppSymbol
+                    name="checkmark.circle.fill"
+                    size={14}
+                    tintColor={colors.primary}
+                  />
+                )}
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.instructionCard,
+                dontRing && styles.instructionCardActive,
+              ]}
+              onPress={() => toggleInstruction('ring')}
+            >
+              <AppSymbol
+                name="bell.slash.fill"
+                size={20}
+                tintColor={dontRing ? colors.primary : colors.textSecondary}
+              />
+              <Text style={styles.instructionTitle}>Don't ring the bell</Text>
+              <View style={styles.checkRow}>
+                <Text style={styles.instructionDesc}>
+                  Leave at gate / lobby
+                </Text>
+                {dontRing && (
+                  <AppSymbol
+                    name="checkmark.circle.fill"
+                    size={14}
+                    tintColor={colors.primary}
+                  />
+                )}
+              </View>
+            </Pressable>
+          </ScrollView>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Payment Options</Text>
-            <Pressable hitSlop={8}>
-              <Text style={styles.viewAll}>View All</Text>
-            </Pressable>
+        {/* Tip your delivery partner */}
+        <View style={styles.sectionCard}>
+          <View style={styles.tipHeader}>
+            <View style={styles.scooterContainer}>
+              <AppSymbol name="bicycle" size={24} tintColor={colors.primary} />
+            </View>
+            <View style={styles.tipHeaderText}>
+              <Text style={styles.tipTitle}>Tip your delivery partner</Text>
+              <Text style={styles.tipSubtitle}>
+                Your kindness means a lot! 100% of your tip goes directly to the
+                rider.
+              </Text>
+            </View>
           </View>
-          <View style={styles.paymentList}>
-            {PAYMENT_METHODS.map((method) => {
-              const selected = paymentId === method.id;
+          <View style={styles.tipPills}>
+            {[1, 2, 3, 5].map((amt) => {
+              const selected = tipAmount === amt;
               return (
                 <Pressable
-                  key={method.id}
-                  onPress={() => {
-                    hapticSoftTap();
-                    setPaymentId(method.id);
-                  }}
-                  style={[
-                    styles.paymentRow,
-                    selected && styles.paymentRowSelected,
-                  ]}
+                  key={amt}
+                  style={[styles.tipPill, selected && styles.tipPillActive]}
+                  onPress={() => handleTipSelect(amt)}
                 >
-                  <RadioMark selected={selected} />
-                  <View style={styles.paymentCenter}>
-                    <View style={styles.paymentTitleRow}>
-                      <Text
-                        style={[
-                          styles.paymentLabel,
-                          selected && styles.paymentLabelSelected,
-                        ]}
-                      >
-                        {method.label}
-                      </Text>
-                      {method.badge ? (
-                        <View style={styles.paymentBadge}>
-                          <Text style={styles.paymentBadgeText}>
-                            {method.badge}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                    <Text style={styles.paymentSubtitle}>
-                      {method.subtitle}
-                    </Text>
-                  </View>
-                  <CheckoutPaymentTrailingLogos
-                    logos={method.trailingLogos}
-                    showMore={method.showChevron}
-                  />
+                  <Text
+                    style={[
+                      styles.tipPillText,
+                      selected && styles.tipPillTextActive,
+                    ]}
+                  >
+                    {amt === 1
+                      ? '😊'
+                      : amt === 2
+                        ? '🤩'
+                        : amt === 3
+                          ? '😍'
+                          : '🏆'}{' '}
+                    {formatUsd(amt)}
+                  </Text>
                 </Pressable>
               );
             })}
+            <Pressable style={styles.tipPill} onPress={hapticSoftTap}>
+              <Text style={styles.tipPillText}>Custom</Text>
+            </Pressable>
           </View>
         </View>
+
+        {/* Payment selector */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.cardTitle}>Select Payment Option</Text>
+          {PAYMENT_METHODS.map((method) => {
+            const selected = paymentId === method.id;
+            const disabled = method.disabled ?? false;
+            return (
+              <Pressable
+                key={method.id}
+                onPress={() => {
+                  if (disabled) return;
+                  hapticSoftTap();
+                  setPaymentId(method.id);
+                }}
+                style={[
+                  styles.paymentRow,
+                  selected && styles.paymentRowSelected,
+                  disabled && styles.paymentRowDisabled,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.radio,
+                    selected && styles.radioSelected,
+                    disabled && styles.radioDisabled,
+                  ]}
+                >
+                  {selected && <View style={styles.radioDot} />}
+                </View>
+                <View style={styles.paymentCenter}>
+                  <View style={styles.paymentTitleRow}>
+                    <Text
+                      style={[
+                        styles.paymentLabel,
+                        disabled && styles.paymentLabelDisabled,
+                      ]}
+                    >
+                      {method.label}
+                    </Text>
+                    {method.badge && (
+                      <View
+                        style={[
+                          styles.paymentBadge,
+                          disabled && styles.paymentBadgeDisabled,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.paymentBadgeText,
+                            disabled && styles.paymentBadgeTextDisabled,
+                          ]}
+                        >
+                          {method.badge}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  {method.subtitle && (
+                    <Text style={styles.paymentSubtitle}>
+                      {method.subtitle}
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+        <AppFooter />
       </ScrollView>
 
-      <CheckoutStickyFooter
-        total={total}
-        savings={displaySavings}
-        isPlacing={isProcessing}
-        disabled={items.length === 0 || isProcessing || merchantOffline}
-        onPlaceOrder={handlePlaceOrder}
-        onViewPriceDetails={scrollToPriceDetails}
-      />
+      {/* Sticky Bottom Bar */}
+      <View
+        style={[styles.footer, { paddingBottom: insets.bottom + spacing.xs }]}
+      >
+        <View style={styles.addressSticky}>
+          <AppSymbol name="location.fill" size={14} tintColor={colors.star} />
+          <Text style={styles.addressStickyText} numberOfLines={1}>
+            Delivering to Home · {fullAddress}
+          </Text>
+          <Pressable onPress={() => router.push('/location')}>
+            <Text style={styles.changeLinkText}>Change</Text>
+          </Pressable>
+        </View>
+        <View style={styles.bottomActions}>
+          <View style={styles.bottomLeft}>
+            <Text style={styles.bottomPayText}>PAY USING</Text>
+            <Text style={styles.bottomPayMethod} numberOfLines={1}>
+              {selectedPaymentMethod.label}
+            </Text>
+          </View>
+          <Pressable
+            style={[
+              styles.placeOrderBtn,
+              isProcessing && styles.placeOrderBtnDisabled,
+            ]}
+            disabled={isProcessing}
+            onPress={handlePlaceOrder}
+          >
+            {isProcessing ? (
+              <ActivityIndicator color={colors.textInverse} />
+            ) : (
+              <View style={styles.placeBtnContent}>
+                <Text style={styles.placeBtnTotal}>{formatUsd(total)}</Text>
+                <Text style={styles.placeBtnText}>Place Order</Text>
+                <AppSymbol
+                  name="chevron.right"
+                  size={14}
+                  tintColor={colors.textInverse}
+                />
+              </View>
+            )}
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
@@ -403,7 +811,7 @@ export function CheckoutScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundMuted,
   },
   header: {
     flexDirection: 'row',
@@ -413,7 +821,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundElevated,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
-    gap: spacing.sm,
   },
   backBtn: {
     width: 32,
@@ -422,22 +829,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    flex: 1,
     fontFamily: fonts.bold,
     fontSize: 16,
-    lineHeight: 20,
     color: colors.textPrimary,
+    marginLeft: spacing.xs,
   },
-  secureBadge: {
+  headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    marginLeft: 'auto',
+    gap: spacing.sm,
   },
-  secureText: {
-    fontFamily: fonts.semibold,
-    fontSize: 11,
-    lineHeight: 14,
-    color: colors.primary,
+  headerIconBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scroll: {
     flex: 1,
@@ -446,181 +853,407 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
-  items: {
-    gap: spacing.sm,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionHeader: {
+  etaBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    lineHeight: 20,
-    color: colors.textPrimary,
-  },
-  viewAll: {
-    fontFamily: fonts.semibold,
-    fontSize: 13,
-    lineHeight: 16,
-    color: colors.primary,
-  },
-  priceCard: {
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 14,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.primaryDark,
+    borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
   },
-  billRow: {
+  etaText: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.textInverse,
+  },
+  sectionCard: {
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cardTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  cartItemRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  itemThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.md,
+    backgroundColor: colors.backgroundMuted,
+  },
+  itemDetails: {
+    flex: 1,
+    gap: 2,
+  },
+  itemName: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+  itemPackSize: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  wishlistLink: {
+    marginTop: 4,
+  },
+  wishlistLinkText: {
+    fontFamily: fonts.semibold,
+    fontSize: 11,
+    color: colors.primary,
+  },
+  cartItemRight: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  itemPrice: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+  itemMrp: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.textTertiary,
+    textDecorationLine: 'line-through',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.md,
+    padding: 2,
+    backgroundColor: colors.accent,
+    marginTop: 4,
+  },
+  stepBtn: {
+    padding: 6,
+  },
+  stepQty: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.primary,
+    paddingHorizontal: 8,
+  },
+  itemDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
+  recommendedSection: {
+    gap: spacing.xs,
+  },
+  sectionTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.textPrimary,
+    paddingLeft: spacing.xs,
+  },
+  horizontalScrollContent: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+  },
+  recommendCard: {
+    width: 130,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 4,
+  },
+  recThumb: {
+    width: 80,
+    height: 80,
+    alignSelf: 'center',
+    resizeMode: 'contain',
+  },
+  recName: {
+    fontFamily: fonts.semibold,
+    fontSize: 11,
+    color: colors.textPrimary,
+    height: 32,
+  },
+  recWeight: {
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    color: colors.textSecondary,
+  },
+  recFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  recPrice: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: colors.textPrimary,
+  },
+  recMrp: {
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    color: colors.textTertiary,
+    textDecorationLine: 'line-through',
+  },
+  recAddBtn: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: colors.accent,
+  },
+  recAddText: {
+    fontFamily: fonts.bold,
+    fontSize: 10,
+    color: colors.primary,
+  },
+  billRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   billLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
   },
   billLabel: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    lineHeight: 18,
     color: colors.textSecondary,
   },
   billValue: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    lineHeight: 18,
     color: colors.textPrimary,
   },
-  billValueFree: {
+  freeText: {
     fontFamily: fonts.semibold,
     color: colors.success,
   },
-  savedLabel: {
-    color: colors.success,
+  savingsTag: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
   },
-  savedValue: {
+  savingsTagText: {
     fontFamily: fonts.semibold,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.success,
+    fontSize: 9,
+    color: colors.textInverse,
   },
   billDivider: {
-    borderStyle: 'dashed',
-    borderTopWidth: 1,
-    borderColor: colors.border,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
     marginVertical: spacing.xs,
   },
-  toPayLabel: {
+  grandTotalLabel: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  grandTotalValue: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    lineHeight: 20,
     color: colors.textPrimary,
   },
-  toPayValue: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    lineHeight: 22,
-    color: colors.textPrimary,
-  },
-  addressCard: {
+  gstCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
     backgroundColor: colors.backgroundElevated,
-    borderRadius: 12,
-    borderCurve: 'continuous',
+    borderRadius: radius.md,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
   },
-  addressBody: {
-    flex: 1,
+  percentBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  addressLine: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.textPrimary,
-  },
-  changeLink: {
+  gstTitle: {
     fontFamily: fonts.semibold,
     fontSize: 13,
-    lineHeight: 16,
-    color: colors.primary,
+    color: colors.textPrimary,
   },
-  paymentList: {
+  gstSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+    maxWidth: 240,
+  },
+  instructionsSection: {
+    gap: spacing.xs,
+  },
+  instructionCard: {
+    width: 140,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.xs,
+  },
+  instructionCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.accent,
+  },
+  instructionTitle: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    color: colors.textPrimary,
+  },
+  instructionDesc: {
+    fontFamily: fonts.regular,
+    fontSize: 9,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  donationCard: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  donationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  donationTextContainer: {
+    flex: 1,
+    gap: 2,
+    paddingRight: spacing.sm,
+  },
+  donationTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: '#1E3A8A',
+  },
+  donationSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: '#1E40AF',
+  },
+  donationPills: {
+    flexDirection: 'row',
     gap: spacing.sm,
+  },
+  donationPill: {
+    flex: 1,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.md,
+    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  donationPillActive: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6',
+  },
+  donationPillText: {
+    fontFamily: fonts.semibold,
+    fontSize: 11,
+    color: '#1D4ED8',
+  },
+  donationPillTextActive: {
+    color: colors.textInverse,
+  },
+  tipHeader: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  scooterContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tipHeaderText: {
+    flex: 1,
+    gap: 2,
+  },
+  tipTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+  tipSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  tipPills: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  tipPill: {
+    flex: 1,
+    backgroundColor: colors.backgroundElevated,
+    borderRadius: radius.md,
+    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tipPillActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.accent,
+  },
+  tipPillText: {
+    fontFamily: fonts.semibold,
+    fontSize: 11,
+    color: colors.textPrimary,
+  },
+  tipPillTextActive: {
+    color: colors.primary,
   },
   paymentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: 12,
-    borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
     gap: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   paymentRowSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.accentMuted,
   },
-  paymentCenter: {
-    flex: 1,
-    gap: 2,
-    minWidth: 0,
-  },
-  paymentTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    flexWrap: 'wrap',
-  },
-  paymentLabel: {
-    fontFamily: fonts.semibold,
-    fontSize: 14,
-    lineHeight: 18,
-    color: colors.textPrimary,
-  },
-  paymentLabelSelected: {
-    color: colors.primary,
-  },
-  paymentSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.textSecondary,
-  },
-  paymentBadge: {
-    backgroundColor: colors.accent,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(36, 155, 66, 0.12)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  paymentBadgeText: {
-    fontFamily: fonts.bold,
-    fontSize: 9,
-    lineHeight: 11,
-    color: colors.success,
-    letterSpacing: 0.3,
+  paymentRowDisabled: {
+    opacity: 0.5,
   },
   radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
     borderColor: colors.borderStrong,
     alignItems: 'center',
@@ -629,19 +1262,169 @@ const styles = StyleSheet.create({
   radioSelected: {
     borderColor: colors.primary,
   },
+  radioDisabled: {
+    borderColor: colors.border,
+  },
   radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.primary,
   },
-  paymentError: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.danger,
-    textAlign: 'center',
+  paymentCenter: {
+    flex: 1,
+  },
+  paymentTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  paymentLabel: {
+    fontFamily: fonts.semibold,
+    fontSize: 13,
+    color: colors.textPrimary,
+  },
+  paymentLabelDisabled: {
+    color: colors.textTertiary,
+  },
+  paymentSubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  paymentBadge: {
+    backgroundColor: colors.accent,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  paymentBadgeDisabled: {
+    backgroundColor: colors.backgroundMuted,
+  },
+  paymentBadgeText: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    color: colors.primary,
+  },
+  paymentBadgeTextDisabled: {
+    color: colors.textSecondary,
+  },
+  footer: {
+    backgroundColor: colors.backgroundElevated,
+    borderTopWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+  },
+  addressSticky: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingBottom: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  addressStickyText: {
+    flex: 1,
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  changeLinkText: {
+    fontFamily: fonts.bold,
+    fontSize: 11,
+    color: colors.primary,
+  },
+  bottomActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: spacing.sm,
+  },
+  bottomLeft: {
+    gap: 1,
+  },
+  bottomPayText: {
+    fontFamily: fonts.bold,
+    fontSize: 9,
+    color: colors.textSecondary,
+  },
+  bottomPayMethod: {
+    fontFamily: fonts.bold,
+    fontSize: 12,
+    color: colors.primary,
+    maxWidth: 120,
+  },
+  placeOrderBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 180,
+  },
+  placeOrderBtnDisabled: {
+    opacity: 0.5,
+  },
+  placeBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  placeBtnTotal: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.textInverse,
+  },
+  placeBtnText: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: colors.textInverse,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.background,
+    gap: spacing.md,
+    marginTop: -40, // offset header visual balance
+  },
+  emptyImage: {
+    width: 250,
+    height: 250,
+    marginBottom: spacing.xs,
+  },
+  emptyTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 24,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    letterSpacing: -0.5,
+  },
+  emptySubtitle: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: -spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  emptyBtn: {
+    backgroundColor: '#007AFF12', // transparent light blue
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl * 1.5,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyBtnPressed: {
+    opacity: 0.8,
+  },
+  emptyBtnText: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    color: '#007AFF', // bright iOS blue
   },
 });

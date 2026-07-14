@@ -1,6 +1,6 @@
 import { useFonts } from 'expo-font';
 import { Image } from 'expo-image';
-import { Stack, useSegments } from 'expo-router';
+import { router, Stack, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -79,6 +79,28 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Auth Route Protection Guard
+  useEffect(() => {
+    if (!loaded) return;
+
+    const isAuthRoute =
+      segments[0] === 'login' ||
+      segments[0] === 'verify' ||
+      segments[0] === 'onboarding' ||
+      !segments[0];
+
+    if (isAuthenticated && isAuthRoute) {
+      // Clear the stack and direct authenticated user to tabs
+      if (router.canGoBack()) {
+        router.dismissAll();
+      }
+      router.replace('/(tabs)');
+    } else if (!isAuthenticated && !isAuthRoute && segments[0] !== undefined) {
+      // Redirect unauthenticated user trying to access app pages to login
+      router.replace('/login');
+    }
+  }, [isAuthenticated, segments, loaded]);
 
   useEffect(() => {
     if (

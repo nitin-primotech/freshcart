@@ -1,4 +1,4 @@
-import type { Href } from 'expo-router';
+import { type Href, router } from 'expo-router';
 import { create } from 'zustand';
 
 import type {
@@ -144,7 +144,8 @@ export function openCartSheet() {
     useCartStore.setState({ isEmptyPromptOpen: true, isSheetOpen: false });
     return;
   }
-  useCartStore.setState({ isSheetOpen: true, isEmptyPromptOpen: false });
+  useCartStore.setState({ isSheetOpen: false, isEmptyPromptOpen: false });
+  router.push('/checkout');
 }
 
 export function closeCartSheet() {

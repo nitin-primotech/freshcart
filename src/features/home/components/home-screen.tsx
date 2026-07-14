@@ -1,10 +1,13 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { router } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  BackHandler,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
   StyleSheet,
+  ToastAndroid,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,13 +33,13 @@ import {
   getDishesExcluding,
   getRecommendedDishes,
 } from '@/features/home/utils/get-recommended-dishes';
+import { AppFooter } from '@/shared/components/app-footer';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { ErrorState } from '@/shared/components/error-state';
 import { Shimmer } from '@/shared/components/shimmer';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
-import { tabBarContentPadding } from '@/theme/tab-bar';
 
 function HomeSkeleton() {
   return (
@@ -51,6 +54,33 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const searchStuckRef = useRef(false);
   const [searchStuck, setSearchStuck] = useState(false);
+
+  useEffect(() => {
+    if (process.env.EXPO_OS !== 'android') return;
+
+    let backPressCount = 0;
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        if (router.canGoBack()) {
+          return false; // Allow standard back navigation for pushed screens
+        }
+
+        if (backPressCount === 0) {
+          backPressCount += 1;
+          ToastAndroid.show('Press back again to exit', ToastAndroid.SHORT);
+          setTimeout(() => {
+            backPressCount = 0;
+          }, 2000);
+          return true; // Block default exit
+        }
+        BackHandler.exitApp();
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, []);
 
   const promosQuery = useSimulatedQuery((signal) => fetchPromos(signal), []);
   const categoriesQuery = useSimulatedQuery(
@@ -97,8 +127,6 @@ export function HomeScreen() {
   const recommendedForYou = getDishesExcluding(restaurants, popularIds, 6, 0);
   const topPicks = getDishesExcluding(restaurants, new Set(), 12, 0);
 
-  const bottomPad = tabBarContentPadding(insets.bottom);
-
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const offsetY = event.nativeEvent.contentOffset.y;
@@ -135,7 +163,7 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
+        contentContainerStyle={{ paddingBottom: 90 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -202,6 +230,7 @@ export function HomeScreen() {
               onRetry={onRefresh}
             />
           ) : null}
+          <AppFooter />
         </View>
       </ScrollView>
     </View>
