@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontFamily: fonts.bold,
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 15,
+    lineHeight: 19,
     color: colors.textPrimary,
   },
   cartBtn: {

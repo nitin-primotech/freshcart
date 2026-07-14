@@ -370,7 +370,6 @@ export function ProfileScreen() {
         message="You will need to sign in again to access your account."
         confirmLabel="Log out"
         icon="rectangle.portrait.and.arrow.right"
-        destructive
         onClose={() => setLogoutModalVisible(false)}
         onConfirm={() => {
           void performLogout();

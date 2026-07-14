@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { strings } from '@/constants/strings';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
 import { selectActiveOrder, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
@@ -13,23 +13,26 @@ import { fonts } from '@/theme/typography';
 
 const ORDER_COMPLETED_LOTTIE = require('@/assets/lottie/order-completed.json');
 
-const TERRACOTTA_COLOR_FILTERS = [
-  { keypath: 'Background Circle (Blue)', color: colors.primary },
-  { keypath: 'Background(Blue)', color: colors.primary },
-  { keypath: 'Glow Mask', color: colors.primaryDark },
-  { keypath: 'Tick', color: colors.textInverse },
-  { keypath: 'Element 10', color: colors.primary },
-  { keypath: 'Element 7', color: colors.primary },
-  { keypath: 'Element 8', color: colors.primaryLight },
-  { keypath: 'Element 6', color: colors.primaryLight },
-  { keypath: 'Element 5', color: colors.primaryLight },
-  { keypath: 'Element 9', color: colors.primaryDark },
-  { keypath: 'Element 11', color: colors.primaryLight },
-  { keypath: 'Element 4', color: colors.primaryDark },
-  { keypath: 'Element 3', color: colors.primaryDark },
-  { keypath: 'Element 2', color: colors.primary },
-  { keypath: 'Element 1', color: colors.primaryLight },
-] as const;
+function buildOrderSuccessLottieColors() {
+  return [
+    { keypath: 'Background Circle (Blue)', color: colors.primary },
+    { keypath: 'Background(Blue)', color: colors.primary },
+    { keypath: 'Glow Mask', color: colors.primaryDark },
+    { keypath: 'Glow', color: colors.primaryLight },
+    { keypath: 'Tick', color: colors.textInverse },
+    { keypath: 'Element 10', color: colors.primary },
+    { keypath: 'Element 7', color: colors.primary },
+    { keypath: 'Element 8', color: colors.primaryLight },
+    { keypath: 'Element 6', color: colors.primaryLight },
+    { keypath: 'Element 5', color: colors.primaryLight },
+    { keypath: 'Element 9', color: colors.primaryDark },
+    { keypath: 'Element 11', color: colors.primaryLight },
+    { keypath: 'Element 4', color: colors.primaryDark },
+    { keypath: 'Element 3', color: colors.primaryDark },
+    { keypath: 'Element 2', color: colors.primary },
+    { keypath: 'Element 1', color: colors.primaryLight },
+  ] as const;
+}
 
 export function OrderSuccessScreen() {
   const router = useRouter();
@@ -71,7 +74,7 @@ export function OrderSuccessScreen() {
           loop={false}
           speed={1}
           style={styles.lottie}
-          colorFilters={[...TERRACOTTA_COLOR_FILTERS]}
+          colorFilters={buildOrderSuccessLottieColors()}
         />
       </Animated.View>
 
@@ -81,8 +84,8 @@ export function OrderSuccessScreen() {
       >
         <Text style={styles.title}>Your order is placed!</Text>
         <Text style={styles.subtitle}>
-          Your chef is firing up the kitchen. We&apos;ll keep you updated every
-          step of the way.
+          We&apos;re packing your groceries with care. We&apos;ll keep you
+          updated every step of the way.
         </Text>
       </Animated.View>
 

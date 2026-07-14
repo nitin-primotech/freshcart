@@ -535,9 +535,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.successLight,
+    backgroundColor: colors.backgroundElevated,
     borderRadius: 12,
     borderCurve: 'continuous',
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.md,
   },
   addressBody: {
@@ -572,7 +574,7 @@ const styles = StyleSheet.create({
   },
   paymentRowSelected: {
     borderColor: colors.primary,
-    backgroundColor: colors.accentMuted,
+    backgroundColor: colors.accent,
   },
   paymentCenter: {
     flex: 1,
@@ -601,8 +603,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   paymentBadge: {
-    backgroundColor: colors.successLight,
+    backgroundColor: colors.accent,
     borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(36, 155, 66, 0.12)',
     paddingHorizontal: 6,
     paddingVertical: 2,
   },

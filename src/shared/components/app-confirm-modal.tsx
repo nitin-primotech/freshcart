@@ -30,9 +30,10 @@ export function AppConfirmModal({
   onClose,
 }: AppConfirmModalProps) {
   const accentColor = destructive ? colors.danger : colors.primary;
-  const iconBackground = destructive
-    ? colors.dangerLight
-    : 'rgba(212, 84, 60, 0.1)';
+  const iconBackground = destructive ? colors.dangerLight : colors.accent;
+  const iconBorderColor = destructive
+    ? 'rgba(220, 38, 38, 0.14)'
+    : 'rgba(36, 155, 66, 0.14)';
 
   function handleClose() {
     hapticSoftTap();
@@ -58,7 +59,13 @@ export function AppConfirmModal({
         >
           {icon ? (
             <View
-              style={[styles.iconWrap, { backgroundColor: iconBackground }]}
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: iconBackground,
+                  borderColor: iconBorderColor,
+                },
+              ]}
             >
               <AppSymbol name={icon} size={22} tintColor={accentColor} />
             </View>
@@ -118,6 +125,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderCurve: 'continuous',
   },
   title: {
     fontFamily: fonts.bold,

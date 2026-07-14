@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
-    borderColor: 'rgba(45, 106, 79, 0.22)',
+    borderColor: 'rgba(36, 155, 66, 0.18)',
   },
   iconWrap: {
     width: 36,

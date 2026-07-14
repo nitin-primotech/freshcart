@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { strings } from '@/constants/strings';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
 import { MEMBERSHIP_PERKS } from '@/features/profile/constants/profile-hub.constants';
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -11,7 +12,7 @@ import { fonts } from '@/theme/typography';
 export function MembershipScreen() {
   return (
     <ProfileSubScreenShell
-      title="foodRush"
+      title={strings.appName}
       accentTitle="Gold"
       subtitle="Your membership benefits"
     >

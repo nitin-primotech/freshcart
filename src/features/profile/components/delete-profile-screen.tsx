@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { strings } from '@/constants/strings';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
 import { formatProfilePhone } from '@/features/profile/constants/profile.constants';
 import { DELETE_ACCOUNT_IMPACT } from '@/features/profile/constants/profile-hub.constants';
@@ -55,8 +56,9 @@ export function DeleteProfileScreen() {
           Permanently delete your account?
         </Text>
         <Text style={styles.warningSubtitle}>
-          Your foodRush account and local data on this device will be removed.
-          You can create a new account anytime with the same phone number.
+          Your {strings.appName} account and local data on this device will be
+          removed. You can create a new account anytime with the same phone
+          number.
         </Text>
       </View>
 

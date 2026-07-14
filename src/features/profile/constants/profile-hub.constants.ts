@@ -79,7 +79,7 @@ export const SUPPORT_CONTACT_OPTIONS: SupportContactOption[] = [
   {
     id: 'email',
     title: 'Email support',
-    subtitle: 'help@foodrush.in',
+    subtitle: SUPPORT_EMAIL,
     icon: 'envelope.fill',
     action: 'email',
   },
@@ -102,7 +102,7 @@ export const SUPPORT_FAQS: SupportFaq[] = [
     id: 'faq-3',
     question: 'How do refunds work?',
     answer:
-      'Eligible refunds are credited to your foodRush wallet within 24–48 hours. For payment issues, contact support with your order ID.',
+      'Eligible refunds are credited to your FreshCart wallet within 24–48 hours. For payment issues, contact support with your order ID.',
   },
   {
     id: 'faq-4',
@@ -154,14 +154,14 @@ export const WALLET_TRANSACTIONS: WalletTransaction[] = [
   {
     id: 'tx-2',
     title: 'Referral bonus',
-    subtitle: 'Friend joined foodRush',
+    subtitle: 'Friend joined FreshCart',
     amount: 100,
     date: '18 Jun 2026',
   },
   {
     id: 'tx-3',
     title: 'Used on checkout',
-    subtitle: 'FoodRush Kitchen',
+    subtitle: 'FreshCart order',
     amount: -89,
     date: '15 Jun 2026',
   },
@@ -229,7 +229,7 @@ export const MEMBERSHIP_PERKS: MembershipPerk[] = [
   {
     id: 'perk-3',
     title: 'Extra cashback',
-    subtitle: '5% back in foodRush wallet',
+    subtitle: '5% back in FreshCart wallet',
     icon: 'wallet.pass.fill',
   },
   {

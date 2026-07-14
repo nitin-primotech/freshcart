@@ -1,6 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 
@@ -11,7 +10,7 @@ type CartLineStepperProps = {
   fullWidth?: boolean;
 };
 
-/** Compact outline stepper for cart rows — Swiggy-style inline control. */
+/** Compact outline stepper for cart rows. */
 export function CartLineStepper({
   quantity,
   onDecrease,
@@ -27,11 +26,9 @@ export function CartLineStepper({
         accessibilityRole="button"
         accessibilityLabel="Decrease quantity"
       >
-        <AppSymbol name="minus" size={12} tintColor={colors.primary} />
+        <Text style={styles.symbol}>−</Text>
       </Pressable>
-      <View style={styles.qtyWrap}>
-        <Text style={styles.qty}>{quantity}</Text>
-      </View>
+      <Text style={styles.qty}>{quantity}</Text>
       <Pressable
         onPress={onIncrease}
         style={styles.btn}
@@ -39,45 +36,52 @@ export function CartLineStepper({
         accessibilityRole="button"
         accessibilityLabel="Increase quantity"
       >
-        <AppSymbol name="plus" size={12} tintColor={colors.primary} />
+        <Text style={styles.symbol}>+</Text>
       </Pressable>
     </View>
   );
 }
 
+const STEP_HEIGHT = 32;
+const BTN_SIZE = 28;
+
 const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-end',
     backgroundColor: colors.backgroundElevated,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.primary,
     borderRadius: 8,
     borderCurve: 'continuous',
+    height: STEP_HEIGHT,
+    minWidth: 88,
     paddingHorizontal: 2,
-    paddingVertical: 1,
-    minWidth: 76,
   },
   rootFullWidth: {
+    alignSelf: 'stretch',
     width: '100%',
-    minWidth: 0,
     justifyContent: 'space-between',
   },
   btn: {
-    width: 26,
-    height: 26,
+    width: BTN_SIZE,
+    height: BTN_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  qtyWrap: {
-    minWidth: 18,
-    flex: 1,
-    alignItems: 'center',
-  },
   qty: {
+    minWidth: 24,
+    textAlign: 'center',
     fontFamily: fonts.semibold,
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 16,
+    color: colors.primary,
+  },
+  symbol: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    lineHeight: 18,
     color: colors.primary,
   },
 });

@@ -3,15 +3,15 @@
  */
 
 export const colors = {
-  primary: '#22C55E',
-  primaryDark: '#16A34A',
-  primaryLight: '#4ADE80',
+  primary: '#249B42',
+  primaryDark: '#1E7D36',
+  primaryLight: '#2CAD4A',
   secondary: '#1C1C1E',
-  accent: '#ECFDF5',
-  accentMuted: '#F8FAF8',
+  accent: '#EDF6EF',
+  accentMuted: '#F5F9F6',
   brandGreen: '#2CAD4A',
   brandGreenDark: '#249B42',
-  onboardingCurve: '#EAF7EE',
+  onboardingCurve: '#E8F2EB',
   onboardingDot: '#D8D8D8',
   onboardingTitle: '#1A1A1A',
   onboardingBody: '#8A8A8A',
@@ -38,8 +38,8 @@ export const colors = {
   borderStrong: '#D4D4D4',
   divider: '#F0F0F0',
 
-  success: '#16A34A',
-  successLight: '#DCFCE7',
+  success: '#249B42',
+  successLight: '#E6F2E9',
   warning: '#D97706',
   danger: '#DC2626',
   dangerLight: '#FEE2E2',
@@ -48,10 +48,10 @@ export const colors = {
   overlay: 'rgba(0, 0, 0, 0.55)',
   overlayLight: 'rgba(0, 0, 0, 0.25)',
 
-  gradientStart: '#22C55E',
-  gradientEnd: '#16A34A',
-  gradientGoldStart: '#4ADE80',
-  gradientGoldEnd: '#22C55E',
+  gradientStart: '#2CAD4A',
+  gradientEnd: '#249B42',
+  gradientGoldStart: '#3DB855',
+  gradientGoldEnd: '#249B42',
 
   white: '#FFFFFF',
   black: '#000000',
@@ -66,10 +66,10 @@ export const screens = {
     heroGradient: ['transparent', 'rgba(20,20,22,0.85)'] as [string, string],
   },
   cart: {
-    badge: '#2D8B3F',
+    badge: '#249B42',
   },
   tracking: {
-    activeStep: '#2D8B3F',
+    activeStep: '#249B42',
     inactiveStep: '#E8E8E8',
   },
 } as const;
@@ -103,7 +103,7 @@ export const shadows = {
     boxShadow: '0 8px 32px rgba(28, 28, 30, 0.1)',
   },
   float: {
-    boxShadow: '0 12px 40px rgba(45, 139, 63, 0.28)',
+    boxShadow: '0 12px 40px rgba(36, 155, 66, 0.28)',
   },
   glass: {
     boxShadow: '0 4px 20px rgba(28, 28, 30, 0.06)',

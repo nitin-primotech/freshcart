@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 
+import { strings } from '@/constants/strings';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
 import {
   SUPPORT_CONTACT_OPTIONS,
@@ -45,7 +46,9 @@ export function HelpSupportScreen() {
       void Linking.openURL(`tel:${SUPPORT_PHONE}`);
       return;
     }
-    void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=foodRush%20Support`);
+    void Linking.openURL(
+      `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`${strings.appName} Support`)}`,
+    );
   }
 
   return (

@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { strings } from '@/constants/strings';
 import { formatInr } from '@/features/checkout/utils/format-currency';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
 import {
@@ -13,7 +14,7 @@ import { fonts } from '@/theme/typography';
 export function WalletScreen() {
   return (
     <ProfileSubScreenShell
-      title="foodRush"
+      title={strings.appName}
       accentTitle="Wallet"
       subtitle="Cashback, refunds and rewards"
     >

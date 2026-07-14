@@ -60,7 +60,7 @@ export function AuthContinueButton({
       : brand
         ? colors.onboardingCurve
         : tone === 'success'
-          ? 'rgba(45, 106, 79, 0.35)'
+          ? 'rgba(36, 155, 66, 0.35)'
           : colors.primaryLight;
   const textColor = loading
     ? colors.textInverse
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    boxShadow: '0 6px 18px rgba(45, 139, 63, 0.22)',
+    boxShadow: '0 6px 18px rgba(36, 155, 66, 0.22)',
   },
   btnPill: {
     minHeight: 56,

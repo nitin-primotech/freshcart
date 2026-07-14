@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   bannerUnlocked: {
-    backgroundColor: colors.successLight,
-    borderColor: 'rgba(45, 106, 79, 0.22)',
+    backgroundColor: colors.accent,
+    borderColor: 'rgba(36, 155, 66, 0.18)',
   },
   row: {
     flexDirection: 'row',
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapUnlocked: {
-    backgroundColor: 'rgba(45, 106, 79, 0.12)',
+    backgroundColor: 'rgba(36, 155, 66, 0.12)',
   },
   copy: {
     flex: 1,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   progressTrackUnlocked: {
-    backgroundColor: 'rgba(45, 106, 79, 0.16)',
+    backgroundColor: 'rgba(36, 155, 66, 0.14)',
   },
   progressFill: {
     position: 'absolute',

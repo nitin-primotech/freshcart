@@ -40,7 +40,7 @@ const OFFERS = [
     subline: 'On Weekend Specials',
     backgroundColor: colors.successLight,
     textColor: colors.success,
-    accentColor: 'rgba(45, 106, 79, 0.16)',
+    accentColor: 'rgba(36, 155, 66, 0.14)',
     iconColor: colors.success,
     icon: 'sparkles',
   },
