@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, View, type ViewStyle } from 'react-native';
-
-import { keyboardAvoidingBehavior } from '@/shared/utils/keyboard';
+import type { ViewStyle } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 type AuthKeyboardWrapperProps = {
   children: ReactNode;
@@ -10,26 +9,19 @@ type AuthKeyboardWrapperProps = {
   keyboardVerticalOffset?: number;
 };
 
-/**
- * iOS: KeyboardAvoidingView. Android: plain View (window resize handles the keyboard).
- * Avoids KAV + resize conflicts that can crash or freeze on TextInput focus.
- */
+/** Keyboard-aware wrapper for auth flows using react-native-keyboard-controller. */
 export function AuthKeyboardWrapper({
   children,
   style,
   keyboardVerticalOffset = 0,
 }: AuthKeyboardWrapperProps) {
-  if (process.env.EXPO_OS === 'ios') {
-    return (
-      <KeyboardAvoidingView
-        behavior={keyboardAvoidingBehavior}
-        style={style}
-        keyboardVerticalOffset={keyboardVerticalOffset}
-      >
-        {children}
-      </KeyboardAvoidingView>
-    );
-  }
-
-  return <View style={style}>{children}</View>;
+  return (
+    <KeyboardAvoidingView
+      style={[{ flex: 1 }, style]}
+      behavior="padding"
+      keyboardVerticalOffset={keyboardVerticalOffset}
+    >
+      {children}
+    </KeyboardAvoidingView>
+  );
 }

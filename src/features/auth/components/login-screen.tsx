@@ -1,14 +1,8 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LOGIN_HERO } from '@/constants/brand-assets';
@@ -19,7 +13,6 @@ import {
 } from '@/features/auth/utils/format-indian-phone';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
-import { AuthKeyboardWrapper } from '@/shared/components/auth-keyboard-wrapper';
 import { FreshCartLogo } from '@/shared/components/freshcart-logo';
 import { GoogleGIcon } from '@/shared/components/google-g-icon';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
@@ -31,6 +24,10 @@ import { fonts } from '@/theme/typography';
 
 const HERO_BG = '#FAFCF8';
 const H_PAD = spacing.lg;
+const CONTINUE_BUTTON_HEIGHT = 52;
+/** Input gap + Continue height + breathing room above the keyboard. */
+const LOGIN_KEYBOARD_BOTTOM_OFFSET =
+  spacing.md + CONTINUE_BUTTON_HEIGHT + spacing.lg + spacing.sm;
 
 export function LoginScreen() {
   const router = useRouter();
@@ -70,20 +67,20 @@ export function LoginScreen() {
   }
 
   return (
-    <AuthKeyboardWrapper style={styles.root}>
+    <View style={styles.root}>
       <AppStatusBar style="dark" />
 
-      <ScrollView
+      <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        bottomOffset={LOGIN_KEYBOARD_BOTTOM_OFFSET}
+        extraKeyboardSpace={spacing.md}
       >
-        {/* Top Hero Section */}
         <View
           style={[styles.topSection, { paddingTop: insets.top + spacing.xl }]}
         >
-          {/* Absolute Background Hero Image */}
           <View style={styles.heroVisualAbsolute}>
             <Image
               source={LOGIN_HERO}
@@ -112,7 +109,6 @@ export function LoginScreen() {
           </View>
         </View>
 
-        {/* Bottom Form Card */}
         <View
           style={[
             styles.formCard,
@@ -187,7 +183,6 @@ export function LoginScreen() {
             <Text style={styles.googleLabel}>Continue with Google</Text>
           </Pressable>
 
-          {/* Footer Block pushed to the bottom */}
           <View style={styles.footerBlock}>
             <View style={styles.trustRow}>
               <View style={styles.padlockCircle}>
@@ -220,23 +215,22 @@ export function LoginScreen() {
             </Text>
           </View>
         </View>
-      </ScrollView>
-    </AuthKeyboardWrapper>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.backgroundElevated,
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.backgroundElevated,
   },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#FFFFFF',
   },
   topSection: {
     backgroundColor: HERO_BG,
