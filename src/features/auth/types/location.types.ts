@@ -1,5 +1,10 @@
 export type LocationCity = 'mohali' | 'delhi' | 'noida';
 
+export type LocationCoordinates = {
+  latitude: number;
+  longitude: number;
+};
+
 export type LocationSuggestion = {
   id: string;
   title: string;
@@ -9,4 +14,12 @@ export type LocationSuggestion = {
   city: LocationCity;
   /** Extra tokens for search — sector numbers, landmarks, aliases */
   keywords?: string[];
+  coordinates?: LocationCoordinates;
+};
+
+export type SavedAddress = {
+  id: string;
+  label: string;
+  isDefault?: boolean;
+  suggestion: LocationSuggestion;
 };

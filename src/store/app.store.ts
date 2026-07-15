@@ -9,6 +9,7 @@ import type { LocationSuggestion } from '@/features/auth/types/location.types';
 import type { UserPreferences } from '@/features/auth/types/user-preferences.types';
 import { DEFAULT_PREFERENCES } from '@/features/auth/types/user-preferences.types';
 import type { DeliveryAddress } from '@/features/catalog/types/catalog.types';
+import { DEFAULT_RECENT_LOCATION_IDS } from '@/features/location/constants/location.constants';
 import { filterPersonNameInput } from '@/shared/utils/person-name';
 
 type AppHydrationStatus = 'loading' | 'ready';
@@ -19,6 +20,8 @@ type AppState = {
   userName: string;
   preferences: UserPreferences;
   recentSearches: string[];
+  recentLocationIds: string[];
+  favoriteLocationIds: string[];
   profileSavedToken: number | null;
 };
 
@@ -28,6 +31,8 @@ export const useAppStore = create<AppState>(() => ({
   userName: DEFAULT_PROFILE.userName,
   preferences: DEFAULT_PREFERENCES,
   recentSearches: ['Organic Milk', 'Bananas', 'Chicken Breast'],
+  recentLocationIds: [...DEFAULT_RECENT_LOCATION_IDS],
+  favoriteLocationIds: [],
   profileSavedToken: null,
 }));
 
@@ -68,14 +73,33 @@ export function clearProfileSavedToast() {
 export function setDeliveryAddressFromSuggestion(
   suggestion: LocationSuggestion,
 ) {
+  const recentLocationIds = useAppStore.getState().recentLocationIds;
+  const shouldTrackRecent =
+    suggestion.id !== 'home' && suggestion.id !== 'current-location';
+  const nextRecent = shouldTrackRecent
+    ? [
+        suggestion.id,
+        ...recentLocationIds.filter((id) => id !== suggestion.id),
+      ].slice(0, 6)
+    : recentLocationIds;
+
   useAppStore.setState({
     address: {
       label: suggestion.title,
       line1: suggestion.line1,
       line2: suggestion.line2,
     },
+    recentLocationIds: nextRecent,
   });
   void persistProfile();
+}
+
+export function toggleFavoriteLocation(id: string) {
+  const favoriteLocationIds = useAppStore.getState().favoriteLocationIds;
+  const next = favoriteLocationIds.includes(id)
+    ? favoriteLocationIds.filter((entry) => entry !== id)
+    : [...favoriteLocationIds, id];
+  useAppStore.setState({ favoriteLocationIds: next });
 }
 
 export async function resetAppProfile() {
@@ -107,4 +131,6 @@ export const selectAddress = (s: AppState) => s.address;
 export const selectUserName = (s: AppState) => s.userName;
 export const selectPreferences = (s: AppState) => s.preferences;
 export const selectRecentSearches = (s: AppState) => s.recentSearches;
+export const selectRecentLocationIds = (s: AppState) => s.recentLocationIds;
+export const selectFavoriteLocationIds = (s: AppState) => s.favoriteLocationIds;
 export const selectProfileSavedToken = (s: AppState) => s.profileSavedToken;

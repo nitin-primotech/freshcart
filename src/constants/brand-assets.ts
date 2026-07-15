@@ -10,6 +10,9 @@ export const FRESHCART_LOGO =
 export const LOGIN_HERO =
   require('@/assets/images/Login-hero.png') as ImageSource;
 
+export const GROCERY_ADDRESS =
+  require('@/assets/images/grocery-address.png') as ImageSource;
+
 export const ONBOARDING_SLIDES = [
   require('@/assets/images/Onboarding-slide1.png'),
   require('@/assets/images/Onboarding-slide2.png'),

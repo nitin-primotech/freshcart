@@ -88,6 +88,8 @@ export default function RootLayout() {
       segments[0] === 'login' ||
       segments[0] === 'verify' ||
       segments[0] === 'onboarding' ||
+      segments[0] === 'terms' ||
+      segments[0] === 'privacy' ||
       !segments[0];
 
     if (isAuthenticated && isAuthRoute) {

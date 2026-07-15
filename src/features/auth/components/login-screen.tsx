@@ -7,10 +7,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LOGIN_HERO } from '@/constants/brand-assets';
 import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
+import { CountryCodePickerButton } from '@/features/auth/components/country-code-picker-button';
+import type { PhoneCountry } from '@/features/auth/types/phone-country.types';
+import { DEFAULT_PHONE_COUNTRY } from '@/features/auth/types/phone-country.types';
 import {
-  isValidIndianMobile,
-  sanitizeIndianPhoneInput,
-} from '@/features/auth/utils/format-indian-phone';
+  isValidPhoneNumber,
+  sanitizePhoneInput,
+} from '@/features/auth/utils/phone-number';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { FreshCartLogo } from '@/shared/components/freshcart-logo';
@@ -37,13 +40,14 @@ export function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState<PhoneCountry>(DEFAULT_PHONE_COUNTRY);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const digits = sanitizeIndianPhoneInput(phone);
-  const canContinue = isValidIndianMobile(digits);
-  const busy = loading || googleLoading;
+  const busy = googleLoading;
+  const digits = sanitizePhoneInput(phone, country);
+  const canContinue = isValidPhoneNumber(digits, country);
+  const phoneMaxLength = country.cca2 === 'IN' ? 10 : 15;
 
   const systemBottom =
     insets.bottom > 0
@@ -52,12 +56,23 @@ export function LoginScreen() {
         ? 56
         : spacing.md;
 
+  const navigateHome = () => {
+    if (router.canGoBack()) {
+      router.dismissAll();
+    }
+    router.replace('/(tabs)');
+  };
+
   function handleContinue() {
     if (!canContinue || busy) return;
     setError(null);
     router.push({
       pathname: '/verify',
-      params: { phone: digits },
+      params: {
+        phone: digits,
+        countryCode: country.cca2,
+        callingCode: country.callingCode,
+      },
     });
   }
 
@@ -68,10 +83,7 @@ export function LoginScreen() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      if (router.canGoBack()) {
-        router.dismissAll();
-      }
-      router.replace('/(tabs)');
+      navigateHome();
     } catch (err) {
       if (err instanceof GoogleSignInCancelledError) {
         return;
@@ -89,6 +101,9 @@ export function LoginScreen() {
       <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        bounces={false}
+        alwaysBounceVertical={false}
+        overScrollMode="never"
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         bottomOffset={LOGIN_KEYBOARD_BOTTOM_OFFSET}
@@ -139,31 +154,25 @@ export function LoginScreen() {
           </View>
 
           <View style={styles.inputWrap}>
-            <Pressable
-              style={styles.countryBtn}
-              onPress={hapticSoftTap}
-              accessibilityRole="button"
-              accessibilityLabel="Country code India plus 91"
-            >
-              <Text style={styles.flag}>🇮🇳</Text>
-              <Text style={styles.countryCode}>+91</Text>
-              <AppSymbol
-                name="chevron.down"
-                size={11}
-                tintColor={colors.textSecondary}
-              />
-            </Pressable>
+            <CountryCodePickerButton
+              country={country}
+              onSelect={(nextCountry) => {
+                setCountry(nextCountry);
+                setPhone(sanitizePhoneInput(phone, nextCountry));
+                if (error) setError(null);
+              }}
+            />
             <View style={styles.inputDivider} />
             <TextInput
               value={phone}
               onChangeText={(value) => {
-                setPhone(sanitizeIndianPhoneInput(value));
+                setPhone(sanitizePhoneInput(value, country));
                 if (error) setError(null);
               }}
               placeholder="Mobile number"
               placeholderTextColor={colors.textTertiary}
               keyboardType="number-pad"
-              maxLength={10}
+              maxLength={phoneMaxLength}
               style={styles.input}
               accessibilityLabel="Mobile number"
               {...formTextInputProps}
@@ -175,8 +184,7 @@ export function LoginScreen() {
           <AuthContinueButton
             label="Continue"
             onPress={handleContinue}
-            disabled={!canContinue}
-            loading={loading}
+            disabled={!canContinue || busy}
             showTrailingIcon
             inlineArrow
             tone="brand"
@@ -215,22 +223,28 @@ export function LoginScreen() {
               </Text>
             </View>
 
-            <Text style={styles.legal}>
-              By continuing, you agree to our{' '}
-              <Text
-                style={styles.legalLink}
+            <View style={styles.legalRow}>
+              <Text style={styles.legal}>By continuing, you agree to our </Text>
+              <Pressable
                 onPress={() => router.push('/terms')}
+                hitSlop={6}
+                android_ripple={{ color: 'transparent' }}
+                accessibilityRole="link"
+                accessibilityLabel="Terms of Service"
               >
-                Terms of Service
-              </Text>{' '}
-              and{' '}
-              <Text
-                style={styles.legalLink}
+                <Text style={styles.legalLink}>Terms of Service</Text>
+              </Pressable>
+              <Text style={styles.legal}> and </Text>
+              <Pressable
                 onPress={() => router.push('/privacy')}
+                hitSlop={6}
+                android_ripple={{ color: 'transparent' }}
+                accessibilityRole="link"
+                accessibilityLabel="Privacy Policy"
               >
-                Privacy Policy.
-              </Text>
-            </Text>
+                <Text style={styles.legalLink}>Privacy Policy.</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </KeyboardAwareScrollView>
@@ -341,22 +355,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundElevated,
     boxShadow: '0 4px 18px rgba(28, 28, 30, 0.03)',
   },
-  countryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xxs,
-    paddingRight: spacing.sm,
-  },
-  flag: {
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  countryCode: {
-    fontFamily: fonts.poppinsSemibold,
-    fontSize: 16,
-    lineHeight: 20,
-    color: colors.onboardingTitle,
-  },
   inputDivider: {
     width: StyleSheet.hairlineWidth,
     alignSelf: 'stretch',
@@ -441,6 +439,13 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: colors.textSecondary,
   },
+  legalRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+  },
   legal: {
     fontFamily: fonts.poppinsRegular,
     fontSize: 11,
@@ -450,6 +455,8 @@ const styles = StyleSheet.create({
   },
   legalLink: {
     fontFamily: fonts.poppinsSemibold,
+    fontSize: 11,
+    lineHeight: 16,
     color: colors.brandGreenDark,
   },
 });

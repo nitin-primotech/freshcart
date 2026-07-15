@@ -58,7 +58,8 @@
             "imageWidth": 260
           }
         }
-      ]
+      ],
+      "expo-maps"
     ],
     "experiments": {
       "typedRoutes": true,

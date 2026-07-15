@@ -1,5 +1,5 @@
-import { LocationSearchScreen } from '@/features/auth/components/location-search-screen';
+import { LocationSelectionScreen } from '@/features/location/components/location-selection-screen';
 
 export default function LocationRoute() {
-  return <LocationSearchScreen />;
+  return <LocationSelectionScreen />;
 }

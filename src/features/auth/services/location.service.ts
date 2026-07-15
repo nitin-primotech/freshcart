@@ -1,5 +1,9 @@
+import * as Location from 'expo-location';
+
 import locations from '@/features/auth/mocks/locations.json';
 import type { LocationSuggestion } from '@/features/auth/types/location.types';
+import { LOCATION_COORDINATES } from '@/features/location/constants/location.constants';
+import { enrichSuggestionCoordinates } from '@/features/location/utils/location-helpers';
 
 const ALL_LOCATIONS = locations as LocationSuggestion[];
 
@@ -112,18 +116,26 @@ export function getLocationSuggestions(
   if (!trimmed) {
     return POPULAR_LOCATION_IDS.map(
       (id) => ALL_LOCATIONS.find((loc) => loc.id === id)!,
-    ).filter(Boolean);
+    )
+      .filter(Boolean)
+      .map(enrichSuggestionCoordinates);
   }
 
   return ALL_LOCATIONS.filter(
     (location) => scoreLocation(location, trimmed) > 0,
   )
     .sort((a, b) => scoreLocation(b, trimmed) - scoreLocation(a, trimmed))
-    .slice(0, limit);
+    .slice(0, limit)
+    .map(enrichSuggestionCoordinates);
 }
 
-export function getCurrentLocationSuggestion(): LocationSuggestion {
-  return (
+export function getLocationById(id: string): LocationSuggestion | undefined {
+  const match = ALL_LOCATIONS.find((location) => location.id === id);
+  return match ? enrichSuggestionCoordinates(match) : undefined;
+}
+
+function getFallbackCurrentLocation(): LocationSuggestion {
+  return enrichSuggestionCoordinates(
     ALL_LOCATIONS.find((loc) => loc.id === 'moh-sec-71') ?? {
       id: 'current-location',
       title: 'Sector 71',
@@ -131,6 +143,85 @@ export function getCurrentLocationSuggestion(): LocationSuggestion {
       line1: 'Sector 71',
       line2: 'SAS Nagar, Mohali, Punjab, India',
       city: 'mohali',
-    }
+    },
   );
+}
+
+function findNearestKnownLocation(
+  latitude: number,
+  longitude: number,
+): LocationSuggestion | undefined {
+  let nearest: LocationSuggestion | undefined;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  for (const location of ALL_LOCATIONS) {
+    const coordinates = LOCATION_COORDINATES[location.id];
+    if (!coordinates) continue;
+
+    const distance =
+      (coordinates.latitude - latitude) ** 2 +
+      (coordinates.longitude - longitude) ** 2;
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = location;
+    }
+  }
+
+  if (nearestDistance > 0.25) return undefined;
+  return nearest ? enrichSuggestionCoordinates(nearest) : undefined;
+}
+
+export async function requestLocationPermission(): Promise<boolean> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  return status === Location.PermissionStatus.GRANTED;
+}
+
+export async function getCurrentLocationSuggestion(): Promise<LocationSuggestion> {
+  const granted = await requestLocationPermission();
+  if (!granted) return getFallbackCurrentLocation();
+
+  try {
+    const position = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    const { latitude, longitude } = position.coords;
+    const nearby = findNearestKnownLocation(latitude, longitude);
+    if (nearby) {
+      return {
+        ...nearby,
+        coordinates: { latitude, longitude },
+      };
+    }
+
+    const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
+    if (place) {
+      const title =
+        place.name || place.street || place.district || 'Current location';
+      const subtitle = [place.city, place.region, place.country]
+        .filter(Boolean)
+        .join(', ');
+      const city =
+        place.city?.toLowerCase().includes('noida') ||
+        place.district?.toLowerCase().includes('noida')
+          ? 'noida'
+          : place.city?.toLowerCase().includes('delhi') ||
+              place.region?.toLowerCase().includes('delhi')
+            ? 'delhi'
+            : 'mohali';
+
+      return {
+        id: 'current-location',
+        title,
+        subtitle,
+        line1: place.street || title,
+        line2: subtitle || 'Current location',
+        city,
+        coordinates: { latitude, longitude },
+      };
+    }
+  } catch {
+    // Fall back to mock data when GPS or geocoding fails.
+  }
+
+  return getFallbackCurrentLocation();
 }

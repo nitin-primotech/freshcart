@@ -349,14 +349,7 @@ export function OnboardingScreen() {
         <Animated.View
           pointerEvents="none"
           style={[styles.trustRow, trustStyle]}
-        >
-          <AppSymbol
-            name="checkmark.circle.fill"
-            size={14}
-            tintColor={colors.brandGreen}
-          />
-          <Text style={styles.trustText}>Secure • Fast • Reliable</Text>
-        </Animated.View>
+        ></Animated.View>
       </View>
     </View>
   );
@@ -434,16 +427,18 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: spacing.xl,
-    gap: spacing.md,
+    gap: spacing.sm,
     zIndex: 2,
   },
   actionsSlot: {
     height: 56,
     justifyContent: 'center',
+    marginTop: spacing.sm,
   },
   actionsLayer: {
     ...StyleSheet.absoluteFill,
     justifyContent: 'center',
+    marginTop: spacing.sm,
   },
   dots: {
     flexDirection: 'row',

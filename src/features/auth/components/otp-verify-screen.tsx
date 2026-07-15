@@ -16,10 +16,12 @@ import type { OtpDigitStatus } from '@/features/auth/components/verification-cod
 import { useAnimatedShake } from '@/features/auth/components/verification-code/use-animated-shake';
 import { VerificationCode } from '@/features/auth/components/verification-code/verification-code';
 import {
-  formatIndianPhoneDisplay,
-  isValidIndianMobile,
-  sanitizeIndianPhoneInput,
-} from '@/features/auth/utils/format-indian-phone';
+  formatDialCode,
+  formatPhoneDisplay,
+  isValidPhoneNumber,
+  phoneCountryFromParams,
+  sanitizePhoneInput,
+} from '@/features/auth/utils/phone-number';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { AuthKeyboardWrapper } from '@/shared/components/auth-keyboard-wrapper';
@@ -47,8 +49,17 @@ function formatCountdown(seconds: number): string {
 export function OtpVerifyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { phone: phoneParam } = useLocalSearchParams<{ phone: string }>();
-  const phone = sanitizeIndianPhoneInput(phoneParam ?? '');
+  const {
+    phone: phoneParam,
+    countryCode,
+    callingCode,
+  } = useLocalSearchParams<{
+    phone: string;
+    countryCode?: string;
+    callingCode?: string;
+  }>();
+  const phoneCountry = phoneCountryFromParams(countryCode, callingCode);
+  const phone = sanitizePhoneInput(phoneParam ?? '', phoneCountry);
 
   const [code, setCode] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,10 +75,10 @@ export function OtpVerifyScreen() {
   const canResend = secondsLeft <= 0 && !resending;
 
   useEffect(() => {
-    if (!isValidIndianMobile(phone)) {
+    if (!isValidPhoneNumber(phone, phoneCountry)) {
       router.replace('/login');
     }
-  }, [phone, router]);
+  }, [phone, phoneCountry, router]);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -95,7 +106,7 @@ export function OtpVerifyScreen() {
   }, [verificationStatus]);
 
   const completeSignIn = useCallback(async () => {
-    if (!isValidIndianMobile(phone) || loading) return;
+    if (!isValidPhoneNumber(phone, phoneCountry) || loading) return;
 
     verificationStatus.value = 'correct';
     setLoading(true);
@@ -113,7 +124,15 @@ export function OtpVerifyScreen() {
       resetCode();
       setLoading(false);
     }
-  }, [loading, phone, resetCode, router, shake, verificationStatus]);
+  }, [
+    loading,
+    phone,
+    phoneCountry,
+    resetCode,
+    router,
+    shake,
+    verificationStatus,
+  ]);
 
   function handleVerifyPress() {
     if (!canVerify) return;
@@ -146,7 +165,7 @@ export function OtpVerifyScreen() {
     router.back();
   }
 
-  if (!isValidIndianMobile(phone)) {
+  if (!isValidPhoneNumber(phone, phoneCountry)) {
     return null;
   }
 
@@ -162,6 +181,9 @@ export function OtpVerifyScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          bounces={false}
+          alwaysBounceVertical={false}
+          overScrollMode="never"
           contentContainerStyle={[
             styles.content,
             { paddingBottom: insets.bottom + spacing.xl },
@@ -177,7 +199,8 @@ export function OtpVerifyScreen() {
             </Text>
             <View style={styles.phoneRow}>
               <Text style={styles.phone}>
-                +91 {formatIndianPhoneDisplay(phone)}
+                {formatDialCode(phoneCountry.callingCode)}{' '}
+                {formatPhoneDisplay(phone, phoneCountry)}
               </Text>
               <Pressable
                 onPress={handleEditPhone}
