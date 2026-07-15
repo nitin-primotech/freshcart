@@ -35,7 +35,11 @@ import { AppSymbol } from '@/shared/components/app-symbol';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
-import { selectUserPhone, useAuthStore } from '@/store/auth.store';
+import {
+  selectSession,
+  selectUserPhone,
+  useAuthStore,
+} from '@/store/auth.store';
 import {
   addToCart,
   cartLineKey,
@@ -77,6 +81,7 @@ export function CheckoutScreen() {
   const savedAddress = useAppStore(selectAddress);
   const userName = useAppStore(selectUserName);
   const userPhone = useAuthStore(selectUserPhone);
+  const session = useAuthStore(selectSession);
   const isPlacing = useOrdersStore(selectIsPlacing);
   const merchantReady = useMerchantStore(selectMerchantReady);
   const merchantIsOnline = useMerchantStore(selectMerchantIsOnline);
@@ -151,8 +156,9 @@ export function CheckoutScreen() {
       await openFoodRushCheckout({
         amount: total,
         prefill: {
-          name: userName,
-          contact: userPhone,
+          name: userName || session?.displayName || undefined,
+          contact: userPhone || undefined,
+          email: session?.email || undefined,
         },
         description: `FreshCart order from ${restaurant.restaurantName}`,
       });
@@ -166,9 +172,9 @@ export function CheckoutScreen() {
         restaurantId: restaurant.restaurantId,
         restaurantName: restaurant.restaurantName,
         restaurantLogo: '',
-        customerId: userPhone ?? undefined,
-        customerName: userName ?? undefined,
-        customerPhone: userPhone ?? undefined,
+        customerId: session?.uid ?? userPhone ?? undefined,
+        customerName: userName || session?.displayName || undefined,
+        customerPhone: userPhone || session?.email || session?.uid || undefined,
       });
       clearCart();
       router.replace('/order-success');

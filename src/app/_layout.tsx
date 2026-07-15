@@ -17,8 +17,8 @@ import { preloadAppHaptics } from '@/shared/haptics/feedback';
 import { hydrateAppProfile } from '@/store/app.store';
 import {
   hydrateAuthState,
+  selectCustomerKey,
   selectIsAuthenticated,
-  selectUserPhone,
   useAuthStore,
 } from '@/store/auth.store';
 import { startCatalogSync, stopCatalogSync } from '@/store/catalog.store';
@@ -31,7 +31,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded] = useFonts(fontAssets);
   const segments = useSegments();
-  const userPhone = useAuthStore(selectUserPhone);
+  const customerKey = useAuthStore(selectCustomerKey);
   const isAuthenticated = useAuthStore(selectIsAuthenticated);
   const [showCartChrome, setShowCartChrome] = useState(false);
   const onLogin = segments[0] === 'login';
@@ -68,11 +68,11 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    startOrdersSync(isAuthenticated ? userPhone : null);
+    startOrdersSync(isAuthenticated ? customerKey : null);
     return () => {
       stopOrdersSync();
     };
-  }, [isAuthenticated, userPhone]);
+  }, [isAuthenticated, customerKey]);
 
   useEffect(() => {
     if (loaded) {

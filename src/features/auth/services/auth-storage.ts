@@ -27,8 +27,9 @@ export async function getStoredSession(): Promise<AuthSession | null> {
 export function isSessionValid(
   session: AuthSession | null,
 ): session is AuthSession {
-  if (!session?.token || !session.phone) return false;
-  return session.expiresAt > Date.now();
+  if (!session?.token) return false;
+  if (session.expiresAt <= Date.now()) return false;
+  return Boolean(session.phone || session.uid);
 }
 
 export async function saveSession(session: AuthSession): Promise<void> {
@@ -59,6 +60,17 @@ export function createPhoneSession(phoneDigits: string): AuthSession {
   return {
     token: `demo-${phoneDigits}`,
     phone: `+91${phoneDigits}`,
+    provider: 'phone',
     expiresAt: Date.now() + SESSION_TTL_MS,
   };
+}
+
+export function getSessionCustomerKey(
+  session: AuthSession | null,
+): string | null {
+  if (!session) return null;
+  const phone = session.phone?.trim();
+  if (phone) return phone;
+  const uid = session.uid?.trim();
+  return uid || null;
 }

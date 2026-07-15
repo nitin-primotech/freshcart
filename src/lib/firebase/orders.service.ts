@@ -32,16 +32,16 @@ function stripUndefined<T extends Record<string, unknown>>(value: T): T {
 }
 
 export function subscribeToCustomerOrders(
-  customerPhone: string,
+  customerKey: string,
   callback: (orders: FirestoreOrder[]) => void,
 ): () => void {
   const db = getFirestoreDb();
-  if (!db || !customerPhone.trim()) {
+  if (!db || !customerKey.trim()) {
     callback([]);
     return () => {};
   }
 
-  const normalizedPhone = customerPhone.trim();
+  const normalizedKey = customerKey.trim();
 
   return onSnapshot(
     query(
@@ -56,7 +56,11 @@ export function subscribeToCustomerOrders(
           return isFirestoreOrder(candidate) ? candidate : null;
         })
         .filter((order): order is FirestoreOrder => order !== null)
-        .filter((order) => order.customerPhone === normalizedPhone);
+        .filter(
+          (order) =>
+            order.customerPhone === normalizedKey ||
+            order.customerId === normalizedKey,
+        );
       callback(orders);
     },
     (error) => {

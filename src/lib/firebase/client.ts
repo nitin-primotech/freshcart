@@ -1,5 +1,13 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { type FirebaseApp, getApps, initializeApp } from 'firebase/app';
+import {
+  type Auth,
+  getAuth,
+  initializeAuth,
+  type Persistence,
+} from 'firebase/auth';
 import { type Firestore, getFirestore } from 'firebase/firestore';
+
 import { DEFAULT_FIRESTORE_DATABASE_ID } from '@/lib/firebase/collections';
 
 const firebaseConfig = {
@@ -12,6 +20,7 @@ const firebaseConfig = {
 };
 
 let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
 let db: Firestore | null = null;
 let initAttempted = false;
 
@@ -26,6 +35,31 @@ function getDatabaseId(): string {
   );
 }
 
+/**
+ * Firebase's web typings omit RN persistence; the RN entrypoint exports it.
+ * Metro resolves `firebase/auth` to the react-native build at runtime.
+ */
+function getReactNativeAuthPersistence(): Persistence {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const authModule = require('firebase/auth') as {
+    getReactNativePersistence?: (storage: typeof AsyncStorage) => Persistence;
+  };
+  if (typeof authModule.getReactNativePersistence !== 'function') {
+    throw new Error('React Native Auth persistence is unavailable');
+  }
+  return authModule.getReactNativePersistence(AsyncStorage);
+}
+
+function initAuth(firebaseApp: FirebaseApp): Auth {
+  try {
+    return initializeAuth(firebaseApp, {
+      persistence: getReactNativeAuthPersistence(),
+    });
+  } catch {
+    return getAuth(firebaseApp);
+  }
+}
+
 export function getFirebaseApp(): FirebaseApp | null {
   if (!isFirebaseConfigured()) {
     return null;
@@ -38,10 +72,12 @@ export function getFirebaseApp(): FirebaseApp | null {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     db = getFirestore(app, getDatabaseId());
+    auth = initAuth(app);
     return app;
   } catch (error) {
     console.error('[Firebase] initialization failed:', error);
     app = null;
+    auth = null;
     db = null;
     return null;
   }
@@ -50,4 +86,9 @@ export function getFirebaseApp(): FirebaseApp | null {
 export function getFirestoreDb(): Firestore | null {
   getFirebaseApp();
   return db;
+}
+
+export function getFirebaseAuth(): Auth | null {
+  getFirebaseApp();
+  return auth;
 }

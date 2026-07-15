@@ -7,10 +7,13 @@ export {
 export {
   clearAuthState,
   hydrateAuthState,
+  selectCustomerKey,
+  selectDisplayName,
   selectHydrationStatus,
   selectIsAuthenticated,
   selectSession,
   selectUserPhone,
+  signInWithGoogle,
   signInWithPhone,
   useAuthStore,
 } from './auth.store';

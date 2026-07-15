@@ -17,7 +17,11 @@ import { FreshCartLogo } from '@/shared/components/freshcart-logo';
 import { GoogleGIcon } from '@/shared/components/google-g-icon';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { formTextInputProps } from '@/shared/utils/keyboard';
-import { signInWithPhone } from '@/store/auth.store';
+import {
+  GoogleSignInCancelledError,
+  mapGoogleSignInError,
+  signInWithGoogle,
+} from '@/store/auth.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -35,9 +39,11 @@ export function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const digits = sanitizeIndianPhoneInput(phone);
   const canContinue = isValidIndianMobile(digits);
+  const busy = loading || googleLoading;
 
   const systemBottom =
     insets.bottom > 0
@@ -47,7 +53,7 @@ export function LoginScreen() {
         : spacing.md;
 
   function handleContinue() {
-    if (!canContinue || loading) return;
+    if (!canContinue || busy) return;
     setError(null);
     router.push({
       pathname: '/verify',
@@ -57,15 +63,22 @@ export function LoginScreen() {
 
   async function handleGoogleSignIn() {
     hapticSoftTap();
-    setLoading(true);
+    if (busy) return;
+    setError(null);
+    setGoogleLoading(true);
     try {
-      await signInWithPhone('9876543210');
+      await signInWithGoogle();
       if (router.canGoBack()) {
         router.dismissAll();
       }
       router.replace('/(tabs)');
+    } catch (err) {
+      if (err instanceof GoogleSignInCancelledError) {
+        return;
+      }
+      setError(mapGoogleSignInError(err));
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   }
 
@@ -178,12 +191,14 @@ export function LoginScreen() {
           <Pressable
             style={styles.googleBtn}
             onPress={handleGoogleSignIn}
-            disabled={loading}
+            disabled={busy}
             accessibilityRole="button"
             accessibilityLabel="Continue with Google"
           >
             <GoogleGIcon size={20} />
-            <Text style={styles.googleLabel}>Continue with Google</Text>
+            <Text style={styles.googleLabel}>
+              {googleLoading ? 'Signing in…' : 'Continue with Google'}
+            </Text>
           </Pressable>
 
           <View style={styles.footerBlock}>

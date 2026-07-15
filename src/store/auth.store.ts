@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import {
   clearStoredSession,
   createPhoneSession,
+  getSessionCustomerKey,
   getStoredSession,
   isSessionValid,
   saveSession,
@@ -11,6 +12,14 @@ import type {
   AuthHydrationStatus,
   AuthSession,
 } from '@/features/auth/types/auth.types';
+import {
+  GoogleSignInCancelledError,
+  mapGoogleSignInError,
+  sessionFromFirebaseUser,
+  signInWithGoogleFirebase,
+  signOutFirebaseAuth,
+  subscribeToFirebaseAuth,
+} from '@/lib/firebase/google-auth';
 
 type AuthState = {
   hydrationStatus: AuthHydrationStatus;
@@ -32,15 +41,40 @@ export async function hydrateAuthState() {
       session: stored,
       isAuthenticated: true,
     });
-    return;
+  } else {
+    if (stored) {
+      await clearStoredSession();
+    }
+    useAuthStore.setState({
+      hydrationStatus: 'ready',
+      session: null,
+      isAuthenticated: false,
+    });
   }
-  if (stored) {
-    await clearStoredSession();
-  }
-  useAuthStore.setState({
-    hydrationStatus: 'ready',
-    session: null,
-    isAuthenticated: false,
+
+  subscribeToFirebaseAuth((user) => {
+    void (async () => {
+      if (!user) {
+        const current = useAuthStore.getState().session;
+        if (current?.provider === 'google') {
+          await clearStoredSession();
+          useAuthStore.setState({
+            hydrationStatus: 'ready',
+            session: null,
+            isAuthenticated: false,
+          });
+        }
+        return;
+      }
+
+      const session = await sessionFromFirebaseUser(user);
+      await saveSession(session);
+      useAuthStore.setState({
+        hydrationStatus: 'ready',
+        session,
+        isAuthenticated: true,
+      });
+    })();
   });
 }
 
@@ -58,7 +92,18 @@ export async function signInWithPhone(phoneDigits: string) {
   await setAuthSession(session);
 }
 
+export async function signInWithGoogle(): Promise<AuthSession> {
+  const session = await signInWithGoogleFirebase();
+  await setAuthSession(session);
+  return session;
+}
+
 export async function clearAuthState() {
+  try {
+    await signOutFirebaseAuth();
+  } catch (error) {
+    console.warn('[auth] Firebase sign-out failed', error);
+  }
   await clearStoredSession();
   useAuthStore.setState({
     hydrationStatus: 'ready',
@@ -67,7 +112,13 @@ export async function clearAuthState() {
   });
 }
 
+export { GoogleSignInCancelledError, mapGoogleSignInError };
+
 export const selectHydrationStatus = (s: AuthState) => s.hydrationStatus;
 export const selectIsAuthenticated = (s: AuthState) => s.isAuthenticated;
 export const selectSession = (s: AuthState) => s.session;
-export const selectUserPhone = (s: AuthState) => s.session?.phone ?? null;
+export const selectUserPhone = (s: AuthState) => s.session?.phone || null;
+export const selectCustomerKey = (s: AuthState) =>
+  getSessionCustomerKey(s.session);
+export const selectDisplayName = (s: AuthState) =>
+  s.session?.displayName || s.session?.email || s.session?.phone || null;

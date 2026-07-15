@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "514177519060",
+    "project_id": "foodrush-1c40b",
+    "storage_bucket": "foodrush-1c40b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514177519060:android:a8d8dcfa3c9372628ada41",
+        "android_client_info": {
+          "package_name": "com.dev.primotech.foodRush"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "514177519060-4o5688elkl6f4ni6e3pvm6tkd3h2m2qi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dev.primotech.foodRush",
+            "certificate_hash": "131c78ef1e1006b63c03f31cd0d6c6d3fdf6ea45"
+          }
+        },
+        {
+          "client_id": "514177519060-mu2gqe4ll8h9dal4lebilb9c6tkahpij.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVq-Y0T2N84AwTiPWVvTXwMEmTWpVaY6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514177519060-mu2gqe4ll8h9dal4lebilb9c6tkahpij.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "514177519060-isgcp0ek7fs4047s8fcccf6i2p7ju5t3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dev.primotech.foodRush"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514177519060:android:8dc138d18cdd549a8ada41",
+        "android_client_info": {
+          "package_name": "com.dev.primotech.freshcart"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "514177519060-75mjnuu8cf1usv389bg7u96nt4l49rve.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dev.primotech.freshcart",
+            "certificate_hash": "131c78ef1e1006b63c03f31cd0d6c6d3fdf6ea45"
+          }
+        },
+        {
+          "client_id": "514177519060-mu2gqe4ll8h9dal4lebilb9c6tkahpij.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVq-Y0T2N84AwTiPWVvTXwMEmTWpVaY6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514177519060-mu2gqe4ll8h9dal4lebilb9c6tkahpij.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "514177519060-isgcp0ek7fs4047s8fcccf6i2p7ju5t3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dev.primotech.foodRush"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
