@@ -59,7 +59,15 @@
           }
         }
       ],
-      "expo-maps"
+      "expo-maps",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "dynamic"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
