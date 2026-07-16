@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   loader: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.backgroundMuted,
