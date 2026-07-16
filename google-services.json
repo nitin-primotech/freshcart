@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "514177519060-4o5688elkl6f4ni6e3pvm6tkd3h2m2qi.apps.googleusercontent.com",
+          "client_id": "514177519060-4hdivf8g9ht9tvp60ckpuoi5ram8nqft.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.dev.primotech.foodRush",
-            "certificate_hash": "131c78ef1e1006b63c03f31cd0d6c6d3fdf6ea45"
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
@@ -58,11 +58,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "514177519060-75mjnuu8cf1usv389bg7u96nt4l49rve.apps.googleusercontent.com",
+          "client_id": "514177519060-egh2t0a425desjrfs88ffhs6tlv3dp29.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.dev.primotech.freshcart",
-            "certificate_hash": "131c78ef1e1006b63c03f31cd0d6c6d3fdf6ea45"
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
