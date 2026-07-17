@@ -3,7 +3,6 @@ import type { Href } from 'expo-router';
 import { useRouter } from 'expo-router';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,

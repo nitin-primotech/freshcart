@@ -23,7 +23,7 @@ export function SavedAddressesScreen() {
   const router = useRouter();
   const address = useAppStore(selectAddress);
   const recentLocationIds = useAppStore(selectRecentLocationIds);
-  const favoriteLocationIds = useAppStore(selectFavoriteLocationIds);
+  const _favoriteLocationIds = useAppStore(selectFavoriteLocationIds);
 
   const savedAddresses: SavedAddress[] = [
     {

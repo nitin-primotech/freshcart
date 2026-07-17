@@ -12,6 +12,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { wishlistPath } from '@/features/wishlist/utils/wishlist-path';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import {
@@ -23,18 +25,21 @@ import { colors, shadows } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-const VISIBLE_MS = 1800;
+const VISIBLE_MS = 2200;
 
 export function WishlistSavedToast() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const lastSaved = useWishlistStore(selectLastWishlistSaved);
   const progress = useSharedValue(0);
+  const imageUri = isHttpImageUrl(lastSaved?.image)
+    ? lastSaved?.image
+    : undefined;
 
   function openWishlist() {
     hapticSoftTap();
     clearLastWishlistSaved();
-    router.push('/(tabs)/wishlist');
+    router.push(wishlistPath());
   }
 
   useEffect(() => {
@@ -59,49 +64,65 @@ export function WishlistSavedToast() {
   const toastStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
     transform: [
-      { translateY: (1 - progress.value) * -18 },
-      { scale: 0.94 + progress.value * 0.06 },
+      { translateY: (1 - progress.value) * -14 },
+      { scale: 0.97 + progress.value * 0.03 },
     ],
   }));
 
   if (!lastSaved) return null;
 
   return (
-    <View style={styles.host} pointerEvents="box-none">
-      <Pressable onPress={openWishlist} accessibilityRole="button">
-        <Animated.View
-          style={[
-            styles.toast,
-            shadows.card,
-            toastStyle,
-            { marginTop: insets.top + spacing.sm },
-          ]}
-        >
+    <View
+      style={[styles.host, { paddingTop: insets.top + spacing.sm }]}
+      pointerEvents="box-none"
+    >
+      <Pressable
+        onPress={openWishlist}
+        accessibilityRole="button"
+        accessibilityLabel="View My Wishlist"
+        style={styles.pressable}
+      >
+        <Animated.View style={[styles.toast, shadows.card, toastStyle]}>
           <View style={styles.thumbWrap}>
-            <Image
-              source={{ uri: lastSaved.image }}
-              style={styles.thumb}
-              contentFit="cover"
-            />
+            {imageUri ? (
+              <Image
+                source={{ uri: imageUri }}
+                style={styles.thumb}
+                contentFit="contain"
+                transition={200}
+              />
+            ) : (
+              <View style={styles.thumbFallback}>
+                <AppSymbol
+                  name="heart.fill"
+                  size={18}
+                  tintColor={colors.primary}
+                />
+              </View>
+            )}
             <View style={styles.thumbHeart}>
               <AppSymbol
                 name="heart.fill"
-                size={10}
+                size={9}
                 tintColor={colors.primary}
               />
             </View>
           </View>
+
           <View style={styles.copy}>
             <Text style={styles.title}>Saved to wishlist</Text>
             <Text style={styles.name} numberOfLines={1}>
               {lastSaved.name}
             </Text>
+            <Text style={styles.action}>Tap to view My Wishlist</Text>
           </View>
-          <View style={styles.badge}>
+
+          <View style={styles.chevronWrap}>
             <AppSymbol
-              name="heart.fill"
-              size={14}
-              tintColor={colors.textInverse}
+              name="chevron.right"
+              size={13}
+              tintColor={colors.primary}
+              weight="semibold"
             />
           </View>
         </Animated.View>
@@ -112,18 +133,24 @@ export function WishlistSavedToast() {
 
 const styles = StyleSheet.create({
   host: {
-    ...StyleSheet.absoluteFill,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 220,
-    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  pressable: {
+    width: '100%',
   },
   toast: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    maxWidth: '92%',
+    minHeight: 72,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
-    paddingRight: spacing.md,
     borderRadius: 16,
     borderCurve: 'continuous',
     backgroundColor: colors.backgroundElevated,
@@ -131,24 +158,33 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212, 84, 60, 0.22)',
   },
   thumbWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     borderCurve: 'continuous',
     overflow: 'hidden',
     backgroundColor: colors.backgroundMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   thumb: {
+    width: '88%',
+    height: '88%',
+  },
+  thumbFallback: {
     width: '100%',
     height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.backgroundMuted,
   },
   thumbHeart: {
     position: 'absolute',
-    right: 4,
-    bottom: 4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    right: 3,
+    bottom: 3,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: colors.backgroundElevated,
     alignItems: 'center',
     justifyContent: 'center',
@@ -156,7 +192,7 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
+    gap: 1,
   },
   title: {
     fontFamily: fonts.semibold,
@@ -170,11 +206,18 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: colors.textPrimary,
   },
-  badge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.primary,
+  action: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  chevronWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.successLight,
     alignItems: 'center',
     justifyContent: 'center',
   },

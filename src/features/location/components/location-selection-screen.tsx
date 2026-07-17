@@ -21,7 +21,6 @@ import type {
   LocationSuggestion,
   SavedAddress,
 } from '@/features/auth/types/location.types';
-import { AddAddressBanner } from '@/features/location/components/add-address-banner';
 import { DeliveryMapPreview } from '@/features/location/components/delivery-map-preview';
 import { RecentLocationRow } from '@/features/location/components/recent-location-row';
 import { SavedAddressCard } from '@/features/location/components/saved-address-card';
@@ -320,10 +319,6 @@ export function LocationSelectionScreen() {
                 ))}
               </View>
             </View>
-
-            <AddAddressBanner
-              onPress={() => router.push('/profile/addresses')}
-            />
           </>
         )}
       </KeyboardAwareScrollView>

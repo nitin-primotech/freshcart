@@ -8,13 +8,14 @@ import {
   View,
 } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-
+import type { LifestyleStoreItem } from '@/features/category/constants/categories-hub.constants';
+import { LIFESTYLE_STORE_ITEMS } from '@/features/category/constants/categories-hub.constants';
+import { categoryPath } from '@/features/category/utils/category-path';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
-import { colors } from '@/theme/colors';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-// Vector illustrations for fallback items
 function BooksSvg({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -61,64 +62,26 @@ function JewellerySvg({ size }: { size: number }) {
   );
 }
 
-const LIFESTYLE_ITEMS = [
-  {
-    id: 'spiritual',
-    name: 'Spiritual\nNeeds',
-    bgColor: '#FDF6E2',
-    image: require('@/assets/images/lifestyle_spiritual.png'),
-    href: '/category/cat-fruits-veg' as const,
-  },
-  {
-    id: 'pet',
-    name: 'Pet\nStore',
-    bgColor: '#EDF3E8',
-    image: require('@/assets/images/lifestyle_pet.png'),
-    href: '/category/cat-snacks' as const,
-  },
-  {
-    id: 'fashion',
-    name: 'Fashion\nBasics',
-    bgColor: '#ECEFFD',
-    image: require('@/assets/images/lifestyle_fashion.png'),
-    href: '/category/cat-personal-care' as const,
-  },
-  {
-    id: 'toy',
-    name: 'Toy\nStore',
-    bgColor: '#FDECE7',
-    image: require('@/assets/images/lifestyle_toy.png'),
-    href: '/category/cat-snacks' as const,
-  },
-  {
-    id: 'books',
-    name: 'Book\nStore',
-    bgColor: '#F3F3F3',
-    renderIcon: (size: number) => <BooksSvg size={size} />,
-    href: '/category/cat-cereals' as const,
-  },
-  {
-    id: 'pharma',
-    name: 'Pharma\nStore',
-    bgColor: '#E3F3FD',
-    renderIcon: (size: number) => <PharmaSvg size={size} />,
-    href: '/category/cat-personal-care' as const,
-  },
-  {
-    id: 'gifts',
-    name: 'E-Gifts\nStore',
-    bgColor: '#FEF7D1',
-    renderIcon: (size: number) => <GiftsSvg size={size} />,
-    href: '/category/cat-pantry' as const,
-  },
-  {
-    id: 'jewellery',
-    name: 'Jewellery\nStore',
-    bgColor: '#FCEEF3',
-    renderIcon: (size: number) => <JewellerySvg size={size} />,
-    href: '/category/cat-bakery' as const,
-  },
-];
+function LifestyleIcon({
+  item,
+  size,
+}: {
+  item: LifestyleStoreItem;
+  size: number;
+}) {
+  switch (item.renderIcon) {
+    case 'books':
+      return <BooksSvg size={size} />;
+    case 'pharma':
+      return <PharmaSvg size={size} />;
+    case 'gifts':
+      return <GiftsSvg size={size} />;
+    case 'jewellery':
+      return <JewellerySvg size={size} />;
+    default:
+      return null;
+  }
+}
 
 export function DietLifestyleSection() {
   const router = useRouter();
@@ -131,11 +94,16 @@ export function DietLifestyleSection() {
   const artworkHeight = Math.round(cardHeight * 0.72);
   const iconSize = Math.round(cardWidth * 0.62);
 
+  function openCategory(categoryId: string) {
+    hapticSoftTap();
+    router.push(categoryPath(categoryId));
+  }
+
   return (
     <View style={styles.wrap}>
       <HomeSectionHeader title="Picks for your lifestyle" />
       <View style={styles.grid}>
-        {LIFESTYLE_ITEMS.map((item) => (
+        {LIFESTYLE_STORE_ITEMS.map((item) => (
           <Pressable
             key={item.id}
             style={[
@@ -146,7 +114,7 @@ export function DietLifestyleSection() {
                 backgroundColor: item.bgColor,
               },
             ]}
-            onPress={() => router.push(item.href)}
+            onPress={() => openCategory(item.categoryId)}
             accessibilityRole="button"
             accessibilityLabel={item.name.replace('\n', ' ')}
           >
@@ -169,7 +137,7 @@ export function DietLifestyleSection() {
                 />
               ) : (
                 <View style={styles.iconWrap}>
-                  {item.renderIcon?.(iconSize)}
+                  <LifestyleIcon item={item} size={iconSize} />
                 </View>
               )}
             </View>

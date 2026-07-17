@@ -197,17 +197,21 @@ export function OnboardingScreen() {
       </View>
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
-        <Pressable
-          onPress={() => {
-            hapticSoftTap();
-            finishOnboarding();
-          }}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Skip onboarding"
-        >
-          <Text style={styles.skip}>Skip</Text>
-        </Pressable>
+        {!isLast ? (
+          <Pressable
+            onPress={() => {
+              hapticSoftTap();
+              finishOnboarding();
+            }}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Skip onboarding"
+          >
+            <Text style={styles.skip}>Skip</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.skipPlaceholder} />
+        )}
       </View>
 
       <Animated.FlatList
@@ -378,6 +382,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     color: colors.brandGreen,
+  },
+  skipPlaceholder: {
+    width: 48,
+    height: 20,
   },
   list: {
     flex: 1,

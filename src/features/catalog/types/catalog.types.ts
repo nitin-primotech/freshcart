@@ -102,4 +102,10 @@ export type DeliveryAddress = {
   label: string;
   line1: string;
   line2: string;
+  flatOrHouse?: string;
+  landmark?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
 };

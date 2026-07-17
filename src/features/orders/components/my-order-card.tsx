@@ -82,7 +82,7 @@ export function MyOrderCard({ order }: MyOrderCardProps) {
 
   function handleDetails() {
     hapticSoftTap();
-    router.push({
+    router.navigate({
       pathname: '/order/[id]',
       params: { id: order.id, view: 'details' },
     });
@@ -90,7 +90,7 @@ export function MyOrderCard({ order }: MyOrderCardProps) {
 
   function handleTrack() {
     hapticSoftTap();
-    router.push({
+    router.navigate({
       pathname: '/order/[id]',
       params: { id: order.id, view: 'track' },
     });

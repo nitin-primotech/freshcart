@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import {
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -17,7 +16,6 @@ import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-c
 import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
 import { getProductReviewCount } from '@/features/product/utils/product-review-count';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { ErrorState } from '@/shared/components/error-state';
 import {
   SCREEN_BACK_BUTTON_SIZE,

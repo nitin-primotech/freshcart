@@ -109,6 +109,16 @@ export function clearProfileSavedToast() {
   useAppStore.setState({ profileSavedToken: null });
 }
 
+export function updateDeliveryAddress(patch: Partial<DeliveryAddress>) {
+  const current = useAppStore.getState().address;
+  const next: DeliveryAddress = {
+    ...current,
+    ...patch,
+  };
+  useAppStore.setState({ address: next });
+  void persistProfile();
+}
+
 export function setDeliveryAddressFromSuggestion(
   suggestion: LocationSuggestion,
 ) {

@@ -11,6 +11,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -33,27 +35,26 @@ export function ProductImageGalleryModal({
   const insets = useSafeAreaInsets();
   const stageWidth = Dimensions.get('window').width;
 
+  function handleClose() {
+    hapticSoftTap();
+    onClose();
+  }
+
   return (
     <Modal
       visible={visible}
       animationType="fade"
-      transparent
-      onRequestClose={onClose}
+      transparent={false}
+      presentationStyle="fullScreen"
+      onRequestClose={handleClose}
     >
       <View style={styles.root}>
         <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
-          <Pressable
-            onPress={onClose}
-            style={styles.closeBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Close gallery"
-          >
-            <AppSymbol name="xmark" size={18} tintColor={colors.textPrimary} />
-          </Pressable>
+          <ScreenBackButton onPress={handleClose} />
           <Text style={styles.title} numberOfLines={1}>
             {productName}
           </Text>
-          <View style={styles.closeBtn} />
+          <View style={styles.headerSpacer} />
         </View>
 
         <ScrollView
@@ -77,6 +78,20 @@ export function ProductImageGalleryModal({
             </View>
           ))}
         </ScrollView>
+
+        <View
+          style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}
+        >
+          <Pressable
+            style={styles.closeBtn}
+            onPress={handleClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close gallery"
+          >
+            <AppSymbol name="xmark" size={14} tintColor={colors.textInverse} />
+            <Text style={styles.closeBtnText}>Close</Text>
+          </Pressable>
+        </View>
       </View>
     </Modal>
   );
@@ -90,15 +105,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
+    gap: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.background,
+    zIndex: 2,
   },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+  headerSpacer: {
+    width: 44,
   },
   title: {
     flex: 1,
@@ -112,7 +128,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   slide: {
-    height: '88%',
+    flex: 1,
+    minHeight: '70%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
@@ -120,5 +137,28 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  footer: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  closeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    borderCurve: 'continuous',
+    minHeight: 48,
+  },
+  closeBtnText: {
+    fontFamily: fonts.semibold,
+    fontSize: 15,
+    lineHeight: 19,
+    color: colors.textInverse,
   },
 });

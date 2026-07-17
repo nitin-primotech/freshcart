@@ -2,10 +2,7 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {
-  deriveMrp,
-  formatInr,
-} from '@/features/checkout/utils/format-currency';
+import { formatInr } from '@/features/checkout/utils/format-currency';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
 import { productDetailPath } from '@/features/product/utils/product-path';
 import { isHttpImageUrl } from '@/lib/firebase/category-images';
@@ -20,7 +17,7 @@ import {
   useCartStore,
 } from '@/store/cart.store';
 import { colors } from '@/theme/colors';
-import { radius, spacing } from '@/theme/spacing';
+import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 type TopPicksProductCardProps = {

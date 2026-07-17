@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   Pressable,
   ScrollView,
@@ -26,14 +25,23 @@ import {
   RazorpayUnavailableError,
 } from '@/features/checkout/services/razorpay.service';
 import {
-  deriveDiscountPercent,
+  CHECKOUT_DETAILS_ROUTE,
+  needsCheckoutDetails,
+} from '@/features/checkout/utils/checkout-readiness';
+import {
   deriveMrp,
   formatUsd,
 } from '@/features/checkout/utils/format-currency';
+import { formatDeliveryAddressDisplay } from '@/features/checkout/utils/format-delivery-address';
+import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
+import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
+import { getProductReviewCount } from '@/features/product/utils/product-review-count';
 import { AppFooter } from '@/shared/components/app-footer';
+import { AppInfoModal } from '@/shared/components/app-info-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { MerchantOfflineBanner } from '@/shared/components/merchant-offline-banner';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
+import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { selectAddress, selectUserName, useAppStore } from '@/store/app.store';
 import {
   selectSession,
@@ -41,7 +49,6 @@ import {
   useAuthStore,
 } from '@/store/auth.store';
 import {
-  addToCart,
   cartLineKey,
   clearCart,
   handleCheckoutBack,
@@ -92,12 +99,29 @@ export function CheckoutScreen() {
   const [avoidCalling, setAvoidCalling] = useState(false);
   const [dontRing, setDontRing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [offlineModalVisible, setOfflineModalVisible] = useState(false);
+  const [errorModal, setErrorModal] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
 
   const merchantOffline = merchantReady && !merchantIsOnline;
   const isProcessing = isPlacing;
 
+  useEffect(() => {
+    if (
+      needsCheckoutDetails({
+        userName,
+        address: savedAddress,
+        session,
+      })
+    ) {
+      router.replace(CHECKOUT_DETAILS_ROUTE);
+    }
+  }, [router, userName, savedAddress, session]);
+
   const itemCount = items.reduce((sum, line) => sum + line.quantity, 0);
-  const fullAddress = `${savedAddress.line1}, ${savedAddress.line2}`;
+  const fullAddress = formatDeliveryAddressDisplay(savedAddress);
 
   const freeDelivery = subtotal >= FREE_DELIVERY_THRESHOLD;
   const deliveryFee = items.length > 0 && !freeDelivery ? DELIVERY_FEE : 0;
@@ -121,13 +145,45 @@ export function CheckoutScreen() {
 
   const restaurant = items[0];
 
-  // Get recommended products from catalog not already in cart
-  const recommendedProducts = useMemo(() => {
+  const recommendedDishes = useMemo((): RecommendedDish[] => {
     if (!catalogRestaurant) return [];
-    const allItems = catalogRestaurant.menu.flatMap((sec) => sec.items);
     const cartItemIds = new Set(items.map((line) => line.item.id));
-    return allItems.filter((item) => !cartItemIds.has(item.id)).slice(0, 8);
+    const dishes: RecommendedDish[] = [];
+
+    for (const section of catalogRestaurant.menu) {
+      for (const item of section.items) {
+        if (cartItemIds.has(item.id)) continue;
+        dishes.push({
+          item,
+          restaurantId: catalogRestaurant.id,
+          restaurantName: catalogRestaurant.name,
+          rating: catalogRestaurant.rating,
+          reviewCount: getProductReviewCount(
+            item.id,
+            catalogRestaurant.rating,
+            catalogRestaurant.reviewCount,
+          ),
+        });
+      }
+    }
+
+    dishes.sort((a, b) => {
+      const aPopular = a.item.isPopular ? 1 : 0;
+      const bPopular = b.item.isPopular ? 1 : 0;
+      if (bPopular !== aPopular) return bPopular - aPopular;
+      return b.rating - a.rating;
+    });
+
+    return dishes.slice(0, 8);
   }, [catalogRestaurant, items]);
+
+  const upsellCardWidth = useCarouselItemWidth({
+    visibleCount: 2.35,
+    peek: 0.12,
+    gap: spacing.sm,
+    paddingStart: spacing.md,
+    paddingEnd: spacing.md,
+  });
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -144,10 +200,7 @@ export function CheckoutScreen() {
     if (!restaurant || isProcessing) return;
 
     if (merchantOffline) {
-      Alert.alert(
-        'Store offline',
-        'FreshCart is not accepting orders right now. Please try again later.',
-      );
+      setOfflineModalVisible(true);
       return;
     }
 
@@ -184,16 +237,20 @@ export function CheckoutScreen() {
       }
 
       if (error instanceof RazorpayUnavailableError) {
-        Alert.alert('Razorpay unavailable', error.message);
+        setErrorModal({
+          title: 'Razorpay unavailable',
+          message: error.message,
+        });
         return;
       }
 
-      Alert.alert(
-        'Unable to place order',
-        error instanceof Error
-          ? error.message
-          : 'Please try again in a moment.',
-      );
+      setErrorModal({
+        title: 'Unable to place order',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Please try again in a moment.',
+      });
     }
   }
 
@@ -209,13 +266,6 @@ export function CheckoutScreen() {
   function handleTipSelect(amount: number) {
     hapticSoftTap();
     setTipAmount((prev) => (prev === amount ? 0 : amount));
-  }
-
-  function handleAddRecommended(item: any) {
-    hapticSoftTap();
-    const rId = restaurant?.restaurantId || 'freshcart';
-    const rName = restaurant?.restaurantName || 'FreshCart';
-    addToCart(item, rId, rName);
   }
 
   async function handleShare() {
@@ -434,49 +484,23 @@ export function CheckoutScreen() {
           })}
         </View>
 
-        {/* You Might Also Like Carousel */}
-        {recommendedProducts.length > 0 && (
+        {recommendedDishes.length > 0 && (
           <View style={styles.recommendedSection}>
             <Text style={styles.sectionTitle}>You might also like</Text>
             <ScrollView
               horizontal
+              nestedScrollEnabled
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalScrollContent}
             >
-              {recommendedProducts.map((item) => {
-                const mrp = deriveMrp(item.price);
-                const discount = deriveDiscountPercent(item.price, mrp);
-                return (
-                  <View key={item.id} style={styles.recommendCard}>
-                    <Image
-                      source={{ uri: item.image }}
-                      style={styles.recThumb}
-                    />
-                    <Text style={styles.recName} numberOfLines={2}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.recWeight}>
-                      {item.description || '1 serving'}
-                    </Text>
-                    <View style={styles.recFooter}>
-                      <View>
-                        <Text style={styles.recPrice}>
-                          {formatUsd(item.price)}
-                        </Text>
-                        {discount > 0 && (
-                          <Text style={styles.recMrp}>{formatUsd(mrp)}</Text>
-                        )}
-                      </View>
-                      <Pressable
-                        style={styles.recAddBtn}
-                        onPress={() => handleAddRecommended(item)}
-                      >
-                        <Text style={styles.recAddText}>ADD</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })}
+              {recommendedDishes.map((dish) => (
+                <TopPicksProductCard
+                  key={dish.item.id}
+                  dish={dish}
+                  width={upsellCardWidth}
+                  flush
+                />
+              ))}
             </ScrollView>
           </View>
         )}
@@ -810,6 +834,22 @@ export function CheckoutScreen() {
           </Pressable>
         </View>
       </View>
+
+      <AppInfoModal
+        visible={offlineModalVisible}
+        title="Store offline"
+        message="FreshCart is not accepting orders right now. Please try again later."
+        icon="storefront.fill"
+        onClose={() => setOfflineModalVisible(false)}
+      />
+
+      <AppInfoModal
+        visible={errorModal != null}
+        title={errorModal?.title ?? ''}
+        message={errorModal?.message ?? ''}
+        icon="exclamationmark.triangle.fill"
+        onClose={() => setErrorModal(null)}
+      />
     </View>
   );
 }
@@ -958,72 +998,18 @@ const styles = StyleSheet.create({
   },
   recommendedSection: {
     gap: spacing.xs,
+    marginTop: spacing.xs,
   },
   sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: 14,
     color: colors.textPrimary,
-    paddingLeft: spacing.xs,
+    paddingLeft: spacing.md,
+    marginBottom: spacing.xxs,
   },
   horizontalScrollContent: {
+    paddingHorizontal: spacing.md,
     gap: spacing.sm,
-    paddingHorizontal: spacing.xs,
-  },
-  recommendCard: {
-    width: 130,
-    backgroundColor: colors.backgroundElevated,
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 4,
-  },
-  recThumb: {
-    width: 80,
-    height: 80,
-    alignSelf: 'center',
-    resizeMode: 'contain',
-  },
-  recName: {
-    fontFamily: fonts.semibold,
-    fontSize: 11,
-    color: colors.textPrimary,
-    height: 32,
-  },
-  recWeight: {
-    fontFamily: fonts.regular,
-    fontSize: 9,
-    color: colors.textSecondary,
-  },
-  recFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  recPrice: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    color: colors.textPrimary,
-  },
-  recMrp: {
-    fontFamily: fonts.regular,
-    fontSize: 9,
-    color: colors.textTertiary,
-    textDecorationLine: 'line-through',
-  },
-  recAddBtn: {
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: colors.accent,
-  },
-  recAddText: {
-    fontFamily: fonts.bold,
-    fontSize: 10,
-    color: colors.primary,
   },
   billRow: {
     flexDirection: 'row',

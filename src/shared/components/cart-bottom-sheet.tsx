@@ -12,10 +12,16 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CartItem } from '@/features/catalog/types/catalog.types';
+import {
+  CHECKOUT_DETAILS_ROUTE,
+  needsCheckoutDetails,
+} from '@/features/checkout/utils/checkout-readiness';
 import { formatInr } from '@/features/checkout/utils/format-currency';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { CartLineStepper } from '@/shared/components/cart-line-stepper';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
+import { useAppStore } from '@/store/app.store';
+import { useAuthStore } from '@/store/auth.store';
 import {
   closeCartSheet,
   prepareCheckoutNavigation,
@@ -120,7 +126,18 @@ export function CartBottomSheet() {
 
   function goCheckout() {
     hapticSoftTap();
+    const userName = useAppStore.getState().userName;
+    const address = useAppStore.getState().address;
+    const session = useAuthStore.getState().session;
+
     prepareCheckoutNavigation(pathname);
+
+    if (needsCheckoutDetails({ userName, address, session })) {
+      closeCartSheet();
+      router.push(CHECKOUT_DETAILS_ROUTE);
+      return;
+    }
+
     router.push('/checkout');
   }
 

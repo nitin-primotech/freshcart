@@ -14,8 +14,76 @@ export type TopCategoryBanner = {
   backgroundColor: string;
   accentColor: string;
   image: string;
-  href: Href;
+  categoryId: string;
 };
+
+export type LifestyleStoreItem = {
+  id: string;
+  name: string;
+  bgColor: string;
+  categoryId: string;
+  image?: number;
+  renderIcon?: 'books' | 'pharma' | 'gifts' | 'jewellery';
+};
+
+export const LIFESTYLE_STORE_ITEMS: LifestyleStoreItem[] = [
+  {
+    id: 'spiritual',
+    name: 'Spiritual\nNeeds',
+    bgColor: '#FDF6E2',
+    categoryId: 'cat-flowers',
+    image: require('@/assets/images/lifestyle_spiritual.png'),
+  },
+  {
+    id: 'pet',
+    name: 'Pet\nStore',
+    bgColor: '#EDF3E8',
+    categoryId: 'cat-pet',
+    image: require('@/assets/images/lifestyle_pet.png'),
+  },
+  {
+    id: 'fashion',
+    name: 'Fashion\nBasics',
+    bgColor: '#ECEFFD',
+    categoryId: 'cat-personal-care',
+    image: require('@/assets/images/lifestyle_fashion.png'),
+  },
+  {
+    id: 'toy',
+    name: 'Toy\nStore',
+    bgColor: '#FDECE7',
+    categoryId: 'cat-baby',
+    image: require('@/assets/images/lifestyle_toy.png'),
+  },
+  {
+    id: 'books',
+    name: 'Book\nStore',
+    bgColor: '#F3F3F3',
+    categoryId: 'cat-international',
+    renderIcon: 'books',
+  },
+  {
+    id: 'pharma',
+    name: 'Pharma\nStore',
+    bgColor: '#E3F3FD',
+    categoryId: 'cat-health',
+    renderIcon: 'pharma',
+  },
+  {
+    id: 'gifts',
+    name: 'E-Gifts\nStore',
+    bgColor: '#FEF7D1',
+    categoryId: 'cat-snacks',
+    renderIcon: 'gifts',
+  },
+  {
+    id: 'jewellery',
+    name: 'Jewellery\nStore',
+    bgColor: '#FCEEF3',
+    categoryId: 'cat-personal-care',
+    renderIcon: 'jewellery',
+  },
+];
 
 export const DIET_LIFESTYLE_ITEMS: DietLifestyleItem[] = [
   {
@@ -64,7 +132,7 @@ export const TOP_CATEGORY_BANNERS: TopCategoryBanner[] = [
     backgroundColor: '#E3F2FD',
     accentColor: '#1565C0',
     image: 'https://pngimg.com/uploads/orange_juice/orange_juice_PNG7.png',
-    href: '/category/cat-beverages',
+    categoryId: 'cat-beverages',
   },
   {
     id: 'banner-bbq',
@@ -73,7 +141,7 @@ export const TOP_CATEGORY_BANNERS: TopCategoryBanner[] = [
     backgroundColor: '#FFF3E0',
     accentColor: '#E65100',
     image: 'https://pngimg.com/uploads/meat/meat_PNG13111.png',
-    href: '/category/cat-meat-seafood',
+    categoryId: 'cat-meat-seafood',
   },
   {
     id: 'banner-school',
@@ -82,6 +150,6 @@ export const TOP_CATEGORY_BANNERS: TopCategoryBanner[] = [
     backgroundColor: '#F3E5F5',
     accentColor: '#6A1B9A',
     image: 'https://pngimg.com/uploads/potato_chips/potato_chips_PNG6.png',
-    href: '/category/cat-snacks',
+    categoryId: 'cat-snacks',
   },
 ];

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Category } from '@/features/catalog/types/catalog.types';
+import { categoryPath } from '@/features/category/utils/category-path';
 import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
@@ -24,7 +25,7 @@ export function CategoryGridTile({ category, width }: CategoryGridTileProps) {
   return (
     <Pressable
       style={[styles.tile, { width }]}
-      onPress={() => router.push(`/category/${category.id}`)}
+      onPress={() => router.push(categoryPath(category.id))}
       accessibilityRole="button"
       accessibilityLabel={`Browse ${category.name}`}
     >

@@ -99,13 +99,20 @@ export default function RootLayout() {
       segments[0] === 'onboarding' ||
       !segments[0];
 
+    const isPublicRoute =
+      isAuthRoute || segments[0] === 'terms' || segments[0] === 'privacy';
+
     if (isAuthenticated && isAuthRoute) {
       // Clear the stack and direct authenticated user to tabs
       if (router.canGoBack()) {
         router.dismissAll();
       }
       router.replace('/(tabs)');
-    } else if (!isAuthenticated && !isAuthRoute && segments[0] !== undefined) {
+    } else if (
+      !isAuthenticated &&
+      !isPublicRoute &&
+      segments[0] !== undefined
+    ) {
       // Redirect unauthenticated user trying to access app pages to login
       router.replace('/login');
     }
@@ -234,13 +241,6 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
-            name="wishlist"
-            options={{
-              headerShown: false,
-              animation: 'slide_from_right',
-            }}
-          />
-          <Stack.Screen
             name="search"
             options={{
               headerShown: false,
@@ -257,8 +257,7 @@ export default function RootLayout() {
           <Stack.Screen
             name="checkout"
             options={{
-              headerShown: true,
-              title: 'Checkout',
+              headerShown: false,
               animation: 'slide_from_right',
             }}
           />

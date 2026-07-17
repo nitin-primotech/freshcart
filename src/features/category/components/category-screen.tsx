@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import {
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -20,7 +19,6 @@ import { HomeSectionHeader } from '@/features/home/components/home-section-heade
 import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-card';
 import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { EmptyState } from '@/shared/components/empty-state';
 import { ErrorState } from '@/shared/components/error-state';
 import {

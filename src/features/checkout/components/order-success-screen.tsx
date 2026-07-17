@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { strings } from '@/constants/strings';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
 import { selectActiveOrder, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';

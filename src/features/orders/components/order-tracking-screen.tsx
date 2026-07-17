@@ -1,8 +1,7 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -34,6 +33,7 @@ import {
   DEFAULT_DELIVERY_COORDS,
   RESTAURANT_COORDS,
 } from '@/lib/firebase/order-mapper';
+import { AppChoiceModal } from '@/shared/components/app-choice-modal';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ScreenBackButton } from '@/shared/components/screen-back-button';
@@ -50,7 +50,7 @@ function OrderSummaryCard({
 }: {
   order: Order;
   showDetails: boolean;
-  onToggleDetails: () => void;
+  onToggleDetails?: () => void;
 }) {
   const statusUi = TRACKING_STATUS_BADGE[order.status];
   const heroImage = order.items[0]?.item.image ?? order.restaurantLogo;
@@ -113,16 +113,28 @@ function OrderSummaryCard({
         </View>
         <Pressable
           onPress={onToggleDetails}
-          style={styles.viewDetailsBtn}
-          accessibilityRole="button"
+          style={[
+            styles.viewDetailsBtn,
+            !onToggleDetails && styles.viewDetailsBtnStatic,
+          ]}
+          disabled={!onToggleDetails}
+          accessibilityRole={onToggleDetails ? 'button' : 'text'}
           accessibilityLabel="View order details"
         >
-          <Text style={styles.viewDetailsText}>View details</Text>
-          <AppSymbol
-            name={showDetails ? 'chevron.up' : 'chevron.right'}
-            size={11}
-            tintColor={colors.primary}
-          />
+          <Text style={styles.viewDetailsText}>
+            {onToggleDetails
+              ? showDetails
+                ? 'Hide details'
+                : 'View details'
+              : 'Order summary'}
+          </Text>
+          {onToggleDetails ? (
+            <AppSymbol
+              name={showDetails ? 'chevron.up' : 'chevron.right'}
+              size={11}
+              tintColor={colors.primary}
+            />
+          ) : null}
         </Pressable>
       </View>
 
@@ -213,8 +225,13 @@ export function OrderTrackingScreen() {
   const { id, view } = useLocalSearchParams<{ id: string; view?: string }>();
   const orders = useOrdersStore(selectOrders);
   const order = id ? findOrderById(orders, id) : undefined;
-  const isDetailsView = view === 'details';
+  const viewParam = useMemo(
+    () => (Array.isArray(view) ? view[0] : view),
+    [view],
+  );
+  const isDetailsView = viewParam === 'details';
   const [showDetails, setShowDetails] = useState(isDetailsView);
+  const [contactModalVisible, setContactModalVisible] = useState(false);
 
   useEffect(() => {
     setShowDetails(isDetailsView);
@@ -246,21 +263,21 @@ export function OrderTrackingScreen() {
 
   function handleContactSupport() {
     hapticSoftTap();
-    Alert.alert('Contact support', 'How would you like to reach us?', [
-      {
-        text: 'Call',
-        onPress: () => void Linking.openURL(`tel:${SUPPORT_PHONE}`),
-      },
-      {
-        text: 'Email',
-        onPress: () => void Linking.openURL(`mailto:${SUPPORT_EMAIL}`),
-      },
-      {
-        text: 'Help center',
-        onPress: () => router.push('/profile/support'),
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    setContactModalVisible(true);
+  }
+
+  function handleContactChoice(optionId: string) {
+    if (optionId === 'call') {
+      void Linking.openURL(`tel:${SUPPORT_PHONE}`);
+      return;
+    }
+    if (optionId === 'email') {
+      void Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
+      return;
+    }
+    if (optionId === 'help') {
+      router.push('/profile/support');
+    }
   }
 
   function handleChangeAddress() {
@@ -313,14 +330,18 @@ export function OrderTrackingScreen() {
       >
         <OrderSummaryCard
           order={order}
-          showDetails={showDetails}
-          onToggleDetails={() => {
-            hapticSoftTap();
-            setShowDetails((prev) => !prev);
-          }}
+          showDetails={isDetailsView ? true : showDetails}
+          onToggleDetails={
+            isDetailsView
+              ? undefined
+              : () => {
+                  hapticSoftTap();
+                  setShowDetails((prev) => !prev);
+                }
+          }
         />
 
-        {showLiveMap ? (
+        {!isDetailsView && showLiveMap ? (
           <RiderLiveMap
             deliveryCoords={deliveryCoords}
             riderCoords={riderCoords}
@@ -328,20 +349,24 @@ export function OrderTrackingScreen() {
           />
         ) : null}
 
-        <Text style={styles.sectionTitle}>Order Status</Text>
-        <View style={styles.timelineCard}>
-          <OrderTrackingTimeline
-            status={order.status}
-            timestamps={{
-              createdAt: order.createdAt,
-              prepStartedAt: order.prepStartedAt,
-              prepTime: order.prepTime,
-              updatedAt: order.updatedAt,
-            }}
-          />
-        </View>
+        {!isDetailsView ? (
+          <>
+            <Text style={styles.sectionTitle}>Order Status</Text>
+            <View style={styles.timelineCard}>
+              <OrderTrackingTimeline
+                status={order.status}
+                timestamps={{
+                  createdAt: order.createdAt,
+                  prepStartedAt: order.prepStartedAt,
+                  prepTime: order.prepTime,
+                  updatedAt: order.updatedAt,
+                }}
+              />
+            </View>
+          </>
+        ) : null}
 
-        {showPartner && order.rider ? (
+        {!isDetailsView && showPartner && order.rider ? (
           <DeliveryPartnerCard rider={order.rider} />
         ) : null}
 
@@ -399,6 +424,20 @@ export function OrderTrackingScreen() {
           </View>
         </Pressable>
       </ScrollView>
+
+      <AppChoiceModal
+        visible={contactModalVisible}
+        title="Contact support"
+        message="How would you like to reach us?"
+        icon="headphones"
+        options={[
+          { id: 'call', label: 'Call' },
+          { id: 'email', label: 'Email' },
+          { id: 'help', label: 'Help center' },
+        ]}
+        onSelect={handleContactChoice}
+        onClose={() => setContactModalVisible(false)}
+      />
     </View>
   );
 }
@@ -551,6 +590,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 13,
     color: colors.textSecondary,
+  },
+  viewDetailsBtnStatic: {
+    opacity: 1,
   },
   viewDetailsBtn: {
     flexDirection: 'row',

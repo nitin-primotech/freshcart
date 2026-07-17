@@ -3,8 +3,10 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { TOP_CATEGORY_BANNERS } from '@/features/category/constants/categories-hub.constants';
+import { categoryPath } from '@/features/category/utils/category-path';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { colors } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
@@ -36,7 +38,10 @@ export function TopCategoryBannersSection() {
               styles.card,
               { width: cardWidth, backgroundColor: banner.backgroundColor },
             ]}
-            onPress={() => router.push(banner.href)}
+            onPress={() => {
+              hapticSoftTap();
+              router.push(categoryPath(banner.categoryId));
+            }}
             accessibilityRole="button"
             accessibilityLabel={`${banner.title}. ${banner.subtitle}`}
           >

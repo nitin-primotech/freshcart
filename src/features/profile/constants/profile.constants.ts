@@ -1,4 +1,5 @@
 import type { OrderTabId } from '@/features/orders/constants/orders.constants';
+import { WISHLIST_ROUTE } from '@/features/wishlist/utils/wishlist-path';
 
 export type ProfileOrderShortcut = {
   id: OrderTabId;
@@ -66,7 +67,7 @@ export const PROFILE_ACCOUNT_ITEMS: ProfileLinkItem[] = [
     id: 'wishlist',
     title: 'My Wishlist',
     icon: 'heart.fill',
-    href: '/(tabs)/wishlist',
+    href: WISHLIST_ROUTE,
   },
   {
     id: 'addresses',

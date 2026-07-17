@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   Share,
@@ -38,6 +37,8 @@ import {
 } from '@/features/product/utils/product-delivery';
 import { getProductGalleryImages } from '@/features/product/utils/product-gallery';
 import { getProductReviewCount } from '@/features/product/utils/product-review-count';
+import { AppChoiceModal } from '@/shared/components/app-choice-modal';
+import { AppInfoModal } from '@/shared/components/app-info-modal';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ScreenBackButton } from '@/shared/components/screen-back-button';
@@ -82,6 +83,9 @@ export function ProductDetailScreen() {
   const [selectedWeightId, setSelectedWeightId] = useState('w1');
   const [deliveryMinutes, setDeliveryMinutes] = useState<number | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
+  const [weightHelpVisible, setWeightHelpVisible] = useState(false);
+  const [nutritionVisible, setNutritionVisible] = useState(false);
 
   const itemPrice = data?.item.price ?? 0;
   const itemCalories = data?.item.calories;
@@ -178,37 +182,21 @@ export function ProductDetailScreen() {
 
   function handleChangeDelivery() {
     hapticSoftTap();
-    Alert.alert('Delivery time', 'Choose an instant delivery slot', [
-      {
-        text: '12 min',
-        onPress: () => setDeliveryMinutes(12),
-      },
-      {
-        text: '15 min',
-        onPress: () => setDeliveryMinutes(15),
-      },
-      {
-        text: '20 min',
-        onPress: () => setDeliveryMinutes(20),
-      },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    setDeliveryModalVisible(true);
   }
 
   function handleWeightHelp() {
     hapticSoftTap();
-    Alert.alert(
-      'How much do I need?',
-      'For 1–2 servings, choose 250g. For a family of 3–4, 500g or 1 lb works well. Larger packs offer better value for weekly stock-ups.',
-    );
+    setWeightHelpVisible(true);
   }
 
   function handleNutritionExpand() {
     hapticSoftTap();
-    Alert.alert(
-      'Nutrition (per 100g)',
-      nutritionFacts.map((fact) => `${fact.label}: ${fact.value}`).join('\n'),
-    );
+    setNutritionVisible(true);
+  }
+
+  function handleDeliveryChoice(optionId: string) {
+    setDeliveryMinutes(Number(optionId));
   }
 
   return (
@@ -401,6 +389,38 @@ export function ProductDetailScreen() {
         images={galleryImages}
         productName={item.name}
         onClose={() => setGalleryOpen(false)}
+      />
+
+      <AppChoiceModal
+        visible={deliveryModalVisible}
+        title="Delivery time"
+        message="Choose an instant delivery slot"
+        icon="clock.fill"
+        options={[
+          { id: '12', label: '12 min' },
+          { id: '15', label: '15 min' },
+          { id: '20', label: '20 min' },
+        ]}
+        onSelect={handleDeliveryChoice}
+        onClose={() => setDeliveryModalVisible(false)}
+      />
+
+      <AppInfoModal
+        visible={weightHelpVisible}
+        title="How much do I need?"
+        message="For 1–2 servings, choose 250g. For a family of 3–4, 500g or 1 lb works well. Larger packs offer better value for weekly stock-ups."
+        icon="questionmark.circle.fill"
+        onClose={() => setWeightHelpVisible(false)}
+      />
+
+      <AppInfoModal
+        visible={nutritionVisible}
+        title="Nutrition (per 100g)"
+        message={nutritionFacts
+          .map((fact) => `${fact.label}: ${fact.value}`)
+          .join('\n')}
+        icon="leaf.fill"
+        onClose={() => setNutritionVisible(false)}
       />
     </View>
   );

@@ -1,5 +1,7 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppChoiceModal } from '@/shared/components/app-choice-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors } from '@/theme/colors';
@@ -19,49 +21,68 @@ export function WishlistSummaryCard({
   onManagePress,
   onClearPress,
 }: WishlistSummaryCardProps) {
+  const [manageModalVisible, setManageModalVisible] = useState(false);
+
   function handleManage() {
     hapticSoftTap();
     if (isManaging) {
       onManagePress();
       return;
     }
-    Alert.alert('Manage wishlist', 'Choose an action', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Edit list', onPress: onManagePress },
-      {
-        text: 'Clear all',
-        style: 'destructive',
-        onPress: onClearPress,
-      },
-    ]);
+    setManageModalVisible(true);
+  }
+
+  function handleManageChoice(optionId: string) {
+    if (optionId === 'edit') {
+      onManagePress();
+      return;
+    }
+    if (optionId === 'clear') {
+      onClearPress();
+    }
   }
 
   return (
-    <View style={styles.card}>
-      <View style={styles.iconWrap}>
-        <AppSymbol name="heart.fill" size={18} tintColor={colors.primary} />
-      </View>
-      <View style={styles.copy}>
-        <Text style={styles.count}>
-          {totalCount} {totalCount === 1 ? 'Item' : 'Items'}
-        </Text>
-        <Text style={styles.subtitle}>Saved dishes</Text>
-      </View>
-      <Pressable
-        onPress={handleManage}
-        style={[styles.manageBtn, isManaging && styles.manageBtnActive]}
-        accessibilityRole="button"
-        accessibilityLabel={
-          isManaging ? 'Done managing wishlist' : 'Manage wishlist'
-        }
-      >
-        <Text
-          style={[styles.manageText, isManaging && styles.manageTextActive]}
+    <>
+      <View style={styles.card}>
+        <View style={styles.iconWrap}>
+          <AppSymbol name="heart.fill" size={18} tintColor={colors.primary} />
+        </View>
+        <View style={styles.copy}>
+          <Text style={styles.count}>
+            {totalCount} {totalCount === 1 ? 'Item' : 'Items'}
+          </Text>
+          <Text style={styles.subtitle}>Saved dishes</Text>
+        </View>
+        <Pressable
+          onPress={handleManage}
+          style={[styles.manageBtn, isManaging && styles.manageBtnActive]}
+          accessibilityRole="button"
+          accessibilityLabel={
+            isManaging ? 'Done managing wishlist' : 'Manage wishlist'
+          }
         >
-          {isManaging ? 'Done' : 'Manage'}
-        </Text>
-      </Pressable>
-    </View>
+          <Text
+            style={[styles.manageText, isManaging && styles.manageTextActive]}
+          >
+            {isManaging ? 'Done' : 'Manage'}
+          </Text>
+        </Pressable>
+      </View>
+
+      <AppChoiceModal
+        visible={manageModalVisible}
+        title="Manage wishlist"
+        message="Choose an action"
+        icon="heart.fill"
+        options={[
+          { id: 'edit', label: 'Edit list' },
+          { id: 'clear', label: 'Clear all', destructive: true },
+        ]}
+        onSelect={handleManageChoice}
+        onClose={() => setManageModalVisible(false)}
+      />
+    </>
   );
 }
 

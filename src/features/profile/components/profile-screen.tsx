@@ -21,6 +21,7 @@ import {
   profileNameLabel,
   resolveProfileIdentity,
 } from '@/features/profile/utils/profile-identity';
+import { wishlistPath } from '@/features/wishlist/utils/wishlist-path';
 import { AppConfirmModal } from '@/shared/components/app-confirm-modal';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
@@ -125,6 +126,11 @@ export function ProfileScreen() {
     });
   }
 
+  function openWishlist() {
+    hapticSoftTap();
+    router.push(wishlistPath());
+  }
+
   function openRoute(href?: string) {
     if (!href) return;
     hapticSoftTap();
@@ -132,6 +138,10 @@ export function ProfileScreen() {
   }
 
   function handleMenuPress(item: ProfileLinkItem) {
+    if (item.id === 'wishlist') {
+      openWishlist();
+      return;
+    }
     if (item.href) {
       openRoute(item.href);
     }

@@ -10,7 +10,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppStatusBar } from '@/shared/components/app-status-bar';
-import { AppSymbol } from '@/shared/components/app-symbol';
 import { ScreenBackButton } from '@/shared/components/screen-back-button';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { selectDarkModeEnabled, useAppStore } from '@/store/app.store';

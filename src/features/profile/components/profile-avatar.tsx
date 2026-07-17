@@ -3,7 +3,6 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 type ProfileAvatarProps = {
