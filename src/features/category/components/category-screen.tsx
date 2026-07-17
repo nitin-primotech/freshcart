@@ -14,10 +14,11 @@ import {
   fetchCategoryById,
   fetchRestaurantsByCategory,
 } from '@/features/catalog/api/catalog.api';
+import { CategoryHeroBanner } from '@/features/category/components/category-hero-banner';
+import { CategoryProductGrid } from '@/features/category/components/category-product-grid';
 import { getCategoryDishes } from '@/features/category/utils/get-category-dishes';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-card';
-import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { EmptyState } from '@/shared/components/empty-state';
 import { ErrorState } from '@/shared/components/error-state';
@@ -27,7 +28,6 @@ import {
 } from '@/shared/components/screen-back-button';
 import { Shimmer } from '@/shared/components/shimmer';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
-import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
 import { useSimulatedQuery } from '@/shared/hooks/use-simulated-query';
 import { colors } from '@/theme/colors';
 import { screenTopPadding } from '@/theme/screen-edge';
@@ -67,14 +67,8 @@ export function CategoryScreen() {
 
   const restaurants = restaurantsQuery.data ?? [];
   const dishes = getCategoryDishes(restaurants, categoryId);
-  const categoryName = categoryQuery.data?.name ?? 'Category';
-
-  const dishCardWidth = useCarouselItemWidth({
-    visibleCount: 2.2,
-    peek: 0.03,
-    gap: spacing.md,
-    paddingEnd: spacing.md,
-  });
+  const category = categoryQuery.data;
+  const categoryName = category?.name ?? 'Category';
 
   const restaurantCardWidth = width - spacing.md * 2;
 
@@ -123,25 +117,26 @@ export function CategoryScreen() {
 
         {!isLoading && !hasError ? (
           <>
+            {category ? (
+              <CategoryHeroBanner
+                category={category}
+                productCount={dishes.length}
+              />
+            ) : null}
+
             {dishes.length > 0 ? (
               <View style={styles.section}>
-                <HomeSectionHeader title={`Popular ${categoryName}`} />
-                <ScrollView
-                  horizontal
-                  nestedScrollEnabled
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.dishRow}
-                >
-                  {dishes.map((dish) => (
-                    <TopPicksProductCard
-                      key={`${dish.restaurantId}-${dish.item.id}`}
-                      dish={dish}
-                      width={dishCardWidth}
-                    />
-                  ))}
-                </ScrollView>
+                <HomeSectionHeader title="All products" />
+                <CategoryProductGrid dishes={dishes} />
               </View>
-            ) : null}
+            ) : (
+              <View style={styles.section}>
+                <EmptyState
+                  title="No products yet"
+                  message={`We could not find products for ${categoryName.toLowerCase()} right now.`}
+                />
+              </View>
+            )}
 
             <View style={styles.section}>
               <HomeSectionHeader title="Restaurants" />
@@ -200,10 +195,6 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: spacing.md,
-  },
-  dishRow: {
-    paddingLeft: spacing.md,
-    paddingRight: spacing.xs,
   },
   restaurantList: {
     paddingHorizontal: spacing.md,

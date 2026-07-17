@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { formatInr } from '@/features/checkout/utils/format-currency';
@@ -9,6 +10,10 @@ import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ProductCardAddAction } from '@/shared/components/product-card-add-action';
 import { WishlistToggle } from '@/shared/components/wishlist-toggle';
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  resolveProductImageUri,
+} from '@/shared/constants/product-images';
 import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   addToCart,
@@ -33,7 +38,12 @@ export function TopPicksProductCard({
 }: TopPicksProductCardProps) {
   const { item, restaurantId, restaurantName, rating, reviewCount } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
-  const imageUri = isHttpImageUrl(item.image) ? item.image : undefined;
+  const [imageFailed, setImageFailed] = useState(false);
+  const resolvedImage = resolveProductImageUri(item.image);
+  const imageUri =
+    !imageFailed && isHttpImageUrl(resolvedImage)
+      ? resolvedImage
+      : DEFAULT_PRODUCT_IMAGE;
 
   // Dynamic badge calculation (only show badges selectively so not all products have them)
   const hasSeed = item.id.length % 3 === 0;
@@ -87,16 +97,13 @@ export function TopPicksProductCard({
 
         <Link href={productDetailPath(restaurantId, item.id)} asChild>
           <Pressable style={styles.imagePressable} accessibilityRole="link">
-            {imageUri ? (
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.image}
-                contentFit="contain"
-                transition={200}
-              />
-            ) : (
-              <View style={styles.imageFallback} />
-            )}
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.image}
+              contentFit="contain"
+              transition={200}
+              onError={() => setImageFailed(true)}
+            />
           </Pressable>
         </Link>
 

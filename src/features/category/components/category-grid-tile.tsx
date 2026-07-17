@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Category } from '@/features/catalog/types/catalog.types';
 import { categoryPath } from '@/features/category/utils/category-path';
 import { resolveCategoryImageUri } from '@/lib/firebase/category-images';
+import { AppSymbol } from '@/shared/components/app-symbol';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -37,7 +38,13 @@ export function CategoryGridTile({ category, width }: CategoryGridTileProps) {
             contentFit="contain"
             transition={200}
           />
-        ) : null}
+        ) : (
+          <AppSymbol
+            name={category.icon}
+            size={28}
+            tintColor={colors.primary}
+          />
+        )}
       </View>
       <Text style={styles.label} numberOfLines={2}>
         {category.name}

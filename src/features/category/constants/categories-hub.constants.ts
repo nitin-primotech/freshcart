@@ -131,7 +131,7 @@ export const TOP_CATEGORY_BANNERS: TopCategoryBanner[] = [
     subtitle: 'Stay cool this summer',
     backgroundColor: '#E3F2FD',
     accentColor: '#1565C0',
-    image: 'https://pngimg.com/uploads/orange_juice/orange_juice_PNG7.png',
+    image: 'https://pngimg.com/uploads/juice/juice_PNG7152.png',
     categoryId: 'cat-beverages',
   },
   {
@@ -140,7 +140,7 @@ export const TOP_CATEGORY_BANNERS: TopCategoryBanner[] = [
     subtitle: 'Everything for your BBQ',
     backgroundColor: '#FFF3E0',
     accentColor: '#E65100',
-    image: 'https://pngimg.com/uploads/meat/meat_PNG13111.png',
+    image: 'https://pngimg.com/uploads/meat/meat_PNG98313.png',
     categoryId: 'cat-meat-seafood',
   },
   {

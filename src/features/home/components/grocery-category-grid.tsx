@@ -88,7 +88,6 @@ export function GroceryCategoryGrid({
 
           const cat = entry.cat!;
           const imageUri = resolveCategoryImageUri(cat.image);
-          if (!imageUri) return null;
 
           return (
             <Pressable
@@ -109,12 +108,20 @@ export function GroceryCategoryGrid({
                   },
                 ]}
               >
-                <Image
-                  source={{ uri: imageUri }}
-                  style={{ width: imageSize, height: imageSize }}
-                  contentFit="contain"
-                  transition={200}
-                />
+                {imageUri ? (
+                  <Image
+                    source={{ uri: imageUri }}
+                    style={{ width: imageSize, height: imageSize }}
+                    contentFit="contain"
+                    transition={200}
+                  />
+                ) : (
+                  <AppSymbol
+                    name={cat.icon}
+                    size={22}
+                    tintColor={colors.primary}
+                  />
+                )}
               </View>
               <Text style={styles.label} numberOfLines={2}>
                 {cat.name}

@@ -8,6 +8,11 @@ import type {
   Restaurant,
 } from '@/features/catalog/types/catalog.types';
 import {
+  findCategoryCatalogItem,
+  getCategoryCatalogSectionTitle,
+  getCategoryIdForCatalogItem,
+} from '@/features/category/constants/category-product-catalog';
+import {
   DEFAULT_MERCHANT_RESTAURANT_ID,
   isFirebaseConfigured,
 } from '@/lib/firebase';
@@ -143,6 +148,19 @@ function findMenuItemInMockCatalog(
         return { restaurant, item, sectionTitle: section.title };
       }
     }
+  }
+
+  const catalogItem = findCategoryCatalogItem(itemId);
+  if (catalogItem) {
+    const restaurant =
+      mockRestaurants.find((entry) => entry.id === restaurantId) ??
+      mockRestaurants[0];
+    const categoryId = getCategoryIdForCatalogItem(itemId);
+    return {
+      restaurant,
+      item: catalogItem,
+      sectionTitle: getCategoryCatalogSectionTitle(categoryId ?? ''),
+    };
   }
 
   return null;

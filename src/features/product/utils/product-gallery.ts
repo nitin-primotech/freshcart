@@ -1,18 +1,20 @@
 import type { Restaurant } from '@/features/catalog/types/catalog.types';
 
 import { isHttpImageUrl } from '@/lib/firebase/category-images';
+import { resolveProductImageUri } from '@/shared/constants/product-images';
 
 export function getProductGalleryImages(
   primaryImage: string,
   _relatedImages: string[] = [],
   limit = 3,
 ): string[] {
-  if (!isHttpImageUrl(primaryImage)) {
+  const resolved = resolveProductImageUri(primaryImage);
+  if (!resolved || !isHttpImageUrl(resolved)) {
     return [];
   }
 
   // Single product image only — avoid fake multi-image carousel dots.
-  return [primaryImage];
+  return [resolved];
 }
 
 export function getRelatedProductImageUrls(

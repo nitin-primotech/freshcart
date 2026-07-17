@@ -15,7 +15,7 @@
     "id": "cat-meat-seafood",
     "name": "Meat, Poultry & Seafood",
     "icon": "fish.fill",
-    "image": "https://pngimg.com/uploads/meat/meat_PNG13111.png"
+    "image": "https://pngimg.com/uploads/meat/meat_PNG98313.png"
   },
   {
     "id": "cat-bakery",
@@ -63,7 +63,7 @@
     "id": "cat-baby",
     "name": "Baby Care",
     "icon": "figure.and.child.holdinghands",
-    "image": "https://pngimg.com/uploads/milk/milk_PNG12716.png"
+    "image": "https://pngimg.com/uploads/teddy_bear/teddy_bear_PNG45.png"
   },
   {
     "id": "cat-personal-care",
@@ -75,25 +75,25 @@
     "id": "cat-household",
     "name": "Household Essentials",
     "icon": "house.fill",
-    "image": "https://pngimg.com/uploads/olive_oil/olive_oil_PNG9.png"
+    "image": "https://pngimg.com/uploads/toilet_paper/toilet_paper_PNG99648.png"
   },
   {
     "id": "cat-cleaning",
     "name": "Cleaning Supplies",
     "icon": "sparkles",
-    "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png"
+    "image": "https://pngimg.com/uploads/water_bottle/water_bottle_PNG10144.png"
   },
   {
     "id": "cat-health",
     "name": "Health & Wellness",
     "icon": "cross.case.fill",
-    "image": "https://pngimg.com/uploads/orange/orange_PNG789.png"
+    "image": "https://pngimg.com/uploads/pills/pills_PNG16491.png"
   },
   {
     "id": "cat-organic",
     "name": "Organic & Natural",
     "icon": "leaf.circle.fill",
-    "image": "https://pngimg.com/uploads/broccoli/broccoli_PNG10.png"
+    "image": "https://pngimg.com/uploads/broccoli/broccoli_PNG2820.png"
   },
   {
     "id": "cat-gluten-free",
@@ -105,7 +105,7 @@
     "id": "cat-pet",
     "name": "Pet Supplies",
     "icon": "pawprint.fill",
-    "image": "https://pngimg.com/uploads/cheese/cheese_PNG25332.png"
+    "image": "https://pngimg.com/uploads/fish/fish_PNG25176.png"
   },
   {
     "id": "cat-international",
@@ -117,6 +117,6 @@
     "id": "cat-flowers",
     "name": "Flowers & Plants",
     "icon": "camera.macro",
-    "image": "https://pngimg.com/uploads/broccoli/broccoli_PNG10.png"
+    "image": "https://pngimg.com/uploads/rose/rose_PNG658.png"
   }
 ]
