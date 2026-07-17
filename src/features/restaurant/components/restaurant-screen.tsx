@@ -15,9 +15,14 @@ import { fetchRestaurantById } from '@/features/catalog/api/catalog.api';
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { RestaurantTileCard } from '@/features/home/components/restaurant-tile-card';
 import { TopPicksProductCard } from '@/features/home/components/top-picks-product-card';
+import { getProductReviewCount } from '@/features/product/utils/product-review-count';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { ErrorState } from '@/shared/components/error-state';
+import {
+  SCREEN_BACK_BUTTON_SIZE,
+  ScreenBackButton,
+} from '@/shared/components/screen-back-button';
 import { Shimmer } from '@/shared/components/shimmer';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { useCarouselItemWidth } from '@/shared/hooks/use-carousel-item-width';
@@ -85,22 +90,11 @@ export function RestaurantScreen() {
       <View
         style={[styles.topBar, { paddingTop: screenTopPadding(insets.top) }]}
       >
-        <Pressable
-          style={styles.backBtn}
-          onPress={onBack}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppSymbol
-            name="chevron.left"
-            size={20}
-            tintColor={colors.textPrimary}
-          />
-        </Pressable>
+        <ScreenBackButton onPress={onBack} />
         <Text style={styles.title} numberOfLines={1}>
           {data.name}
         </Text>
-        <View style={styles.backBtn} />
+        <View style={styles.backSpacer} />
       </View>
 
       <ScrollView
@@ -138,6 +132,11 @@ export function RestaurantScreen() {
                     restaurantId: data.id,
                     restaurantName: data.name,
                     rating: data.rating,
+                    reviewCount: getProductReviewCount(
+                      item.id,
+                      data.rating,
+                      data.reviewCount,
+                    ),
                   }}
                   width={menuCardWidth}
                 />
@@ -164,11 +163,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  backSpacer: {
+    width: SCREEN_BACK_BUTTON_SIZE,
+    height: SCREEN_BACK_BUTTON_SIZE,
   },
   title: {
     flex: 1,

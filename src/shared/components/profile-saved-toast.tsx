@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -30,10 +30,24 @@ export function ProfileSavedToast() {
   const insets = useSafeAreaInsets();
   const profileSavedToken = useAppStore(selectProfileSavedToken);
   const progress = useSharedValue(0);
+  const activeTokenRef = useRef<number | null>(null);
+
+  const finishToast = useCallback(() => {
+    activeTokenRef.current = null;
+    clearProfileSavedToast();
+  }, []);
 
   useEffect(() => {
-    if (!profileSavedToken) return;
+    if (!profileSavedToken) {
+      activeTokenRef.current = null;
+      return;
+    }
 
+    if (activeTokenRef.current === profileSavedToken) {
+      return;
+    }
+
+    activeTokenRef.current = profileSavedToken;
     progress.value = 0;
     progress.value = withSequence(
       withTiming(1, { duration: ENTER_MS, easing: Easing.out(Easing.cubic) }),
@@ -43,12 +57,12 @@ export function ProfileSavedToast() {
         { duration: 280, easing: Easing.in(Easing.cubic) },
         (done) => {
           if (done) {
-            runOnJS(clearProfileSavedToast)();
+            runOnJS(finishToast)();
           }
         },
       ),
     );
-  }, [profileSavedToken, progress]);
+  }, [profileSavedToken, progress, finishToast]);
 
   const toastStyle = useAnimatedStyle(() => ({
     opacity: progress.value,

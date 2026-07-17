@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -12,6 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   clearLastWishlistSaved,
   selectLastWishlistSaved,
@@ -24,9 +26,16 @@ import { fonts } from '@/theme/typography';
 const VISIBLE_MS = 1800;
 
 export function WishlistSavedToast() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const lastSaved = useWishlistStore(selectLastWishlistSaved);
   const progress = useSharedValue(0);
+
+  function openWishlist() {
+    hapticSoftTap();
+    clearLastWishlistSaved();
+    router.push('/(tabs)/wishlist');
+  }
 
   useEffect(() => {
     if (!lastSaved?.key) return;
@@ -58,39 +67,45 @@ export function WishlistSavedToast() {
   if (!lastSaved) return null;
 
   return (
-    <View style={styles.host} pointerEvents="none">
-      <Animated.View
-        style={[
-          styles.toast,
-          shadows.card,
-          toastStyle,
-          { marginTop: insets.top + spacing.sm },
-        ]}
-      >
-        <View style={styles.thumbWrap}>
-          <Image
-            source={{ uri: lastSaved.image }}
-            style={styles.thumb}
-            contentFit="cover"
-          />
-          <View style={styles.thumbHeart}>
-            <AppSymbol name="heart.fill" size={10} tintColor={colors.primary} />
+    <View style={styles.host} pointerEvents="box-none">
+      <Pressable onPress={openWishlist} accessibilityRole="button">
+        <Animated.View
+          style={[
+            styles.toast,
+            shadows.card,
+            toastStyle,
+            { marginTop: insets.top + spacing.sm },
+          ]}
+        >
+          <View style={styles.thumbWrap}>
+            <Image
+              source={{ uri: lastSaved.image }}
+              style={styles.thumb}
+              contentFit="cover"
+            />
+            <View style={styles.thumbHeart}>
+              <AppSymbol
+                name="heart.fill"
+                size={10}
+                tintColor={colors.primary}
+              />
+            </View>
           </View>
-        </View>
-        <View style={styles.copy}>
-          <Text style={styles.title}>Saved to wishlist</Text>
-          <Text style={styles.name} numberOfLines={1}>
-            {lastSaved.name}
-          </Text>
-        </View>
-        <View style={styles.badge}>
-          <AppSymbol
-            name="heart.fill"
-            size={14}
-            tintColor={colors.textInverse}
-          />
-        </View>
-      </Animated.View>
+          <View style={styles.copy}>
+            <Text style={styles.title}>Saved to wishlist</Text>
+            <Text style={styles.name} numberOfLines={1}>
+              {lastSaved.name}
+            </Text>
+          </View>
+          <View style={styles.badge}>
+            <AppSymbol
+              name="heart.fill"
+              size={14}
+              tintColor={colors.textInverse}
+            />
+          </View>
+        </Animated.View>
+      </Pressable>
     </View>
   );
 }

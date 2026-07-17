@@ -6,7 +6,7 @@ import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 
 const FILTERS = [
-  { id: 'off', label: 'MIN ₹100 OFF', accent: true },
+  { id: 'off', label: 'MIN $100 OFF', accent: true },
   { id: 'fast', label: '10 MINS DELIVERY', accent: false },
 ] as const;
 

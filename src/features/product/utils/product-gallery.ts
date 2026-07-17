@@ -4,25 +4,15 @@ import { isHttpImageUrl } from '@/lib/firebase/category-images';
 
 export function getProductGalleryImages(
   primaryImage: string,
-  relatedImages: string[],
+  _relatedImages: string[] = [],
   limit = 3,
 ): string[] {
-  const gallery: string[] = [];
-
-  if (isHttpImageUrl(primaryImage)) {
-    gallery.push(primaryImage);
+  if (!isHttpImageUrl(primaryImage)) {
+    return [];
   }
 
-  for (const image of relatedImages) {
-    if (gallery.length >= limit) {
-      break;
-    }
-    if (isHttpImageUrl(image) && !gallery.includes(image)) {
-      gallery.push(image);
-    }
-  }
-
-  return gallery;
+  // Single product image only — avoid fake multi-image carousel dots.
+  return [primaryImage];
 }
 
 export function getRelatedProductImageUrls(

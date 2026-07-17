@@ -1,25 +1,64 @@
 import { Image } from 'expo-image';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { HomeSectionHeader } from '@/features/home/components/home-section-header';
 import { POPULAR_BRANDS } from '@/features/home/constants/popular-brands';
+import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
-export function PopularBrandsSection() {
+type PopularBrandsSectionProps = {
+  title?: string;
+  cardWidth?: number;
+  logoSize?: number;
+  rowGap?: number;
+};
+
+export function PopularBrandsSection({
+  title = 'Shop by Brands',
+  cardWidth = 64,
+  logoSize = 52,
+  rowGap = spacing.sm,
+}: PopularBrandsSectionProps) {
+  const router = useRouter();
+
+  function openBrand(searchQuery: string) {
+    hapticSoftTap();
+    router.push({
+      pathname: '/search',
+      params: { q: searchQuery },
+    });
+  }
+
   return (
     <View style={styles.wrap}>
-      <HomeSectionHeader title="Shop by Brands" href="/(tabs)/categories" />
+      <HomeSectionHeader title={title} href="/(tabs)/categories" />
       <ScrollView
         horizontal
         nestedScrollEnabled
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
+        contentContainerStyle={[styles.row, { gap: rowGap }]}
       >
         {POPULAR_BRANDS.map((brand) => (
-          <View key={brand.id} style={styles.card}>
-            <View style={styles.logoWrap}>
+          <Pressable
+            key={brand.id}
+            style={[styles.card, { width: cardWidth }]}
+            onPress={() => openBrand(brand.searchQuery)}
+            accessibilityRole="button"
+            accessibilityLabel={`Shop ${brand.name}`}
+          >
+            <View
+              style={[
+                styles.logoWrap,
+                {
+                  width: logoSize,
+                  height: logoSize,
+                  borderRadius: logoSize / 2,
+                },
+              ]}
+            >
               <Image
                 source={brand.image}
                 style={styles.logo}
@@ -30,7 +69,7 @@ export function PopularBrandsSection() {
             <Text style={styles.name} numberOfLines={1}>
               {brand.name}
             </Text>
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
     </View>
@@ -43,17 +82,12 @@ const styles = StyleSheet.create({
   },
   row: {
     paddingHorizontal: spacing.md,
-    gap: spacing.sm,
   },
   card: {
-    width: 64,
     alignItems: 'center',
     gap: 4,
   },
   logoWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
     backgroundColor: colors.backgroundElevated,
     borderWidth: 1,
     borderColor: colors.border,

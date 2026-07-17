@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { strings } from '@/constants/strings';
@@ -7,11 +7,19 @@ import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub
 import { formatProfilePhone } from '@/features/profile/constants/profile.constants';
 import { DELETE_ACCOUNT_IMPACT } from '@/features/profile/constants/profile-hub.constants';
 import { deleteUserAccount } from '@/features/profile/services/delete-account';
+import {
+  profileNameLabel,
+  resolveProfileIdentity,
+} from '@/features/profile/utils/profile-identity';
 import { AppConfirmModal } from '@/shared/components/app-confirm-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { selectUserName, useAppStore } from '@/store/app.store';
-import { selectUserPhone, useAuthStore } from '@/store/auth.store';
+import {
+  selectSession,
+  selectUserPhone,
+  useAuthStore,
+} from '@/store/auth.store';
 import { colors, shadows } from '@/theme/colors';
 import { radius, spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -20,10 +28,15 @@ export function DeleteProfileScreen() {
   const router = useRouter();
   const userName = useAppStore(selectUserName);
   const phone = useAuthStore(selectUserPhone);
+  const session = useAuthStore(selectSession);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const displayName = userName ?? 'Guest User';
+  const identity = useMemo(
+    () => resolveProfileIdentity({ storedName: userName, session }),
+    [userName, session],
+  );
+  const displayName = profileNameLabel(identity);
   const displayPhone = phone ? formatProfilePhone(phone) : 'Not linked';
 
   async function handleDelete() {

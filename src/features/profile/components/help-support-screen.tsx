@@ -1,12 +1,5 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { strings } from '@/constants/strings';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
@@ -17,6 +10,7 @@ import {
   SUPPORT_HOURS,
   SUPPORT_PHONE,
 } from '@/features/profile/constants/profile-hub.constants';
+import { AppInfoModal } from '@/shared/components/app-info-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { colors, shadows } from '@/theme/colors';
@@ -27,6 +21,7 @@ export function HelpSupportScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(
     SUPPORT_FAQS[0]?.id ?? null,
   );
+  const [chatModalVisible, setChatModalVisible] = useState(false);
 
   function toggleFaq(id: string) {
     hapticSoftTap();
@@ -36,10 +31,7 @@ export function HelpSupportScreen() {
   function handleContact(action: 'chat' | 'call' | 'email') {
     hapticSoftTap();
     if (action === 'chat') {
-      Alert.alert(
-        'Live chat',
-        'Our support team will be available in-app soon. For now, call or email us and we will help right away.',
-      );
+      setChatModalVisible(true);
       return;
     }
     if (action === 'call') {
@@ -155,6 +147,14 @@ export function HelpSupportScreen() {
           the order details screen.
         </Text>
       </View>
+
+      <AppInfoModal
+        visible={chatModalVisible}
+        title="Live chat"
+        message="Our support team will be available in-app soon. For now, call or email us and we will help right away."
+        icon="message.fill"
+        onClose={() => setChatModalVisible(false)}
+      />
     </ProfileSubScreenShell>
   );
 }

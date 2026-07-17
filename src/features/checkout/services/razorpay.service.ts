@@ -63,12 +63,13 @@ function formatContact(phone?: string | null): string | undefined {
   return digits.length > 0 ? `+${digits}` : undefined;
 }
 
-function toRazorpayMinorUnits(amountUsd: number): number {
+function toRazorpayMinorUnits(amountMajor: number): number {
   if (RAZORPAY_BRAND.currency === 'INR') {
-    return Math.max(Math.round(amountUsd * USD_TO_INR_RATE * 100), 100);
+    return Math.max(Math.round(amountMajor * USD_TO_INR_RATE * 100), 100);
   }
 
-  return Math.max(Math.round(amountUsd * 100), 100);
+  // USD and other ISO currencies: amount in smallest unit (e.g. cents).
+  return Math.max(Math.round(amountMajor * 100), 100);
 }
 
 function isUserCancelled(error: PaymentErrorData): boolean {

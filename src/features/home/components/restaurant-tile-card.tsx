@@ -25,7 +25,7 @@ export function RestaurantTileCard({
 }: RestaurantTileCardProps) {
   const offer =
     restaurant.offerLabel ??
-    (restaurant.isPromoted ? '40% OFF up to ₹99' : undefined);
+    (restaurant.isPromoted ? '40% OFF up to $99' : undefined);
 
   return (
     <View style={[styles.card, flush && styles.cardFlush, { width }]}>

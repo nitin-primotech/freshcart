@@ -1,6 +1,10 @@
 import { create } from 'zustand';
-
 import type { MenuItem } from '@/features/catalog/types/catalog.types';
+import {
+  clearStoredWishlist,
+  getStoredWishlist,
+  saveWishlist,
+} from '@/features/wishlist/services/wishlist-storage';
 
 export type WishlistProduct = {
   restaurantId: string;
@@ -30,6 +34,15 @@ export function wishlistProductKey(restaurantId: string, itemId: string) {
   return `${restaurantId}:${itemId}`;
 }
 
+export async function hydrateWishlist() {
+  const entries = await getStoredWishlist();
+  useWishlistStore.setState({ entries });
+}
+
+async function persistWishlist(entries: WishlistProduct[]) {
+  await saveWishlist(entries);
+}
+
 export function toggleWishlistProduct(
   item: MenuItem,
   restaurantId: string,
@@ -43,33 +56,37 @@ export function toggleWishlistProduct(
   );
 
   if (exists) {
+    const nextEntries = entries.filter(
+      (entry) =>
+        !(entry.restaurantId === restaurantId && entry.item.id === item.id),
+    );
     useWishlistStore.setState({
-      entries: entries.filter(
-        (entry) =>
-          !(entry.restaurantId === restaurantId && entry.item.id === item.id),
-      ),
+      entries: nextEntries,
       lastSaved: null,
     });
+    void persistWishlist(nextEntries);
     return false;
   }
 
+  const nextEntries = [
+    {
+      restaurantId,
+      restaurantName,
+      rating,
+      item,
+      addedAt: new Date().toISOString(),
+    },
+    ...entries,
+  ];
   useWishlistStore.setState({
-    entries: [
-      {
-        restaurantId,
-        restaurantName,
-        rating,
-        item,
-        addedAt: new Date().toISOString(),
-      },
-      ...entries,
-    ],
+    entries: nextEntries,
     lastSaved: {
       key,
       name: item.name,
       image: item.image,
     },
   });
+  void persistWishlist(nextEntries);
   return true;
 }
 
@@ -78,18 +95,18 @@ export function clearLastWishlistSaved() {
 }
 
 export function removeWishlistEntry(key: string) {
-  useWishlistStore.setState({
-    entries: useWishlistStore
-      .getState()
-      .entries.filter(
-        (entry) =>
-          wishlistProductKey(entry.restaurantId, entry.item.id) !== key,
-      ),
-  });
+  const nextEntries = useWishlistStore
+    .getState()
+    .entries.filter(
+      (entry) => wishlistProductKey(entry.restaurantId, entry.item.id) !== key,
+    );
+  useWishlistStore.setState({ entries: nextEntries });
+  void persistWishlist(nextEntries);
 }
 
 export function clearWishlist() {
   useWishlistStore.setState({ entries: [], lastSaved: null });
+  void clearStoredWishlist();
 }
 
 export const selectWishlistEntries = (s: WishlistState) => s.entries;

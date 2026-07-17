@@ -34,7 +34,7 @@ export function TopPicksProductCard({
   width,
   flush = false,
 }: TopPicksProductCardProps) {
-  const { item, restaurantId, restaurantName, rating } = dish;
+  const { item, restaurantId, restaurantName, rating, reviewCount } = dish;
   const quantity = useCartStore(selectCartLineQuantity(item.id, restaurantId));
   const imageUri = isHttpImageUrl(item.image) ? item.image : undefined;
 
@@ -59,12 +59,12 @@ export function TopPicksProductCard({
       addToCart(item, restaurantId, restaurantName);
       return;
     }
-    updateCartQuantity(item.id, quantity + 1);
+    updateCartQuantity(item.id, quantity + 1, restaurantId);
   }
 
   function handleDecrease() {
     hapticSoftTap();
-    updateCartQuantity(item.id, quantity - 1);
+    updateCartQuantity(item.id, quantity - 1, restaurantId);
   }
 
   // Pseudo-random delivery info based on ID length
@@ -113,13 +113,6 @@ export function TopPicksProductCard({
           accessibilityLabel={`Save ${item.name} to wishlist`}
         />
 
-        {/* Visual gallery pagination dots */}
-        <View style={styles.paginationDots}>
-          <View style={[styles.pagDot, styles.pagDotActive]} />
-          <View style={styles.pagDot} />
-          <View style={styles.pagDot} />
-        </View>
-
         {/* Floating ADD action button overlapping bottom border */}
         <View style={styles.actionContainer}>
           <ProductCardAddAction
@@ -159,9 +152,7 @@ export function TopPicksProductCard({
                   }
                 />
               ))}
-              <Text style={styles.reviewsCount}>
-                {Math.round((rating ?? 4.2) * 110)}
-              </Text>
+              <Text style={styles.reviewsCount}>{reviewCount}</Text>
             </View>
 
             {/* Delivery time and urgent stock warning */}

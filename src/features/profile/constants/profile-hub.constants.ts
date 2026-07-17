@@ -143,6 +143,18 @@ export const SAVED_PAYMENT_METHODS: SavedPaymentMethod[] = [
   },
 ];
 
+export function getPlatformSavedPaymentMethods(): SavedPaymentMethod[] {
+  if (process.env.EXPO_OS === 'ios') {
+    return SAVED_PAYMENT_METHODS;
+  }
+  return SAVED_PAYMENT_METHODS.filter(
+    (method) => method.brandId !== 'applePay',
+  ).map((method) => ({
+    ...method,
+    isDefault: method.brandId === 'visa',
+  }));
+}
+
 export const WALLET_TRANSACTIONS: WalletTransaction[] = [
   {
     id: 'tx-1',
@@ -178,7 +190,7 @@ export const PROFILE_OFFERS: ProfileOffer[] = [
   {
     id: 'offer-1',
     title: 'Flat 20% off',
-    subtitle: 'On orders above ₹299',
+    subtitle: 'On orders above $299',
     code: 'RUSH20',
     gradient: ['#D4543C', '#B8433A'],
     icon: 'tag.fill',
@@ -195,7 +207,7 @@ export const PROFILE_OFFERS: ProfileOffer[] = [
   },
   {
     id: 'offer-3',
-    title: '₹75 off',
+    title: '$75 off',
     subtitle: 'First order of the week',
     code: 'WEEK75',
     gradient: ['#7C5CBF', '#5B3F96'],

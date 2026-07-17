@@ -1,9 +1,17 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import type { Order } from '@/features/catalog/types/catalog.types';
-import { formatUsd } from '@/features/checkout/utils/format-currency';
+import { formatInr } from '@/features/checkout/utils/format-currency';
+import { OrderItemsModal } from '@/features/orders/components/order-items-modal';
 import {
   countOrderItems,
   formatEstimatedWindow,
@@ -27,26 +35,41 @@ type MyOrderCardProps = {
 };
 
 function OrderThumb({ uri, label }: { uri?: string; label: string }) {
-  if (uri && isHttpImageUrl(uri)) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  if (!uri || !isHttpImageUrl(uri) || failed) {
     return (
-      <Image
-        source={{ uri }}
-        style={styles.thumb}
-        contentFit="contain"
-        transition={150}
-      />
+      <View style={styles.thumbFallback} accessibilityLabel={label}>
+        <AppSymbol name="bag.fill" size={16} tintColor={colors.textTertiary} />
+      </View>
     );
   }
 
   return (
-    <View style={styles.thumbFallback} accessibilityLabel={label}>
-      <AppSymbol name="bag.fill" size={16} tintColor={colors.textTertiary} />
+    <View style={styles.thumbWrap}>
+      {!loaded ? (
+        <View style={styles.thumbLoading}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      ) : null}
+      <Image
+        source={{ uri }}
+        style={styles.thumb}
+        contentFit="contain"
+        cachePolicy="memory-disk"
+        recyclingKey={uri}
+        transition={150}
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+      />
     </View>
   );
 }
 
 export function MyOrderCard({ order }: MyOrderCardProps) {
   const router = useRouter();
+  const [itemsModalOpen, setItemsModalOpen] = useState(false);
   const statusUi = ORDER_STATUS_UI[order.status];
   const itemCount = countOrderItems(order.items);
   const visibleItems = order.items.slice(0, MAX_THUMBS);
@@ -59,12 +82,23 @@ export function MyOrderCard({ order }: MyOrderCardProps) {
 
   function handleDetails() {
     hapticSoftTap();
-    router.push(`/order/${order.id}`);
+    router.push({
+      pathname: '/order/[id]',
+      params: { id: order.id, view: 'details' },
+    });
   }
 
   function handleTrack() {
     hapticSoftTap();
-    router.push(`/order/${order.id}`);
+    router.push({
+      pathname: '/order/[id]',
+      params: { id: order.id, view: 'track' },
+    });
+  }
+
+  function handleOverflowPress() {
+    hapticSoftTap();
+    setItemsModalOpen(true);
   }
 
   function handleBuyAgain() {
@@ -77,175 +111,196 @@ export function MyOrderCard({ order }: MyOrderCardProps) {
   }
 
   return (
-    <View style={styles.card}>
-      <View style={styles.topRow}>
-        <Text style={styles.orderId}>{formatOrderId(order.id)}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: statusUi.bg }]}>
-          <AppSymbol
-            name={statusUi.icon}
-            size={11}
-            tintColor={statusUi.color}
-          />
-          <Text style={[styles.statusText, { color: statusUi.color }]}>
-            {statusUi.label}
-          </Text>
-        </View>
-      </View>
-
-      <Text style={styles.dateText}>
-        {formatOrderDateTime(order.createdAt)}
-      </Text>
-
-      <View style={styles.thumbRow}>
-        {visibleItems.map((line) => (
-          <OrderThumb
-            key={`${line.restaurantId}:${line.item.id}`}
-            uri={line.item.image}
-            label={line.item.name}
-          />
-        ))}
-        {overflow > 0 ? (
-          <View style={styles.overflow}>
-            <Text style={styles.overflowText}>+{overflow}</Text>
-            <Text style={styles.overflowSubtext}>more</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <Text style={styles.summary}>
-        {itemCount} {itemCount === 1 ? 'item' : 'items'} •{' '}
-        {formatUsd(order.total)}
-      </Text>
-
-      {isOngoing ? (
-        <View style={styles.deliveryBlock}>
-          <View style={styles.deliveryCopy}>
-            <Text style={styles.deliveryTitle}>Arriving Today</Text>
-            <Text
-              style={[
-                styles.deliveryWindow,
-                isOutForDelivery && styles.deliveryWindowActive,
-              ]}
-            >
-              {formatEstimatedWindow(order.estimatedDelivery, {
-                status: order.status,
-                prepStartedAt: order.prepStartedAt,
-                prepTime: order.prepTime,
-              })}
+    <>
+      <View style={styles.card}>
+        <View style={styles.topRow}>
+          <Text style={styles.orderId}>{formatOrderId(order.id)}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: statusUi.bg }]}>
+            <AppSymbol
+              name={statusUi.icon}
+              size={11}
+              tintColor={statusUi.color}
+            />
+            <Text style={[styles.statusText, { color: statusUi.color }]}>
+              {statusUi.label}
             </Text>
-            {order.rider ? (
-              <Text style={styles.riderName}>{order.rider.name}</Text>
-            ) : null}
           </View>
-          {order.rider ? (
-            <View style={styles.riderAvatarWrap}>
-              {order.rider.avatar && isHttpImageUrl(order.rider.avatar) ? (
-                <Image
-                  source={{ uri: order.rider.avatar }}
-                  style={styles.riderAvatar}
-                  contentFit="cover"
-                />
-              ) : (
-                <View style={styles.riderFallback}>
-                  <AppSymbol
-                    name="person.fill"
-                    size={16}
-                    tintColor={colors.textSecondary}
-                  />
-                </View>
-              )}
-            </View>
+        </View>
+
+        <Text style={styles.dateText}>
+          {formatOrderDateTime(order.createdAt)}
+        </Text>
+
+        <View style={styles.thumbRow}>
+          {visibleItems.map((line) => (
+            <OrderThumb
+              key={`${line.restaurantId}:${line.item.id}`}
+              uri={line.item.image}
+              label={line.item.name}
+            />
+          ))}
+          {overflow > 0 ? (
+            <Pressable
+              style={styles.overflow}
+              onPress={handleOverflowPress}
+              accessibilityRole="button"
+              accessibilityLabel={`View ${overflow} more items`}
+            >
+              <Text style={styles.overflowText}>+{overflow}</Text>
+              <Text style={styles.overflowSubtext}>more</Text>
+            </Pressable>
           ) : null}
         </View>
-      ) : null}
 
-      {isDelivered ? (
-        <View style={styles.deliveredRow}>
-          <Text style={styles.deliveredText}>
-            Delivered {formatOrderDateTime(order.updatedAt)}
-          </Text>
-          <View style={styles.ratingRow}>
-            <AppSymbol name="star.fill" size={11} tintColor={colors.primary} />
-            <Text style={styles.ratingText}>4.8</Text>
-            <Text style={styles.rateLink}>Rate Order</Text>
-          </View>
-        </View>
-      ) : null}
-
-      {isCancelled ? (
-        <Text style={styles.cancelledText}>
-          Cancelled {formatOrderDateTime(order.updatedAt)}
+        <Text style={styles.summary}>
+          {itemCount} {itemCount === 1 ? 'item' : 'items'} •{' '}
+          {formatInr(order.total)}
         </Text>
-      ) : null}
 
-      <View style={[styles.actions, isCancelled && styles.actionsSingle]}>
         {isOngoing ? (
-          <>
-            <Pressable
-              style={styles.outlineBtn}
-              onPress={handleTrack}
-              accessibilityRole="button"
-              accessibilityLabel="Track order"
-            >
-              <Text style={styles.outlineBtnText}>Track Order</Text>
-            </Pressable>
-            <Pressable
-              style={styles.primaryBtn}
-              onPress={handleDetails}
-              accessibilityRole="button"
-              accessibilityLabel="Order details"
-            >
-              <Text style={styles.primaryBtnText}>Order Details</Text>
-              <AppSymbol
-                name="chevron.right"
-                size={11}
-                tintColor={colors.textInverse}
-              />
-            </Pressable>
-          </>
+          <View style={styles.deliveryBlock}>
+            <View style={styles.deliveryCopy}>
+              <Text style={styles.deliveryTitle}>Arriving Today</Text>
+              <Text
+                style={[
+                  styles.deliveryWindow,
+                  isOutForDelivery && styles.deliveryWindowActive,
+                ]}
+              >
+                {formatEstimatedWindow(order.estimatedDelivery, {
+                  status: order.status,
+                  prepStartedAt: order.prepStartedAt,
+                  prepTime: order.prepTime,
+                })}
+              </Text>
+              {order.rider ? (
+                <Text style={styles.riderName}>{order.rider.name}</Text>
+              ) : null}
+            </View>
+            {order.rider ? (
+              <View style={styles.riderAvatarWrap}>
+                {order.rider.avatar && isHttpImageUrl(order.rider.avatar) ? (
+                  <Image
+                    source={{ uri: order.rider.avatar }}
+                    style={styles.riderAvatar}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                  />
+                ) : (
+                  <View style={styles.riderFallback}>
+                    <AppSymbol
+                      name="person.fill"
+                      size={16}
+                      tintColor={colors.textSecondary}
+                    />
+                  </View>
+                )}
+              </View>
+            ) : null}
+          </View>
         ) : null}
 
         {isDelivered ? (
-          <>
+          <View style={styles.deliveredRow}>
+            <Text style={styles.deliveredText}>
+              Delivered {formatOrderDateTime(order.updatedAt)}
+            </Text>
+            <View style={styles.ratingRow}>
+              <AppSymbol
+                name="star.fill"
+                size={11}
+                tintColor={colors.primary}
+              />
+              <Text style={styles.ratingText}>4.8</Text>
+              <Text style={styles.rateLink}>Rate Order</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {isCancelled ? (
+          <Text style={styles.cancelledText}>
+            Cancelled {formatOrderDateTime(order.updatedAt)}
+          </Text>
+        ) : null}
+
+        <View style={[styles.actions, isCancelled && styles.actionsSingle]}>
+          {isOngoing ? (
+            <>
+              <Pressable
+                style={styles.outlineBtn}
+                onPress={handleTrack}
+                accessibilityRole="button"
+                accessibilityLabel="Track order"
+              >
+                <Text style={styles.outlineBtnText}>Track Order</Text>
+              </Pressable>
+              <Pressable
+                style={styles.primaryBtn}
+                onPress={handleDetails}
+                accessibilityRole="button"
+                accessibilityLabel="Order details"
+              >
+                <Text style={styles.primaryBtnText}>Order Details</Text>
+                <AppSymbol
+                  name="chevron.right"
+                  size={11}
+                  tintColor={colors.textInverse}
+                />
+              </Pressable>
+            </>
+          ) : null}
+
+          {isDelivered ? (
+            <>
+              <Pressable
+                style={styles.outlineBtn}
+                onPress={handleBuyAgain}
+                accessibilityRole="button"
+                accessibilityLabel="Buy again"
+              >
+                <AppSymbol name="cart" size={12} tintColor={colors.primary} />
+                <Text style={styles.outlineBtnText}>Buy Again</Text>
+              </Pressable>
+              <Pressable
+                style={styles.primaryBtn}
+                onPress={handleDetails}
+                accessibilityRole="button"
+                accessibilityLabel="Order details"
+              >
+                <Text style={styles.primaryBtnText}>Order Details</Text>
+                <AppSymbol
+                  name="chevron.right"
+                  size={11}
+                  tintColor={colors.textInverse}
+                />
+              </Pressable>
+            </>
+          ) : null}
+
+          {isCancelled ? (
             <Pressable
-              style={styles.outlineBtn}
-              onPress={handleBuyAgain}
-              accessibilityRole="button"
-              accessibilityLabel="Buy again"
-            >
-              <AppSymbol name="cart" size={12} tintColor={colors.primary} />
-              <Text style={styles.outlineBtnText}>Buy Again</Text>
-            </Pressable>
-            <Pressable
-              style={styles.primaryBtn}
+              style={[styles.outlineBtn, styles.outlineBtnFull]}
               onPress={handleDetails}
               accessibilityRole="button"
               accessibilityLabel="Order details"
             >
-              <Text style={styles.primaryBtnText}>Order Details</Text>
-              <AppSymbol
-                name="chevron.right"
-                size={11}
-                tintColor={colors.textInverse}
-              />
+              <Text style={styles.outlineBtnText}>Order Details</Text>
             </Pressable>
-          </>
-        ) : null}
-
-        {isCancelled ? (
-          <Pressable
-            style={[styles.outlineBtn, styles.outlineBtnFull]}
-            onPress={handleDetails}
-            accessibilityRole="button"
-            accessibilityLabel="Order details"
-          >
-            <Text style={styles.outlineBtnText}>Order Details</Text>
-          </Pressable>
-        ) : null}
+          ) : null}
+        </View>
       </View>
-    </View>
+
+      <OrderItemsModal
+        visible={itemsModalOpen}
+        orderId={order.id}
+        items={order.items}
+        onClose={() => setItemsModalOpen(false)}
+      />
+    </>
   );
 }
+
+const THUMB_SIZE = 46;
 
 const styles = StyleSheet.create({
   card: {
@@ -295,18 +350,31 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     marginTop: spacing.xxs,
   },
-  thumb: {
-    width: 46,
-    height: 46,
+  thumbWrap: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
     borderRadius: 10,
     borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgroundMuted,
+    overflow: 'hidden',
+  },
+  thumb: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.backgroundMuted,
+  },
+  thumbLoading: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.backgroundMuted,
+    zIndex: 1,
   },
   thumbFallback: {
-    width: 46,
-    height: 46,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
     borderRadius: 10,
     borderCurve: 'continuous',
     borderWidth: 1,
@@ -316,8 +384,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   overflow: {
-    width: 46,
-    height: 46,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
     borderRadius: 10,
     borderCurve: 'continuous',
     borderWidth: 1,

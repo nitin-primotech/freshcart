@@ -20,37 +20,46 @@ export function SavedAddressCard({
   onEdit,
 }: SavedAddressCardProps) {
   return (
-    <Pressable
-      style={styles.card}
-      onPress={() => {
-        hapticSoftTap();
-        onPress();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`Select ${address.label} address`}
-    >
-      <View style={styles.iconWrap}>
-        <AppSymbol name="house.fill" size={18} tintColor={colors.primary} />
-      </View>
-
-      <View style={styles.body}>
-        <View style={styles.titleRow}>
-          <PremiumText style={styles.title}>{address.label}</PremiumText>
-          {address.isDefault ? (
-            <View style={styles.defaultBadge}>
-              <PremiumText style={styles.defaultBadgeText}>Default</PremiumText>
-            </View>
-          ) : null}
+    <View style={styles.card}>
+      <Pressable
+        style={styles.mainPressable}
+        onPress={() => {
+          hapticSoftTap();
+          onPress();
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`Select ${address.label} address`}
+      >
+        <View style={styles.iconWrap}>
+          <AppSymbol name="house.fill" size={18} tintColor={colors.primary} />
         </View>
-        <PremiumText style={styles.subtitle} numberOfLines={2}>
-          {address.suggestion.line1}, {address.suggestion.line2}
-        </PremiumText>
-      </View>
+
+        <View style={styles.body}>
+          <View style={styles.titleRow}>
+            <PremiumText style={styles.title}>{address.label}</PremiumText>
+            {address.isDefault ? (
+              <View style={styles.defaultBadge}>
+                <PremiumText style={styles.defaultBadgeText}>
+                  Default
+                </PremiumText>
+              </View>
+            ) : null}
+          </View>
+          <PremiumText style={styles.subtitle} numberOfLines={2}>
+            {address.suggestion.line1}, {address.suggestion.line2}
+          </PremiumText>
+        </View>
+
+        <AppSymbol
+          name="chevron.right"
+          size={14}
+          tintColor={colors.textTertiary}
+        />
+      </Pressable>
 
       <Pressable
         style={styles.editButton}
-        onPress={(event) => {
-          event.stopPropagation();
+        onPress={() => {
           hapticSoftTap();
           onEdit();
         }}
@@ -64,13 +73,7 @@ export function SavedAddressCard({
           tintColor={colors.primary}
         />
       </Pressable>
-
-      <AppSymbol
-        name="chevron.right"
-        size={14}
-        tintColor={colors.textTertiary}
-      />
-    </Pressable>
+    </View>
   );
 }
 
@@ -78,14 +81,21 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
     backgroundColor: colors.card,
     borderRadius: radius.md,
     borderCurve: 'continuous',
-    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    overflow: 'hidden',
     ...shadows.soft,
+  },
+  mainPressable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    paddingRight: spacing.xs,
   },
   iconWrap: {
     width: 42,
@@ -125,10 +135,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   editButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.xxs,
   },
 });

@@ -63,16 +63,16 @@ export type ProfileLinkItem = {
 
 export const PROFILE_ACCOUNT_ITEMS: ProfileLinkItem[] = [
   {
-    id: 'personal',
-    title: 'Personal Information',
-    icon: 'person',
-    href: '/profile/edit',
+    id: 'wishlist',
+    title: 'My Wishlist',
+    icon: 'heart.fill',
+    href: '/(tabs)/wishlist',
   },
   {
     id: 'addresses',
     title: 'Addresses',
     icon: 'location.fill',
-    href: '/location',
+    href: '/profile/addresses',
   },
   {
     id: 'payments',
@@ -94,17 +94,6 @@ export const PROFILE_ACCOUNT_ITEMS: ProfileLinkItem[] = [
   },
 ];
 
-export const PROFILE_PREFERENCE_ITEMS: ProfileLinkItem[] = [
-  { id: 'notifications', title: 'Notifications', icon: 'bell.fill' },
-  {
-    id: 'language',
-    title: 'Language',
-    icon: 'globe',
-    trailing: 'English',
-  },
-  { id: 'dark-mode', title: 'Dark Mode', icon: 'moon.fill', toggle: true },
-];
-
 export const PROFILE_SUPPORT_ITEMS: ProfileLinkItem[] = [
   {
     id: 'help',
@@ -122,6 +111,7 @@ export const PROFILE_SUPPORT_ITEMS: ProfileLinkItem[] = [
     id: 'about',
     title: 'About FreshCart',
     icon: 'info.circle.fill',
+    href: '/profile/about',
   },
   {
     id: 'privacy',
@@ -140,14 +130,17 @@ export const PROFILE_SUPPORT_ITEMS: ProfileLinkItem[] = [
 export const PROFILE_AVATAR_URI =
   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop';
 
-export function formatProfilePhone(phone: string | null): string {
-  if (!phone?.trim()) return '+1 (555) 123-4567';
+export function formatProfilePhone(
+  phone: string | null,
+  callingCode = '91',
+): string {
+  if (!phone?.trim()) return `+${callingCode} 98765 43210`;
   const digits = phone.replace(/\D/g, '');
   if (digits.length >= 10) {
     const local = digits.slice(-10);
-    return `+1 (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
+    return `+${callingCode} ${local.slice(0, 5)} ${local.slice(5)}`;
   }
-  return phone;
+  return `+${callingCode} ${phone}`;
 }
 
 export function profileEmailFromName(name: string): string {

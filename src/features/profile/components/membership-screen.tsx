@@ -76,7 +76,7 @@ export function MembershipScreen() {
       <View style={styles.note}>
         <AppSymbol name="sparkles" size={16} tintColor={colors.primary} />
         <Text style={styles.noteText}>
-          Gold members save an average of ₹320 per month on delivery and
+          Gold members save an average of $320 per month on delivery and
           exclusive offers.
         </Text>
       </View>

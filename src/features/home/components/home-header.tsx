@@ -60,15 +60,6 @@ export function HomeHeader() {
         <View style={styles.actions}>
           <Pressable
             style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-          >
-            <AppSymbol name="bell" size={20} tintColor={colors.textPrimary} />
-            <View style={styles.notifDot} />
-          </Pressable>
-
-          <Pressable
-            style={styles.iconBtn}
             onPress={openCartSheet}
             accessibilityRole="button"
             accessibilityLabel={`Cart, ${cartCount} items`}
@@ -147,17 +138,6 @@ const styles = StyleSheet.create({
     height: 34,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 7,
-    right: 7,
-    width: 7,
-    height: 7,
-    borderRadius: radius.full,
-    backgroundColor: colors.danger,
-    borderWidth: 1.5,
-    borderColor: colors.background,
   },
   cartBadge: {
     position: 'absolute',

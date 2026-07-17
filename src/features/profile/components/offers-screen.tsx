@@ -1,8 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
 import { PROFILE_OFFERS } from '@/features/profile/constants/profile-hub.constants';
+import { AppInfoModal } from '@/shared/components/app-info-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
 import { colors, shadows } from '@/theme/colors';
@@ -10,9 +12,11 @@ import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 export function OffersScreen() {
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
   function copyCode(code: string) {
     hapticSuccess();
-    Alert.alert('Coupon copied', `${code} is ready to use at checkout.`);
+    setCopiedCode(code);
   }
 
   return (
@@ -68,6 +72,14 @@ export function OffersScreen() {
           </LinearGradient>
         </Pressable>
       ))}
+
+      <AppInfoModal
+        visible={copiedCode != null}
+        title="Coupon copied"
+        message={copiedCode ? `${copiedCode} is ready to use at checkout.` : ''}
+        icon="tag.fill"
+        onClose={() => setCopiedCode(null)}
+      />
     </ProfileSubScreenShell>
   );
 }

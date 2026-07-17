@@ -118,7 +118,7 @@
             "name": "Grade A Eggs",
             "description": "12 count · cage free",
             "price": 5.49,
-            "image": "https://pngimg.com/uploads/fried_egg/fried_egg_PNG4.png",
+            "image": "https://pngimg.com/uploads/egg/egg_PNG11526.png",
             "isPopular": true,
             "calories": 70
           },
@@ -189,7 +189,7 @@
             "name": "Aquafina Water",
             "description": "24 pack · 16.9 fl oz",
             "price": 5.99,
-            "image": "https://pngimg.com/uploads/orange/orange_PNG789.png",
+            "image": "https://pngimg.com/uploads/plastic_bottle/plastic_bottle_PNG3.png",
             "isPopular": true,
             "calories": 0
           },
@@ -237,7 +237,7 @@
             "name": "Scott Toilet Paper",
             "description": "12 mega rolls · ultra soft",
             "price": 12.99,
-            "image": "https://pngimg.com/uploads/shampoo/shampoo_PNG11.png",
+            "image": "https://pngimg.com/uploads/toilet_paper/toilet_paper_PNG19274.png",
             "isPopular": true
           },
           {

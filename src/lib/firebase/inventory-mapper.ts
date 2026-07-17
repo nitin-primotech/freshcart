@@ -25,7 +25,7 @@ const DEFAULT_RESTAURANT_PROFILE: Omit<Restaurant, 'categoryIds' | 'menu'> = {
   distanceKm: 2.1,
   isFreeDelivery: false,
   isPromoted: true,
-  offerLabel: 'Free delivery on orders above ₹299',
+  offerLabel: 'Free delivery on orders above $299',
   isFastDelivery: true,
   coverImage: '',
   logoImage: '',

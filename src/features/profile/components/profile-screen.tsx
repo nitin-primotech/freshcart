@@ -1,14 +1,6 @@
-import { Image } from 'expo-image';
 import { type Href, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -16,29 +8,33 @@ import {
   type OrderTabId,
 } from '@/features/orders/constants/orders.constants';
 import { mergeOrdersWithDemo } from '@/features/orders/mocks/demo-orders';
+import { ProfileAvatar } from '@/features/profile/components/profile-avatar';
 import {
   formatProfilePhone,
   PROFILE_ACCOUNT_ITEMS,
-  PROFILE_AVATAR_URI,
   PROFILE_ORDER_SHORTCUTS,
-  PROFILE_PREFERENCE_ITEMS,
   PROFILE_SUPPORT_ITEMS,
   PROFILE_WALLET_STATS,
   type ProfileLinkItem,
-  profileDisplayName,
-  profileEmailFromName,
 } from '@/features/profile/constants/profile.constants';
+import {
+  profileNameLabel,
+  resolveProfileIdentity,
+} from '@/features/profile/utils/profile-identity';
 import { AppConfirmModal } from '@/shared/components/app-confirm-modal';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   resetAppProfile,
+  selectDarkModeEnabled,
+  selectPhoneCountry,
   selectUserName,
   useAppStore,
 } from '@/store/app.store';
 import {
   clearAuthState,
+  selectSession,
   selectUserPhone,
   useAuthStore,
 } from '@/store/auth.store';
@@ -50,22 +46,18 @@ import { fonts } from '@/theme/typography';
 
 function ProfileMenuRow({
   item,
-  darkMode,
-  onDarkModeChange,
   onPress,
   isLast,
 }: {
   item: ProfileLinkItem;
-  darkMode: boolean;
-  onDarkModeChange: (value: boolean) => void;
   onPress: () => void;
   isLast?: boolean;
 }) {
   return (
     <Pressable
-      onPress={item.toggle ? undefined : onPress}
+      onPress={onPress}
       style={[styles.menuRow, !isLast && styles.menuRowBorder]}
-      accessibilityRole={item.toggle ? 'none' : 'button'}
+      accessibilityRole="button"
       accessibilityLabel={item.title}
     >
       <View style={styles.menuIconWrap}>
@@ -75,20 +67,11 @@ function ProfileMenuRow({
       {item.trailing ? (
         <Text style={styles.menuTrailing}>{item.trailing}</Text>
       ) : null}
-      {item.toggle ? (
-        <Switch
-          value={darkMode}
-          onValueChange={onDarkModeChange}
-          trackColor={{ false: colors.border, true: colors.primaryLight }}
-          thumbColor={colors.backgroundElevated}
-        />
-      ) : (
-        <AppSymbol
-          name="chevron.right"
-          size={12}
-          tintColor={colors.textTertiary}
-        />
-      )}
+      <AppSymbol
+        name="chevron.right"
+        size={12}
+        tintColor={colors.textTertiary}
+      />
     </Pressable>
   );
 }
@@ -97,14 +80,21 @@ export function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const phone = useAuthStore(selectUserPhone);
+  const session = useAuthStore(selectSession);
   const userName = useAppStore(selectUserName);
+  const phoneCountry = useAppStore(selectPhoneCountry);
+  const darkMode = useAppStore(selectDarkModeEnabled);
   const storeOrders = useOrdersStore(selectOrders);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
 
-  const displayName = profileDisplayName(userName);
-  const displayPhone = formatProfilePhone(phone);
-  const displayEmail = profileEmailFromName(displayName);
+  const identity = useMemo(
+    () => resolveProfileIdentity({ storedName: userName, session }),
+    [userName, session],
+  );
+  const displayPhone = formatProfilePhone(phone, phoneCountry.callingCode);
+  const nameLabel = profileNameLabel(identity);
+  const secondaryLine = identity.email ?? displayPhone;
+  const tertiaryLine = identity.email && phone ? displayPhone : null;
 
   const orders = useMemo(() => mergeOrdersWithDemo(storeOrders), [storeOrders]);
   const orderBadges = useMemo(
@@ -129,7 +119,7 @@ export function ProfileScreen() {
 
   function openOrders(tab: OrderTabId = 'all') {
     hapticSoftTap();
-    router.push({
+    router.navigate({
       pathname: '/(tabs)/orders',
       params: { tab },
     });
@@ -149,35 +139,10 @@ export function ProfileScreen() {
 
   return (
     <View style={styles.root}>
-      <AppStatusBar style="dark" />
+      <AppStatusBar style={darkMode ? 'light' : 'dark'} />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerActions}>
-          <Pressable
-            onPress={() => openRoute('/(tabs)/profile')}
-            hitSlop={10}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-          >
-            <AppSymbol name="bell" size={20} tintColor={colors.textPrimary} />
-            <View style={styles.notifDot} />
-          </Pressable>
-          <Pressable
-            onPress={() => openRoute('/profile/edit')}
-            hitSlop={10}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Settings"
-          >
-            <AppSymbol
-              name="gearshape.fill"
-              size={20}
-              tintColor={colors.textPrimary}
-            />
-          </Pressable>
-        </View>
       </View>
 
       <ScrollView
@@ -196,11 +161,10 @@ export function ProfileScreen() {
             accessibilityLabel="Edit profile"
           >
             <View style={styles.avatarWrap}>
-              <Image
-                source={{ uri: PROFILE_AVATAR_URI }}
-                style={styles.avatar}
-                contentFit="cover"
-                transition={200}
+              <ProfileAvatar
+                uri={identity.avatarUri}
+                initials={identity.initials}
+                showPersonFallback={identity.needsName && !identity.avatarUri}
               />
               <View style={styles.editBadge}>
                 <AppSymbol
@@ -213,9 +177,18 @@ export function ProfileScreen() {
             </View>
 
             <View style={styles.userCopy}>
-              <Text style={styles.userName}>{displayName}</Text>
-              <Text style={styles.userMeta}>{displayPhone}</Text>
-              <Text style={styles.userMeta}>{displayEmail}</Text>
+              <Text
+                style={[
+                  styles.userName,
+                  identity.needsName && styles.userNamePlaceholder,
+                ]}
+              >
+                {nameLabel}
+              </Text>
+              <Text style={styles.userMeta}>{secondaryLine}</Text>
+              {tertiaryLine ? (
+                <Text style={styles.userMeta}>{tertiaryLine}</Text>
+              ) : null}
               <View style={styles.clubBadge}>
                 <AppSymbol
                   name="crown.fill"
@@ -313,24 +286,8 @@ export function ProfileScreen() {
             <ProfileMenuRow
               key={item.id}
               item={item}
-              darkMode={darkMode}
-              onDarkModeChange={setDarkMode}
               onPress={() => handleMenuPress(item)}
               isLast={index === PROFILE_ACCOUNT_ITEMS.length - 1}
-            />
-          ))}
-        </View>
-
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          {PROFILE_PREFERENCE_ITEMS.map((item, index) => (
-            <ProfileMenuRow
-              key={item.id}
-              item={item}
-              darkMode={darkMode}
-              onDarkModeChange={setDarkMode}
-              onPress={() => handleMenuPress(item)}
-              isLast={index === PROFILE_PREFERENCE_ITEMS.length - 1}
             />
           ))}
         </View>
@@ -341,8 +298,6 @@ export function ProfileScreen() {
             <ProfileMenuRow
               key={item.id}
               item={item}
-              darkMode={darkMode}
-              onDarkModeChange={setDarkMode}
               onPress={() => handleMenuPress(item)}
               isLast={index === PROFILE_SUPPORT_ITEMS.length - 1}
             />
@@ -407,29 +362,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.textPrimary,
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  iconBtn: {
-    width: 34,
-    height: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.danger,
-    borderWidth: 1.5,
-    borderColor: colors.background,
-  },
   userCard: {
     backgroundColor: colors.backgroundElevated,
     borderRadius: 16,
@@ -476,6 +408,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     color: colors.textPrimary,
+  },
+  userNamePlaceholder: {
+    color: colors.primary,
   },
   userMeta: {
     fontFamily: fonts.regular,

@@ -5,11 +5,13 @@ import {
   getStoredProfile,
   saveProfile,
 } from '@/features/auth/services/profile-storage';
+import type { AuthSession } from '@/features/auth/types/auth.types';
 import type { LocationSuggestion } from '@/features/auth/types/location.types';
 import type { UserPreferences } from '@/features/auth/types/user-preferences.types';
 import { DEFAULT_PREFERENCES } from '@/features/auth/types/user-preferences.types';
 import type { DeliveryAddress } from '@/features/catalog/types/catalog.types';
 import { DEFAULT_RECENT_LOCATION_IDS } from '@/features/location/constants/location.constants';
+import { isUnsetProfileName } from '@/features/profile/utils/profile-identity';
 import { filterPersonNameInput } from '@/shared/utils/person-name';
 
 type AppHydrationStatus = 'loading' | 'ready';
@@ -60,6 +62,43 @@ export function updateProfileName(name: string) {
   if (!trimmed) return;
   useAppStore.setState({ userName: trimmed });
   void persistProfile();
+}
+
+export function syncProfileNameFromSession(session: AuthSession | null) {
+  const sessionName = session?.displayName?.trim();
+  if (!sessionName) return;
+
+  const currentName = useAppStore.getState().userName;
+  if (!isUnsetProfileName(currentName)) return;
+
+  useAppStore.setState({ userName: filterPersonNameInput(sessionName).trim() });
+  void persistProfile();
+}
+
+export function updatePreferences(patch: Partial<UserPreferences>) {
+  useAppStore.setState({
+    preferences: {
+      ...useAppStore.getState().preferences,
+      ...patch,
+    },
+  });
+  void persistProfile();
+}
+
+export function setDarkModeEnabled(enabled: boolean) {
+  updatePreferences({ darkMode: enabled });
+}
+
+export function setAppLanguage(language: UserPreferences['language']) {
+  updatePreferences({ language });
+}
+
+export function setNotificationsEnabled(enabled: boolean) {
+  updatePreferences({ notificationsEnabled: enabled });
+}
+
+export function setPhoneCountry(phoneCountry: UserPreferences['phoneCountry']) {
+  updatePreferences({ phoneCountry });
 }
 
 export function markProfileSaved() {
@@ -130,6 +169,11 @@ export const selectHydrationStatus = (s: AppState) => s.hydrationStatus;
 export const selectAddress = (s: AppState) => s.address;
 export const selectUserName = (s: AppState) => s.userName;
 export const selectPreferences = (s: AppState) => s.preferences;
+export const selectDarkModeEnabled = (s: AppState) => s.preferences.darkMode;
+export const selectAppLanguage = (s: AppState) => s.preferences.language;
+export const selectNotificationsEnabled = (s: AppState) =>
+  s.preferences.notificationsEnabled;
+export const selectPhoneCountry = (s: AppState) => s.preferences.phoneCountry;
 export const selectRecentSearches = (s: AppState) => s.recentSearches;
 export const selectRecentLocationIds = (s: AppState) => s.recentLocationIds;
 export const selectFavoriteLocationIds = (s: AppState) => s.favoriteLocationIds;

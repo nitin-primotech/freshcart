@@ -1,7 +1,8 @@
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -26,11 +27,16 @@ import {
 } from '@/features/orders/constants/orders.constants';
 import { findOrderById } from '@/features/orders/mocks/demo-orders';
 import {
+  SUPPORT_EMAIL,
+  SUPPORT_PHONE,
+} from '@/features/profile/constants/profile-hub.constants';
+import {
   DEFAULT_DELIVERY_COORDS,
   RESTAURANT_COORDS,
 } from '@/lib/firebase/order-mapper';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import { selectOrders, useOrdersStore } from '@/store/orders.store';
 import { colors } from '@/theme/colors';
@@ -149,10 +155,11 @@ function OrderSummaryCard({
 }
 
 function DeliveryPartnerCard({ rider }: { rider: OrderRider }) {
-  const handleCall = () => {
-    if (!rider.phone) return;
-    void Linking.openURL(`tel:${rider.phone}`);
-  };
+  function handleCall() {
+    hapticSoftTap();
+    const phone = rider.phone ?? SUPPORT_PHONE;
+    void Linking.openURL(`tel:${phone}`);
+  }
 
   return (
     <View style={styles.partnerCard}>
@@ -186,10 +193,7 @@ function DeliveryPartnerCard({ rider }: { rider: OrderRider }) {
       <View style={styles.partnerActions}>
         <Pressable
           style={styles.partnerAction}
-          onPress={() => {
-            hapticSoftTap();
-            handleCall();
-          }}
+          onPress={handleCall}
           accessibilityRole="button"
           accessibilityLabel="Call delivery partner"
         >
@@ -206,10 +210,15 @@ function DeliveryPartnerCard({ rider }: { rider: OrderRider }) {
 export function OrderTrackingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, view } = useLocalSearchParams<{ id: string; view?: string }>();
   const orders = useOrdersStore(selectOrders);
   const order = id ? findOrderById(orders, id) : undefined;
-  const [showDetails, setShowDetails] = useState(false);
+  const isDetailsView = view === 'details';
+  const [showDetails, setShowDetails] = useState(isDetailsView);
+
+  useEffect(() => {
+    setShowDetails(isDetailsView);
+  }, [isDetailsView]);
 
   if (!order) {
     return (
@@ -225,9 +234,39 @@ export function OrderTrackingScreen() {
     order.status !== 'cancelled';
 
   const showLiveMap =
+    !isDetailsView &&
     Boolean(order.rider) &&
     order.status !== 'delivered' &&
     order.status !== 'cancelled';
+
+  function handleHelp() {
+    hapticSoftTap();
+    router.push('/profile/support');
+  }
+
+  function handleContactSupport() {
+    hapticSoftTap();
+    Alert.alert('Contact support', 'How would you like to reach us?', [
+      {
+        text: 'Call',
+        onPress: () => void Linking.openURL(`tel:${SUPPORT_PHONE}`),
+      },
+      {
+        text: 'Email',
+        onPress: () => void Linking.openURL(`mailto:${SUPPORT_EMAIL}`),
+      },
+      {
+        text: 'Help center',
+        onPress: () => router.push('/profile/support'),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
+  function handleChangeAddress() {
+    hapticSoftTap();
+    router.push('/location');
+  }
 
   const deliveryCoords = order.deliveryCoords ?? DEFAULT_DELIVERY_COORDS;
   const riderCoords = order.riderCoords ?? RESTAURANT_COORDS;
@@ -243,25 +282,17 @@ export function OrderTrackingScreen() {
       <AppStatusBar style="dark" />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
-        <Pressable
+        <ScreenBackButton
           onPress={() => {
             hapticSoftTap();
             router.back();
           }}
-          hitSlop={10}
-          style={styles.headerBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppSymbol
-            name="chevron.left"
-            size={18}
-            tintColor={colors.textPrimary}
-          />
-        </Pressable>
-        <Text style={styles.headerTitle}>Track Order</Text>
+        />
+        <Text style={styles.headerTitle}>
+          {isDetailsView ? 'Order Details' : 'Track Order'}
+        </Text>
         <Pressable
-          onPress={hapticSoftTap}
+          onPress={handleHelp}
           hitSlop={10}
           style={styles.helpBtn}
           accessibilityRole="button"
@@ -318,9 +349,14 @@ export function OrderTrackingScreen() {
         <View style={styles.addressCard}>
           <View style={styles.addressHeader}>
             <Text style={styles.addressTitle}>Home · Default</Text>
-            <View style={styles.changeBtn}>
+            <Pressable
+              onPress={handleChangeAddress}
+              style={styles.changeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Change delivery address"
+            >
               <Text style={styles.changeText}>Change</Text>
-            </View>
+            </Pressable>
           </View>
           <View style={styles.addressRow}>
             <View style={styles.addressIcon}>
@@ -336,7 +372,7 @@ export function OrderTrackingScreen() {
 
         <Pressable
           style={styles.supportCard}
-          onPress={hapticSoftTap}
+          onPress={handleContactSupport}
           accessibilityRole="button"
           accessibilityLabel="Contact support"
         >
@@ -399,17 +435,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
-  },
-  headerBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderCurve: 'continuous',
-    backgroundColor: colors.backgroundElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: spacing.xs,
   },
   headerTitle: {
     flex: 1,

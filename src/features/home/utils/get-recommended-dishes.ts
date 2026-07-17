@@ -2,12 +2,14 @@ import type {
   MenuItem,
   Restaurant,
 } from '@/features/catalog/types/catalog.types';
+import { getProductReviewCount } from '@/features/product/utils/product-review-count';
 
 export type RecommendedDish = {
   item: MenuItem;
   restaurantId: string;
   restaurantName: string;
   rating: number;
+  reviewCount: number;
 };
 
 export function getRecommendedDishes(
@@ -24,6 +26,11 @@ export function getRecommendedDishes(
           restaurantId: restaurant.id,
           restaurantName: restaurant.name,
           rating: restaurant.rating,
+          reviewCount: getProductReviewCount(
+            item.id,
+            restaurant.rating,
+            restaurant.reviewCount,
+          ),
         });
       }
     }
@@ -59,6 +66,11 @@ export function getDishesForCategoryIds(
           restaurantId: restaurant.id,
           restaurantName: restaurant.name,
           rating: restaurant.rating,
+          reviewCount: getProductReviewCount(
+            item.id,
+            restaurant.rating,
+            restaurant.reviewCount,
+          ),
         });
       }
     }
@@ -91,6 +103,11 @@ export function getDishesExcluding(
           restaurantId: restaurant.id,
           restaurantName: restaurant.name,
           rating: restaurant.rating,
+          reviewCount: getProductReviewCount(
+            item.id,
+            restaurant.rating,
+            restaurant.reviewCount,
+          ),
         });
       }
     }

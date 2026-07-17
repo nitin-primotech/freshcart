@@ -1,9 +1,9 @@
-/** USD display for FreshCart checkout. */
+/** USD display for FreshCart (primary currency). */
 export function formatUsd(amount: number): string {
   return `$${amount.toFixed(2)}`;
 }
 
-/** @deprecated Use formatUsd — kept for gradual migration */
+/** @deprecated Use formatUsd — alias for existing imports */
 export const formatInr = formatUsd;
 
 export function deriveMrp(price: number): number {

@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,7 +11,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
+import { selectDarkModeEnabled, useAppStore } from '@/store/app.store';
 import { colors } from '@/theme/colors';
 import { screenTopPadding } from '@/theme/screen-edge';
 import { spacing } from '@/theme/spacing';
@@ -39,6 +40,7 @@ export function ProfileSubScreenShell({
 }: ProfileSubScreenShellProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const darkMode = useAppStore(selectDarkModeEnabled);
 
   function onBack() {
     hapticSoftTap();
@@ -70,23 +72,12 @@ export function ProfileSubScreenShell({
 
   return (
     <View style={styles.root}>
-      <AppStatusBar style="dark" />
+      <AppStatusBar style={darkMode ? 'light' : 'dark'} />
 
       <View
         style={[styles.header, { paddingTop: screenTopPadding(insets.top) }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppSymbol
-            name="chevron.left"
-            size={20}
-            tintColor={colors.textPrimary}
-          />
-        </Pressable>
+        <ScreenBackButton onPress={onBack} />
 
         <View style={styles.headerCenter}>
           {accentTitle ? (
@@ -105,7 +96,7 @@ export function ProfileSubScreenShell({
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
 
-        <View style={styles.backBtn} />
+        <View style={styles.backSpacer} />
       </View>
 
       {body}
@@ -127,11 +118,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.background,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  backSpacer: {
+    width: 44,
+    height: 44,
   },
   headerCenter: {
     flex: 1,

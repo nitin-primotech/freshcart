@@ -14,16 +14,21 @@ import { FloatingCartBar } from '@/shared/components/floating-cart-bar';
 import { ProfileSavedToast } from '@/shared/components/profile-saved-toast';
 import { WishlistSavedToast } from '@/shared/components/wishlist-saved-toast';
 import { preloadAppHaptics } from '@/shared/haptics/feedback';
-import { hydrateAppProfile } from '@/store/app.store';
+import {
+  hydrateAppProfile,
+  syncProfileNameFromSession,
+} from '@/store/app.store';
 import {
   hydrateAuthState,
   selectCustomerKey,
   selectIsAuthenticated,
   useAuthStore,
 } from '@/store/auth.store';
+import { closeCartSheet } from '@/store/cart.store';
 import { startCatalogSync, stopCatalogSync } from '@/store/catalog.store';
 import { startMerchantSync, stopMerchantSync } from '@/store/merchant.store';
 import { startOrdersSync, stopOrdersSync } from '@/store/orders.store';
+import { hydrateWishlist } from '@/store/wishlist.store';
 import { fontAssets } from '@/theme/typography';
 
 SplashScreen.preventAutoHideAsync();
@@ -40,13 +45,17 @@ export default function RootLayout() {
   const onLegal = segments[0] === 'terms' || segments[0] === 'privacy';
   const hideCartRoute =
     segments[0] === 'checkout' ||
-    segments[0] === 'search' ||
     segments[0] === 'order-success' ||
     segments[0] === 'order';
 
   useEffect(() => {
     preloadAppHaptics();
-    void Promise.all([hydrateAuthState(), hydrateAppProfile()]);
+    void (async () => {
+      await hydrateAuthState();
+      await hydrateAppProfile();
+      await hydrateWishlist();
+      syncProfileNameFromSession(useAuthStore.getState().session);
+    })();
   }, []);
 
   useEffect(() => {
@@ -88,8 +97,6 @@ export default function RootLayout() {
       segments[0] === 'login' ||
       segments[0] === 'verify' ||
       segments[0] === 'onboarding' ||
-      segments[0] === 'terms' ||
-      segments[0] === 'privacy' ||
       !segments[0];
 
     if (isAuthenticated && isAuthRoute) {
@@ -122,14 +129,35 @@ export default function RootLayout() {
     return () => cancelAnimationFrame(handle);
   }, [onLogin, onVerify, onLegal, onLocation, hideCartRoute, isAuthenticated]);
 
-  const tabSegment = segments[0] === '(tabs)' ? segments[1] : undefined;
-  const isHomeTab =
-    segments[0] === '(tabs)' &&
-    tabSegment !== 'profile' &&
-    tabSegment !== 'orders' &&
-    tabSegment !== 'wishlist';
-  const showFloatingCartBar = showCartChrome && isHomeTab;
-  const showCartSheet = showCartChrome;
+  const segmentList = segments as string[];
+  const activeTab =
+    segmentList[0] === '(tabs)' ? (segmentList[1] ?? 'index') : undefined;
+  const cartHiddenTabs = new Set(['orders', 'profile']);
+  const isCartHiddenTab =
+    segmentList[0] === '(tabs)' && cartHiddenTabs.has(activeTab ?? '');
+  const isShoppingTab =
+    segmentList[0] === '(tabs)' &&
+    (activeTab === 'index' ||
+      activeTab === 'categories' ||
+      activeTab === undefined);
+  const isShoppingRoute =
+    isShoppingTab ||
+    segmentList[0] === 'product' ||
+    segmentList[0] === 'restaurant' ||
+    segmentList[0] === 'category' ||
+    segmentList[0] === 'search' ||
+    segmentList[0] === 'wishlist';
+  const showFloatingCartBar =
+    showCartChrome && isShoppingRoute && !isCartHiddenTab;
+  const showCartSheet = showCartChrome && !isCartHiddenTab;
+  const floatingCartHasTabBar = segmentList[0] === '(tabs)';
+  const floatingCartAboveProductFooter = segmentList[0] === 'product';
+
+  useEffect(() => {
+    if (isCartHiddenTab) {
+      closeCartSheet();
+    }
+  }, [isCartHiddenTab]);
 
   if (!loaded) {
     return null;
@@ -250,12 +278,17 @@ export default function RootLayout() {
             }}
           />
         </Stack>
+        <ProfileSavedToast />
         {showCartSheet ? (
           <>
             <CartDropAnimation />
             <WishlistSavedToast />
-            <ProfileSavedToast />
-            {showFloatingCartBar ? <FloatingCartBar /> : null}
+            {showFloatingCartBar ? (
+              <FloatingCartBar
+                hasTabBar={floatingCartHasTabBar}
+                aboveProductFooter={floatingCartAboveProductFooter}
+              />
+            ) : null}
             <CartBottomSheet />
             <EmptyCartPrompt />
           </>

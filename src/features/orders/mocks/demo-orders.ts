@@ -97,6 +97,8 @@ export function getDemoOrders(): Order[] {
         rider: {
           name: 'John Doe',
           rating: 4.9,
+          phone: '18001234567',
+          otp: 4821,
           avatar:
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop',
         },

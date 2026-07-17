@@ -27,7 +27,15 @@ import { fonts } from '@/theme/typography';
 const CART_BAR_ENTER = FadeIn.duration(200);
 const BAR_WIDTH = '90%';
 
-export function FloatingCartBar() {
+type FloatingCartBarProps = {
+  hasTabBar?: boolean;
+  aboveProductFooter?: boolean;
+};
+
+export function FloatingCartBar({
+  hasTabBar = true,
+  aboveProductFooter = false,
+}: FloatingCartBarProps = {}) {
   const insets = useSafeAreaInsets();
   const itemCount = useCartStore(selectCartItemCount);
   const subtotal = useCartStore(selectCartSubtotal);
@@ -64,7 +72,12 @@ export function FloatingCartBar() {
       entering={CART_BAR_ENTER}
       style={[
         styles.wrapper,
-        { bottom: floatingCartBottomOffset(insets.bottom) },
+        {
+          bottom: floatingCartBottomOffset(insets.bottom, {
+            hasTabBar,
+            aboveProductFooter,
+          }),
+        },
         barStyle,
       ]}
       pointerEvents="box-none"

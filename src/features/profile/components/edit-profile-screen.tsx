@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -10,8 +9,13 @@ import {
   View,
 } from 'react-native';
 
+import { CountryCodePickerButton } from '@/features/auth/components/country-code-picker-button';
+import type { PhoneCountry } from '@/features/auth/types/phone-country.types';
+import { ProfileAvatar } from '@/features/profile/components/profile-avatar';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
 import { formatProfilePhone } from '@/features/profile/constants/profile.constants';
+import { resolveProfileIdentity } from '@/features/profile/utils/profile-identity';
+import { AppInfoModal } from '@/shared/components/app-info-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { PROFILE_SAVED_NAV_DELAY_MS } from '@/shared/components/profile-saved-toast';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
@@ -20,27 +24,73 @@ import { filterPersonNameInput } from '@/shared/utils/person-name';
 import {
   markProfileSaved,
   selectAddress,
+  selectPhoneCountry,
   selectUserName,
+  setPhoneCountry,
   updateProfileName,
   useAppStore,
 } from '@/store/app.store';
-import { selectUserPhone, useAuthStore } from '@/store/auth.store';
+import {
+  selectSession,
+  selectUserPhone,
+  useAuthStore,
+} from '@/store/auth.store';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
+
+function localPhoneDigits(phone: string | null): string {
+  if (!phone?.trim()) return '';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length >= 10) {
+    const local = digits.slice(-10);
+    return `${local.slice(0, 5)} ${local.slice(5)}`;
+  }
+  return phone;
+}
 
 export function EditProfileScreen() {
   const router = useRouter();
   const userName = useAppStore(selectUserName);
   const phone = useAuthStore(selectUserPhone);
+  const session = useAuthStore(selectSession);
+  const phoneCountry = useAppStore(selectPhoneCountry);
   const address = useAppStore(selectAddress);
-  const [name, setName] = useState(userName ?? '');
+
+  const identity = useMemo(
+    () => resolveProfileIdentity({ storedName: userName, session }),
+    [userName, session],
+  );
+
+  const initialName = identity.name;
+  const [name, setName] = useState(initialName);
   const [isSaving, setIsSaving] = useState(false);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
+  const navigateBackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (navigateBackTimeoutRef.current) {
+        clearTimeout(navigateBackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const trimmed = name.trim();
-  const canSave =
-    !isSaving && trimmed.length >= 2 && trimmed !== (userName ?? '');
-  const displayPhone = phone ? formatProfilePhone(phone) : 'Not linked';
+  const canSave = !isSaving && trimmed.length >= 2 && trimmed !== initialName;
+  const displayPhone = useMemo(
+    () => formatProfilePhone(phone, phoneCountry.callingCode),
+    [phone, phoneCountry.callingCode],
+  );
+  const localPhone = useMemo(() => localPhoneDigits(phone), [phone]);
+  const namePlaceholder =
+    identity.provider === 'google' ? 'Your Google name' : 'Enter your name';
+
+  function handleCountrySelect(nextCountry: PhoneCountry) {
+    setPhoneCountry(nextCountry);
+  }
 
   function handleSave() {
     if (!canSave) return;
@@ -49,8 +99,13 @@ export function EditProfileScreen() {
     updateProfileName(trimmed);
     markProfileSaved();
     hapticSuccess();
-    setTimeout(() => {
-      router.back();
+    navigateBackTimeoutRef.current = setTimeout(() => {
+      navigateBackTimeoutRef.current = null;
+      if (router.canGoBack()) {
+        router.back();
+        return;
+      }
+      router.replace('/(tabs)/profile');
     }, PROFILE_SAVED_NAV_DELAY_MS);
   }
 
@@ -58,8 +113,22 @@ export function EditProfileScreen() {
     <ProfileSubScreenShell
       title="Edit"
       accentTitle="Profile"
-      subtitle="Update your account details"
+      subtitle={
+        identity.needsName
+          ? 'Add your name so we can personalize your orders'
+          : 'Update your account details'
+      }
     >
+      <View style={styles.avatarSection}>
+        <ProfileAvatar
+          uri={identity.avatarUri}
+          initials={identity.initials}
+          size={88}
+          showPersonFallback={identity.needsName && !identity.avatarUri}
+        />
+        <Text style={styles.authLabel}>{identity.authLabel}</Text>
+      </View>
+
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Full name</Text>
         <View style={styles.inputRow}>
@@ -71,7 +140,7 @@ export function EditProfileScreen() {
           <TextInput
             value={name}
             onChangeText={(text) => setName(filterPersonNameInput(text))}
-            placeholder="Your name"
+            placeholder={namePlaceholder}
             placeholderTextColor={colors.textTertiary}
             style={styles.input}
             autoCapitalize="words"
@@ -98,22 +167,55 @@ export function EditProfileScreen() {
             </Pressable>
           ) : null}
         </View>
+        {identity.needsName ? (
+          <Text style={styles.helperText}>
+            This name appears on your profile and order receipts.
+          </Text>
+        ) : null}
       </View>
 
-      <View style={styles.fieldGroup}>
-        <Text style={styles.label}>Mobile number</Text>
-        <View style={[styles.inputRow, styles.inputRowDisabled]}>
-          <AppSymbol
-            name="phone.fill"
-            size={16}
-            tintColor={colors.textTertiary}
-          />
-          <Text style={styles.readOnlyText}>{displayPhone}</Text>
-          <View style={styles.verifiedPill}>
-            <Text style={styles.verifiedPillText}>Verified</Text>
+      {identity.email ? (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Email</Text>
+          <View style={[styles.inputRow, styles.inputRowDisabled]}>
+            <AppSymbol
+              name="envelope.fill"
+              size={16}
+              tintColor={colors.textTertiary}
+            />
+            <Text style={styles.readOnlyText}>{identity.email}</Text>
+            {identity.provider === 'google' ? (
+              <View style={styles.verifiedPill}>
+                <Text style={styles.verifiedPillText}>Google</Text>
+              </View>
+            ) : null}
           </View>
         </View>
-      </View>
+      ) : null}
+
+      {phone ? (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Mobile number</Text>
+          <View style={[styles.inputRow, styles.inputRowDisabled]}>
+            <CountryCodePickerButton
+              country={phoneCountry as PhoneCountry}
+              onSelect={handleCountrySelect}
+            />
+            <View style={styles.inputDivider} />
+            <Text style={styles.readOnlyText}>
+              {localPhone || displayPhone}
+            </Text>
+            {identity.provider === 'phone' ? (
+              <View style={styles.verifiedPill}>
+                <Text style={styles.verifiedPillText}>Verified</Text>
+              </View>
+            ) : null}
+          </View>
+          {localPhone ? (
+            <Text style={styles.helperText}>{displayPhone}</Text>
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Delivery area</Text>
@@ -148,17 +250,16 @@ export function EditProfileScreen() {
         accessibilityRole="button"
         accessibilityLabel="Save profile"
       >
-        <Text style={styles.saveBtnText}>Save changes</Text>
+        <Text style={styles.saveBtnText}>
+          {identity.needsName ? 'Save name' : 'Save changes'}
+        </Text>
       </Pressable>
 
       <Pressable
         style={styles.secondaryBtn}
         onPress={() => {
           hapticSoftTap();
-          Alert.alert(
-            'Need help?',
-            'Contact support from Help & Support on your profile.',
-          );
+          setHelpModalVisible(true);
         }}
         accessibilityRole="button"
       >
@@ -166,46 +267,29 @@ export function EditProfileScreen() {
           Need help with your account?
         </Text>
       </Pressable>
+
+      <AppInfoModal
+        visible={helpModalVisible}
+        title="Need help?"
+        message="Contact support from Help & Support on your profile."
+        icon="questionmark.circle.fill"
+        onClose={() => setHelpModalVisible(false)}
+      />
     </ProfileSubScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  avatarWrap: {
-    alignSelf: 'center',
-    width: 88,
-    height: 88,
+  avatarSection: {
+    alignItems: 'center',
+    gap: spacing.xs,
     marginBottom: spacing.xs,
-    position: 'relative',
   },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(212, 84, 60, 0.1)',
-    borderWidth: 2,
-    borderColor: 'rgba(212, 84, 60, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontFamily: fonts.bold,
-    fontSize: 28,
-    lineHeight: 34,
-    color: colors.primary,
-  },
-  avatarIcon: {
-    position: 'absolute',
-    right: -2,
-    bottom: -2,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+  authLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.textSecondary,
   },
   fieldGroup: {
     gap: spacing.xs,
@@ -233,6 +317,12 @@ const styles = StyleSheet.create({
   inputRowDisabled: {
     opacity: 0.92,
   },
+  inputDivider: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+    backgroundColor: colors.border,
+    marginVertical: spacing.xxs,
+  },
   input: {
     flex: 1,
     fontFamily: fonts.medium,
@@ -247,6 +337,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.textPrimary,
+  },
+  helperText: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.textTertiary,
+    marginLeft: spacing.xxs,
   },
   verifiedPill: {
     backgroundColor: colors.successLight,

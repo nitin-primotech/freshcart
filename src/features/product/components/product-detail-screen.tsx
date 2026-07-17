@@ -1,21 +1,27 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  fetchMenuItemContext,
-  getRelatedMenuItems,
-} from '@/features/catalog/api/catalog.api';
+import { fetchMenuItemContext } from '@/features/catalog/api/catalog.api';
 import {
   deriveDiscountPercent,
   deriveMrp,
-  formatUsd,
+  formatInr,
 } from '@/features/checkout/utils/format-currency';
 import {
   ProductFooterStepper,
   productFooterControlHeight,
 } from '@/features/product/components/product-footer-stepper';
+import { ProductImageGalleryModal } from '@/features/product/components/product-image-gallery-modal';
 import { ProductImageHero } from '@/features/product/components/product-image-hero';
 import { ProductNutritionSection } from '@/features/product/components/product-nutrition-section';
 import {
@@ -26,8 +32,15 @@ import {
   getProductTagline,
   PRODUCT_TRUST_ITEMS,
 } from '@/features/product/constants/product.constants';
+import {
+  formatInstantDeliveryLabel,
+  getInstantDeliveryMinutes,
+} from '@/features/product/utils/product-delivery';
+import { getProductGalleryImages } from '@/features/product/utils/product-gallery';
+import { getProductReviewCount } from '@/features/product/utils/product-review-count';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
 import { Shimmer } from '@/shared/components/shimmer';
 import { WishlistToggle } from '@/shared/components/wishlist-toggle';
 import { hapticAddToCart, hapticSoftTap } from '@/shared/haptics/feedback';
@@ -66,11 +79,9 @@ export function ProductDetailScreen() {
   );
 
   const quantity = useCartStore(selectCartLineQuantity(itemId, restaurantId));
-
-  const relatedItems = useMemo(
-    () => (data ? getRelatedMenuItems(data.restaurant, data.item.id, 5) : []),
-    [data],
-  );
+  const [selectedWeightId, setSelectedWeightId] = useState('w1');
+  const [deliveryMinutes, setDeliveryMinutes] = useState<number | null>(null);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   const itemPrice = data?.item.price ?? 0;
   const itemCalories = data?.item.calories;
@@ -85,8 +96,6 @@ export function ProductDetailScreen() {
       { id: 'w4', label: '2 lb', price: Math.round(base * 4 * 100) / 100 },
     ];
   }, [itemPrice]);
-
-  const [selectedWeightId, setSelectedWeightId] = useState('w1');
 
   const nutritionFacts = useMemo(() => {
     const cal = itemCalories ?? 32;
@@ -118,7 +127,14 @@ export function ProductDetailScreen() {
   const displayPrice = selectedWeight?.price ?? item.price;
   const mrp = deriveMrp(displayPrice);
   const discount = deriveDiscountPercent(displayPrice, mrp);
-  const footerQuantity = quantity > 0 ? quantity : 1;
+  const reviewCount = getProductReviewCount(
+    item.id,
+    restaurant.rating,
+    restaurant.reviewCount,
+  );
+  const instantMinutes = deliveryMinutes ?? getInstantDeliveryMinutes(item.id);
+  const galleryImages = getProductGalleryImages(item.image, [], 3);
+  const lineTotal = displayPrice * quantity;
   const detailCopy = `${item.name} are carefully selected for freshness and quality. ${item.description ? `Each pack is ${item.description.toLowerCase()}.` : ''} Store in a cool, dry place and consume within the recommended period for best taste.`;
   const tagline = getProductTagline(item);
 
@@ -133,8 +149,7 @@ export function ProductDetailScreen() {
 
   function handleDecrease() {
     hapticSoftTap();
-    if (quantity <= 1) {
-      updateCartQuantity(item.id, 0, restaurant.id);
+    if (quantity === 0) {
       return;
     }
     updateCartQuantity(item.id, quantity - 1, restaurant.id);
@@ -144,8 +159,56 @@ export function ProductDetailScreen() {
     hapticAddToCart();
     if (quantity === 0) {
       addToCart(item, restaurant.id, restaurant.name);
+      return;
     }
     openCartSheet();
+  }
+
+  function handleShare() {
+    hapticSoftTap();
+    void Share.share({
+      message: `Check out ${item.name} on FreshCart — ${formatInr(displayPrice)}`,
+    });
+  }
+
+  function handleViewImages() {
+    hapticSoftTap();
+    setGalleryOpen(true);
+  }
+
+  function handleChangeDelivery() {
+    hapticSoftTap();
+    Alert.alert('Delivery time', 'Choose an instant delivery slot', [
+      {
+        text: '12 min',
+        onPress: () => setDeliveryMinutes(12),
+      },
+      {
+        text: '15 min',
+        onPress: () => setDeliveryMinutes(15),
+      },
+      {
+        text: '20 min',
+        onPress: () => setDeliveryMinutes(20),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
+  function handleWeightHelp() {
+    hapticSoftTap();
+    Alert.alert(
+      'How much do I need?',
+      'For 1–2 servings, choose 250g. For a family of 3–4, 500g or 1 lb works well. Larger packs offer better value for weekly stock-ups.',
+    );
+  }
+
+  function handleNutritionExpand() {
+    hapticSoftTap();
+    Alert.alert(
+      'Nutrition (per 100g)',
+      nutritionFacts.map((fact) => `${fact.label}: ${fact.value}`).join('\n'),
+    );
   }
 
   return (
@@ -153,21 +216,12 @@ export function ProductDetailScreen() {
       <AppStatusBar style="dark" />
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
-        <Pressable
+        <ScreenBackButton
           onPress={() => {
             hapticSoftTap();
             router.back();
           }}
-          style={styles.headerBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppSymbol
-            name="chevron.left"
-            size={20}
-            tintColor={colors.textPrimary}
-          />
-        </Pressable>
+        />
 
         <View style={styles.headerActions}>
           <Pressable
@@ -183,7 +237,7 @@ export function ProductDetailScreen() {
             />
           </Pressable>
           <Pressable
-            onPress={hapticSoftTap}
+            onPress={handleShare}
             style={styles.headerBtn}
             accessibilityRole="button"
             accessibilityLabel="Share"
@@ -207,6 +261,8 @@ export function ProductDetailScreen() {
       </View>
 
       <ScrollView
+        bounces={false}
+        overScrollMode="never"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
@@ -215,9 +271,9 @@ export function ProductDetailScreen() {
       >
         <ProductImageHero
           primaryImage={item.image}
-          relatedImages={relatedItems.map((entry) => entry.image)}
+          relatedImages={[]}
           discountPercent={discount}
-          onViewImages={hapticSoftTap}
+          onViewImages={handleViewImages}
         />
 
         <View style={styles.body}>
@@ -233,17 +289,17 @@ export function ProductDetailScreen() {
             />
             <Text style={styles.socialText}>
               {restaurant.rating.toFixed(1)} (
-              {restaurant.reviewCount.toLocaleString('en-US')} reviews)
+              {reviewCount.toLocaleString('en-US')} reviews)
             </Text>
             <View style={styles.socialDivider} />
             <Text style={styles.socialText}>2K+ bought this week</Text>
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{formatUsd(displayPrice)}</Text>
+            <Text style={styles.price}>{formatInr(displayPrice)}</Text>
             {discount > 0 ? (
               <>
-                <Text style={styles.mrp}>{formatUsd(mrp)}</Text>
+                <Text style={styles.mrp}>{formatInr(mrp)}</Text>
                 <View style={styles.offPill}>
                   <Text style={styles.offText}>{discount}% OFF</Text>
                 </View>
@@ -255,6 +311,7 @@ export function ProductDetailScreen() {
             options={weightOptions}
             selectedId={selectedWeightId}
             onSelect={setSelectedWeightId}
+            onHelpPress={handleWeightHelp}
           />
 
           <View style={styles.deliveryCard}>
@@ -263,16 +320,20 @@ export function ProductDetailScreen() {
             </View>
             <View style={styles.deliveryCopy}>
               <Text style={styles.deliveryTitle}>
-                Get it by{' '}
+                Get it in{' '}
                 <Text style={styles.deliveryAccent}>
-                  Tomorrow, 10 AM – 12 PM
+                  {formatInstantDeliveryLabel(instantMinutes)}
                 </Text>
               </Text>
               <Text style={styles.deliverySubtitle}>
-                Express delivery available
+                Instant delivery · express slots available
               </Text>
             </View>
-            <Pressable accessibilityRole="button">
+            <Pressable
+              onPress={handleChangeDelivery}
+              accessibilityRole="button"
+              accessibilityLabel="Change delivery time"
+            >
               <Text style={styles.changeLink}>Change</Text>
             </Pressable>
           </View>
@@ -298,7 +359,10 @@ export function ProductDetailScreen() {
             </View>
           </View>
 
-          <ProductNutritionSection facts={nutritionFacts} />
+          <ProductNutritionSection
+            facts={nutritionFacts}
+            onExpand={handleNutritionExpand}
+          />
         </View>
       </ScrollView>
 
@@ -308,22 +372,36 @@ export function ProductDetailScreen() {
           { paddingBottom: Math.max(insets.bottom, spacing.sm) },
         ]}
       >
-        <ProductFooterStepper
-          quantity={footerQuantity}
-          onDecrease={handleDecrease}
-          onIncrease={handleIncrease}
-        />
+        {quantity > 0 ? (
+          <ProductFooterStepper
+            quantity={quantity}
+            onDecrease={handleDecrease}
+            onIncrease={handleIncrease}
+          />
+        ) : null}
         <Pressable
-          style={styles.addToCartBtn}
+          style={[
+            styles.addToCartBtn,
+            quantity === 0 && styles.addToCartBtnExpanded,
+          ]}
           onPress={handleAddToCart}
           accessibilityRole="button"
-          accessibilityLabel="Add to cart"
+          accessibilityLabel={quantity > 0 ? 'View cart' : 'Add to cart'}
         >
           <Text style={styles.addToCartText}>
-            Add to Cart – {formatUsd(displayPrice)}
+            {quantity > 0
+              ? `View Cart (${quantity}) – ${formatInr(lineTotal)}`
+              : `Add to Cart – ${formatInr(displayPrice)}`}
           </Text>
         </Pressable>
       </View>
+
+      <ProductImageGalleryModal
+        visible={galleryOpen}
+        images={galleryImages}
+        productName={item.name}
+        onClose={() => setGalleryOpen(false)}
+      />
     </View>
   );
 }
@@ -539,6 +617,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addToCartBtnExpanded: {
+    flex: 1,
   },
   addToCartText: {
     fontFamily: fonts.bold,

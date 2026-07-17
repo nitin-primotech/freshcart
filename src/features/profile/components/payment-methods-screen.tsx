@@ -1,12 +1,13 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CheckoutPaymentTrailingLogos } from '@/features/checkout/components/checkout-payment-trailing-logos';
 import { PAYMENT_METHODS } from '@/features/checkout/constants/checkout.constants';
 import { PAYMENT_BRAND_LOGOS } from '@/features/checkout/constants/payment-brands';
 import { ProfileSubScreenShell } from '@/features/profile/components/profile-sub-screen-shell';
-import { SAVED_PAYMENT_METHODS } from '@/features/profile/constants/profile-hub.constants';
+import { getPlatformSavedPaymentMethods } from '@/features/profile/constants/profile-hub.constants';
+import { AppInfoModal } from '@/shared/components/app-info-modal';
 import { AppSymbol } from '@/shared/components/app-symbol';
 import { hapticSoftTap, hapticSuccess } from '@/shared/haptics/feedback';
 import { colors, shadows } from '@/theme/colors';
@@ -14,11 +15,17 @@ import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
 
 export function PaymentMethodsScreen() {
+  const platformMethods = getPlatformSavedPaymentMethods();
   const initialDefault =
-    SAVED_PAYMENT_METHODS.find((method) => method.isDefault)?.id ??
-    SAVED_PAYMENT_METHODS[0]?.id ??
+    platformMethods.find((method) => method.isDefault)?.id ??
+    platformMethods[0]?.id ??
     null;
   const [defaultId, setDefaultId] = useState<string | null>(initialDefault);
+  const [infoModal, setInfoModal] = useState<{
+    title: string;
+    message: string;
+    icon?: string;
+  } | null>(null);
 
   function setDefault(methodId: string) {
     hapticSoftTap();
@@ -28,18 +35,21 @@ export function PaymentMethodsScreen() {
 
   function handleAddMethod() {
     hapticSoftTap();
-    Alert.alert(
-      'Add payment method',
-      'New cards and UPI IDs can be added securely at checkout when you place your next order.',
-    );
+    setInfoModal({
+      title: 'Add payment method',
+      message:
+        'New cards and UPI IDs can be added securely at checkout when you place your next order.',
+      icon: 'plus.circle.fill',
+    });
   }
 
   function handleRemove(methodLabel: string) {
     hapticSoftTap();
-    Alert.alert(
-      'Remove method',
-      `${methodLabel} can be removed from your Razorpay saved methods at checkout.`,
-    );
+    setInfoModal({
+      title: 'Remove method',
+      message: `${methodLabel} can be removed from your Razorpay saved methods at checkout.`,
+      icon: 'trash.fill',
+    });
   }
 
   return (
@@ -61,7 +71,7 @@ export function PaymentMethodsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Saved methods</Text>
         <View style={styles.list}>
-          {SAVED_PAYMENT_METHODS.map((method, index) => {
+          {platformMethods.map((method, index) => {
             const isDefault = defaultId === method.id;
             const brandLogo = method.brandId
               ? PAYMENT_BRAND_LOGOS[method.brandId]
@@ -74,7 +84,7 @@ export function PaymentMethodsScreen() {
                 onLongPress={() => handleRemove(method.label)}
                 style={[
                   styles.savedRow,
-                  index < SAVED_PAYMENT_METHODS.length - 1 && styles.rowBorder,
+                  index < platformMethods.length - 1 && styles.rowBorder,
                   isDefault && styles.savedRowSelected,
                 ]}
                 accessibilityRole="button"
@@ -186,6 +196,14 @@ export function PaymentMethodsScreen() {
           at checkout.
         </Text>
       </View>
+
+      <AppInfoModal
+        visible={infoModal != null}
+        title={infoModal?.title ?? ''}
+        message={infoModal?.message ?? ''}
+        icon={infoModal?.icon}
+        onClose={() => setInfoModal(null)}
+      />
     </ProfileSubScreenShell>
   );
 }

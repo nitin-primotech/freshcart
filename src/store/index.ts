@@ -43,6 +43,7 @@ export {
 export {
   clearLastWishlistSaved,
   clearWishlist,
+  hydrateWishlist,
   removeWishlistEntry,
   selectIsWishlistedProduct,
   selectLastWishlistSaved,

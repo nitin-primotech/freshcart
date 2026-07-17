@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { formatUsd } from '@/features/checkout/utils/format-currency';
+import { formatInr } from '@/features/checkout/utils/format-currency';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { fonts } from '@/theme/typography';
@@ -15,18 +15,24 @@ type ProductWeightSelectorProps = {
   options: WeightOption[];
   selectedId: string;
   onSelect: (id: string) => void;
+  onHelpPress?: () => void;
 };
 
 export function ProductWeightSelector({
   options,
   selectedId,
   onSelect,
+  onHelpPress,
 }: ProductWeightSelectorProps) {
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.title}>Select Weight</Text>
-        <Pressable accessibilityRole="button">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="How much do I need?"
+          onPress={onHelpPress}
+        >
           <Text style={styles.link}>How much do I need?</Text>
         </Pressable>
       </View>
@@ -55,7 +61,7 @@ export function ProductWeightSelector({
                   selected && styles.optionPriceSelected,
                 ]}
               >
-                {formatUsd(option.price)}
+                {formatInr(option.price)}
               </Text>
             </Pressable>
           );

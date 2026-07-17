@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import type { UserPreferences } from '@/features/auth/types/user-preferences.types';
 import { DEFAULT_PREFERENCES } from '@/features/auth/types/user-preferences.types';
 import type { DeliveryAddress } from '@/features/catalog/types/catalog.types';
+import { isUnsetProfileName } from '@/features/profile/utils/profile-identity';
 
 const PROFILE_KEY = 'freshcart.app.profile';
 
@@ -19,7 +20,7 @@ const DEFAULT_ADDRESS: DeliveryAddress = {
 };
 
 export const DEFAULT_PROFILE: StoredProfile = {
-  userName: 'Alex Morgan',
+  userName: '',
   address: DEFAULT_ADDRESS,
   preferences: DEFAULT_PREFERENCES,
 };
@@ -39,12 +40,24 @@ export async function getStoredProfile(): Promise<StoredProfile> {
   try {
     const parsed = JSON.parse(raw) as Partial<StoredProfile>;
     return {
-      userName: parsed.userName?.trim() || DEFAULT_PROFILE.userName,
-      address: parsed.address ?? DEFAULT_ADDRESS,
+      userName: isUnsetProfileName(parsed.userName)
+        ? ''
+        : (parsed.userName?.trim() ?? ''),
+      address: { ...DEFAULT_ADDRESS, ...parsed.address },
       preferences: {
-        cuisineIds: parsed.preferences?.cuisineIds ?? [],
-        dietary: parsed.preferences?.dietary ?? null,
+        cuisineIds:
+          parsed.preferences?.cuisineIds ?? DEFAULT_PREFERENCES.cuisineIds,
+        dietary: parsed.preferences?.dietary ?? DEFAULT_PREFERENCES.dietary,
         skipped: Boolean(parsed.preferences?.skipped),
+        darkMode: Boolean(parsed.preferences?.darkMode),
+        language: parsed.preferences?.language ?? DEFAULT_PREFERENCES.language,
+        notificationsEnabled:
+          parsed.preferences?.notificationsEnabled ??
+          DEFAULT_PREFERENCES.notificationsEnabled,
+        phoneCountry: {
+          ...DEFAULT_PREFERENCES.phoneCountry,
+          ...parsed.preferences?.phoneCountry,
+        },
       },
     };
   } catch {

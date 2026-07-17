@@ -28,11 +28,13 @@ export function HomeSearchBar({
         <Text style={styles.placeholder} numberOfLines={1}>
           {placeholder}
         </Text>
+        {/* QR scanner — enable when barcode scan is implemented
         <AppSymbol
           name="qrcode.viewfinder"
           size={18}
           tintColor={colors.primary}
         />
+        */}
       </Pressable>
     </Link>
   );

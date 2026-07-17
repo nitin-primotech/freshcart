@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -38,6 +38,14 @@ export function OrdersScreen() {
       ? (tab as OrderTabId)
       : 'all';
   const [activeTab, setActiveTab] = useState<OrderTabId>(initialTab);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (tab && ORDER_TABS.some((entry) => entry.id === tab)) {
+        setActiveTab(tab as OrderTabId);
+      }
+    }, [tab]),
+  );
 
   const restaurantsQuery = useSimulatedQuery(
     (signal) => fetchRestaurants(signal),
@@ -81,19 +89,6 @@ export function OrdersScreen() {
               size={20}
               tintColor={colors.textPrimary}
             />
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              hapticSoftTap();
-              router.push('/(tabs)/profile');
-            }}
-            hitSlop={10}
-            style={styles.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-          >
-            <AppSymbol name="bell" size={20} tintColor={colors.textPrimary} />
-            <View style={styles.notifDot} />
           </Pressable>
         </View>
       </View>
@@ -192,17 +187,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  },
-  notifDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.danger,
-    borderWidth: 1.5,
-    borderColor: colors.background,
   },
   screen: {
     flex: 1,

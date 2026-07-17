@@ -1,5 +1,6 @@
 import type { Restaurant } from '@/features/catalog/types/catalog.types';
 import type { RecommendedDish } from '@/features/home/utils/get-recommended-dishes';
+import { getProductReviewCount } from '@/features/product/utils/product-review-count';
 
 export function searchDishes(
   query: string,
@@ -22,6 +23,11 @@ export function searchDishes(
           restaurantId: restaurant.id,
           restaurantName: restaurant.name,
           rating: restaurant.rating,
+          reviewCount: getProductReviewCount(
+            item.id,
+            restaurant.rating,
+            restaurant.reviewCount,
+          ),
         });
       }
     }

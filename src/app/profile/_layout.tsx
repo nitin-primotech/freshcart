@@ -6,6 +6,10 @@ export default function ProfileLayout() {
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
     >
       <Stack.Screen name="edit" />
+      <Stack.Screen name="addresses" />
+      <Stack.Screen name="about" />
+      <Stack.Screen name="language" />
+      <Stack.Screen name="notifications" />
       <Stack.Screen name="wallet" />
       <Stack.Screen name="offers" />
       <Stack.Screen name="membership" />

@@ -20,6 +20,7 @@ import {
   signOutFirebaseAuth,
   subscribeToFirebaseAuth,
 } from '@/lib/firebase/google-auth';
+import { syncProfileNameFromSession } from '@/store/app.store';
 
 type AuthState = {
   hydrationStatus: AuthHydrationStatus;
@@ -69,6 +70,7 @@ export async function hydrateAuthState() {
 
       const session = await sessionFromFirebaseUser(user);
       await saveSession(session);
+      syncProfileNameFromSession(session);
       useAuthStore.setState({
         hydrationStatus: 'ready',
         session,
@@ -80,6 +82,7 @@ export async function hydrateAuthState() {
 
 export async function setAuthSession(session: AuthSession) {
   await saveSession(session);
+  syncProfileNameFromSession(session);
   useAuthStore.setState({
     hydrationStatus: 'ready',
     session,
@@ -117,6 +120,7 @@ export { GoogleSignInCancelledError, mapGoogleSignInError };
 export const selectHydrationStatus = (s: AuthState) => s.hydrationStatus;
 export const selectIsAuthenticated = (s: AuthState) => s.isAuthenticated;
 export const selectSession = (s: AuthState) => s.session;
+export const selectAuthProvider = (s: AuthState) => s.session?.provider ?? null;
 export const selectUserPhone = (s: AuthState) => s.session?.phone || null;
 export const selectCustomerKey = (s: AuthState) =>
   getSessionCustomerKey(s.session);

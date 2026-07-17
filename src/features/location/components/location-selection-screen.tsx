@@ -281,7 +281,7 @@ export function LocationSelectionScreen() {
                   Saved Addresses
                 </PremiumText>
                 <Pressable
-                  onPress={() => router.push('/profile/edit')}
+                  onPress={() => router.push('/profile/addresses')}
                   accessibilityRole="button"
                   accessibilityLabel="View all saved addresses"
                 >
@@ -298,7 +298,7 @@ export function LocationSelectionScreen() {
                   onPress={() =>
                     handleSelectSuggestion(savedAddress.suggestion)
                   }
-                  onEdit={() => router.push('/profile/edit')}
+                  onEdit={() => router.push('/profile/addresses')}
                 />
               ))}
             </View>
@@ -321,7 +321,9 @@ export function LocationSelectionScreen() {
               </View>
             </View>
 
-            <AddAddressBanner onPress={() => router.push('/profile/edit')} />
+            <AddAddressBanner
+              onPress={() => router.push('/profile/addresses')}
+            />
           </>
         )}
       </KeyboardAwareScrollView>

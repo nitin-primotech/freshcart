@@ -5,13 +5,13 @@ export const RAZORPAY_KEY_ID =
   process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID ?? 'rzp_test_RKgTcc9tht64cZ';
 
 /**
- * UPI, wallets, and netbanking only appear for INR.
- * USD/international checkouts typically show cards only.
+ * Razorpay checkout currency. Test mode supports USD with test API keys.
+ * Override with EXPO_PUBLIC_RAZORPAY_CURRENCY if needed.
  */
 export const RAZORPAY_CURRENCY =
-  process.env.EXPO_PUBLIC_RAZORPAY_CURRENCY ?? 'INR';
+  process.env.EXPO_PUBLIC_RAZORPAY_CURRENCY ?? 'USD';
 
-/** Converts displayed USD cart totals to INR for Razorpay when currency is INR. */
+/** Used only when EXPO_PUBLIC_RAZORPAY_CURRENCY is INR. */
 export const USD_TO_INR_RATE = Number(
   process.env.EXPO_PUBLIC_USD_TO_INR_RATE ?? '83',
 );
@@ -24,12 +24,22 @@ export const RAZORPAY_BRAND = {
   description: 'FreshCart grocery checkout',
 };
 
-/** Show UPI, cards, netbanking, wallets, and EMI (subject to dashboard activation). */
-export const RAZORPAY_CHECKOUT_CONFIG = {
-  display: {
-    sequence: ['upi', 'card', 'netbanking', 'wallet', 'emi'],
-    preferences: {
-      show_default_blocks: true,
-    },
-  },
-};
+/** INR: UPI, cards, netbanking, wallets. USD: cards only (Razorpay test/live). */
+export const RAZORPAY_CHECKOUT_CONFIG =
+  RAZORPAY_CURRENCY === 'USD'
+    ? {
+        display: {
+          sequence: ['card'],
+          preferences: {
+            show_default_blocks: true,
+          },
+        },
+      }
+    : {
+        display: {
+          sequence: ['upi', 'card', 'netbanking', 'wallet', 'emi'],
+          preferences: {
+            show_default_blocks: true,
+          },
+        },
+      };

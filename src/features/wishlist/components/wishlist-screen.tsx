@@ -8,6 +8,7 @@ import { WishlistExploreBanner } from '@/features/wishlist/components/wishlist-e
 import { WishlistSummaryCard } from '@/features/wishlist/components/wishlist-summary-card';
 import { AppStatusBar } from '@/shared/components/app-status-bar';
 import { AppSymbol } from '@/shared/components/app-symbol';
+import { ScreenBackButton } from '@/shared/components/screen-back-button';
 import { hapticSoftTap } from '@/shared/haptics/feedback';
 import {
   openCartSheet,
@@ -55,20 +56,7 @@ export function WishlistScreen({ showBack }: WishlistScreenProps) {
 
       <View style={[styles.header, { paddingTop: insets.top + spacing.xs }]}>
         <View style={styles.headerLeading}>
-          {canGoBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.iconBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <AppSymbol
-                name="chevron.left"
-                size={20}
-                tintColor={colors.textPrimary}
-              />
-            </Pressable>
-          ) : null}
+          {canGoBack ? <ScreenBackButton onPress={onBack} /> : null}
           <Text style={styles.headerTitle}>My Wishlist</Text>
         </View>
 

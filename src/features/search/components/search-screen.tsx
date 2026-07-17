@@ -261,6 +261,7 @@ export function SearchScreen() {
                   tintColor={colors.textSecondary}
                 />
               </Pressable>
+              {/* QR scanner — enable when barcode scan is implemented
               <Pressable
                 hitSlop={8}
                 accessibilityRole="button"
@@ -272,6 +273,7 @@ export function SearchScreen() {
                   tintColor={colors.primary}
                 />
               </Pressable>
+              */}
             </>
           )}
         </View>
