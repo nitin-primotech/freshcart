@@ -196,7 +196,14 @@ export function EditProfileScreen() {
       {phone ? (
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Mobile number</Text>
-          <View style={[styles.inputRow, styles.inputRowDisabled]}>
+          <View
+            style={[
+              styles.inputRow,
+              styles.inputRowDisabled,
+              styles.removeGap,
+              styles.removeGap,
+            ]}
+          >
             <CountryCodePickerButton
               country={phoneCountry as PhoneCountry}
               onSelect={handleCountrySelect}
@@ -316,6 +323,9 @@ const styles = StyleSheet.create({
   },
   inputRowDisabled: {
     opacity: 0.92,
+  },
+  removeGap: {
+    gap: 0,
   },
   inputDivider: {
     width: StyleSheet.hairlineWidth,
