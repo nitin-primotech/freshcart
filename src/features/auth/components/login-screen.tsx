@@ -106,8 +106,8 @@ export function LoginScreen() {
         overScrollMode="never"
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        bottomOffset={LOGIN_KEYBOARD_BOTTOM_OFFSET}
-        extraKeyboardSpace={spacing.md}
+        // bottomOffset={LOGIN_KEYBOARD_BOTTOM_OFFSET}
+        // extraKeyboardSpace={spacing.md}
       >
         <View
           style={[styles.topSection, { paddingTop: insets.top + spacing.xl }]}
@@ -171,11 +171,12 @@ export function LoginScreen() {
               }}
               placeholder="Mobile number"
               placeholderTextColor={colors.textTertiary}
-              keyboardType="number-pad"
+              keyboardType="decimal-pad"
               maxLength={phoneMaxLength}
               style={styles.input}
               accessibilityLabel="Mobile number"
               {...formTextInputProps}
+              returnKeyType="done"
             />
           </View>
 

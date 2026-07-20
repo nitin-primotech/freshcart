@@ -3,8 +3,8 @@ import { Image } from 'expo-image';
 import { router, Stack, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 import { getStartupCatalogImageUrls } from '@/features/catalog/startup-images';
 import { RootProvider } from '@/providers/root-provider';
 import { CartBottomSheet } from '@/shared/components/cart-bottom-sheet';
@@ -47,6 +47,8 @@ export default function RootLayout() {
     segments[0] === 'checkout' ||
     segments[0] === 'order-success' ||
     segments[0] === 'order';
+
+  LogBox.ignoreAllLogs();
 
   useEffect(() => {
     preloadAppHaptics();
