@@ -7,6 +7,8 @@ declare module 'react-native-razorpay' {
     description?: string;
     image?: string;
     order_id?: string;
+    /** When false, hides the save-card checkbox (RBI tokenisation consent). */
+    remember_customer?: boolean;
     prefill?: {
       name?: string;
       email?: string;

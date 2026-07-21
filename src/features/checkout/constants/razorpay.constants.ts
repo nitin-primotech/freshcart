@@ -24,6 +24,9 @@ export const RAZORPAY_BRAND = {
   description: 'FreshCart grocery checkout',
 };
 
+/** US/international checkout — do not offer RBI save-card tokenisation. */
+export const RAZORPAY_REMEMBER_CUSTOMER = false;
+
 /** INR: UPI, cards, netbanking, wallets. USD: cards only (Razorpay test/live). */
 export const RAZORPAY_CHECKOUT_CONFIG =
   RAZORPAY_CURRENCY === 'USD'

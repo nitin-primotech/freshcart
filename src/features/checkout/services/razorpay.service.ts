@@ -11,6 +11,7 @@ import {
   RAZORPAY_BRAND,
   RAZORPAY_CHECKOUT_CONFIG,
   RAZORPAY_KEY_ID,
+  RAZORPAY_REMEMBER_CUSTOMER,
   USD_TO_INR_RATE,
 } from '@/features/checkout/constants/razorpay.constants';
 
@@ -110,6 +111,7 @@ export async function openFoodRushCheckout(input: {
     image: RAZORPAY_BRAND.logoUrl,
     theme: { color: RAZORPAY_BRAND.themeColor },
     config: RAZORPAY_CHECKOUT_CONFIG,
+    remember_customer: RAZORPAY_REMEMBER_CUSTOMER,
     prefill: {
       name: input.prefill.name?.trim() || undefined,
       email: input.prefill.email?.trim() || undefined,
