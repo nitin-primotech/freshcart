@@ -28,7 +28,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   language: 'en',
   notificationsEnabled: true,
   phoneCountry: {
-    cca2: 'IN',
-    callingCode: '91',
+    cca2: 'US',
+    callingCode: '1',
   },
 };

@@ -33,8 +33,7 @@ const HERO_BG = '#FAFCF8';
 const H_PAD = spacing.lg;
 const CONTINUE_BUTTON_HEIGHT = 52;
 /** Input gap + Continue height + breathing room above the keyboard. */
-const LOGIN_KEYBOARD_BOTTOM_OFFSET =
-  spacing.md + CONTINUE_BUTTON_HEIGHT + spacing.lg + spacing.sm;
+const LOGIN_KEYBOARD_BOTTOM_OFFSET = spacing.md + CONTINUE_BUTTON_HEIGHT;
 
 export function LoginScreen() {
   const router = useRouter();

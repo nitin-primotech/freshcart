@@ -6,6 +6,6 @@ export type PhoneCountry = {
 };
 
 export const DEFAULT_PHONE_COUNTRY: PhoneCountry = {
-  cca2: 'IN',
-  callingCode: '91',
+  cca2: 'US',
+  callingCode: '1',
 };
