@@ -1,3 +1,4 @@
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -214,8 +215,22 @@ function AndroidTabs() {
 // ---------- iOS: native UITabBarController with glassmorphism ----------
 
 function IosTabs() {
+  // Liquid glass (iOS 26+) keeps the system tab bar; older iOS gets an opaque
+  // white bar so scrolled content cannot show through behind the tabs.
+  const useLiquidGlass = isLiquidGlassAvailable();
+
   return (
-    <NativeTabs tintColor={colors.primary} minimizeBehavior="onScrollDown">
+    <NativeTabs
+      tintColor={colors.primary}
+      minimizeBehavior="onScrollDown"
+      {...(!useLiquidGlass
+        ? {
+            backgroundColor: colors.background,
+            blurEffect: 'none' as const,
+            disableTransparentOnScrollEdge: true,
+          }
+        : {})}
+    >
       <NativeTabs.Trigger name="index" disableTransparentOnScrollEdge>
         <NativeTabs.Trigger.Icon
           sf={{ default: 'house', selected: 'house.fill' }}
