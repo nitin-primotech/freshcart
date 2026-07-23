@@ -34,7 +34,7 @@ let ordersUnsubscribe: (() => void) | null = null;
 function getRestaurantMeta() {
   const restaurant = useCatalogStore.getState().restaurant;
   return {
-    name: restaurant?.name ?? 'FoodRush Kitchen',
+    name: restaurant?.name ?? 'FreshCart',
     logo: restaurant?.logoImage ?? '',
   };
 }
@@ -96,7 +96,7 @@ export async function placeOrder(input: PlaceOrderInput) {
       }
 
       const customerPhone = input.customerPhone?.trim();
-      const customerName = input.customerName?.trim() || 'FoodRush Customer';
+      const customerName = input.customerName?.trim() || 'FreshCart Customer';
 
       if (!customerPhone) {
         throw new Error('Phone number is required to place an order.');

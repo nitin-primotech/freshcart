@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 
+import { USE_MOCK_CATALOG } from '@/features/catalog/constants/catalog-source';
+import categoriesData from '@/features/catalog/mocks/categories.json';
+import restaurantsData from '@/features/catalog/mocks/restaurants.json';
 import type {
   Category,
   Restaurant,
@@ -10,7 +13,11 @@ import {
   mapInventoryToRestaurant,
   subscribeToInventory,
 } from '@/lib/firebase';
-import { collectInventoryProductImages } from '@/lib/firebase/catalog-images';
+import {
+  collectInventoryProductImages,
+  collectRestaurantMenuImages,
+} from '@/lib/firebase/catalog-images';
+import { isHttpImageUrl } from '@/lib/firebase/category-images';
 import type { FirestoreMenuItem } from '@/lib/firebase/types';
 
 type CatalogState = {
@@ -42,9 +49,47 @@ function markCatalogReady() {
   readyResolvers = [];
 }
 
-export function startCatalogSync(): void {
-  if (!isFirebaseConfigured()) {
+function hydrateFromGroceryMocks(): void {
+  const restaurants = restaurantsData as Restaurant[];
+  const categories = categoriesData as Category[];
+  const base = restaurants[0];
+  if (!base) {
+    useCatalogStore.setState({
+      items: [],
+      restaurant: null,
+      categories,
+      productImages: [],
+      ready: true,
+    });
     markCatalogReady();
+    return;
+  }
+
+  const menuImages = collectRestaurantMenuImages(base);
+  const restaurant: Restaurant = {
+    ...base,
+    coverImage: menuImages[0] ?? base.coverImage,
+    logoImage: menuImages[1] ?? menuImages[0] ?? base.logoImage,
+  };
+
+  const productImages = restaurant.menu
+    .flatMap((section) => section.items)
+    .map((item) => item.image)
+    .filter((url) => isHttpImageUrl(url));
+
+  useCatalogStore.setState({
+    items: [],
+    restaurant,
+    categories,
+    productImages,
+    ready: true,
+  });
+  markCatalogReady();
+}
+
+export function startCatalogSync(): void {
+  if (USE_MOCK_CATALOG || !isFirebaseConfigured()) {
+    hydrateFromGroceryMocks();
     return;
   }
   if (catalogUnsubscribe) {
@@ -69,7 +114,11 @@ export function stopCatalogSync(): void {
 }
 
 export function waitForCatalogReady(): Promise<void> {
-  if (!isFirebaseConfigured() || useCatalogStore.getState().ready) {
+  if (
+    USE_MOCK_CATALOG ||
+    !isFirebaseConfigured() ||
+    useCatalogStore.getState().ready
+  ) {
     return Promise.resolve();
   }
 

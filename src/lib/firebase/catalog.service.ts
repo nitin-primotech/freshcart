@@ -1,6 +1,7 @@
 import { collection, onSnapshot } from 'firebase/firestore';
 import { getFirestoreDb } from '@/lib/firebase/client';
 import { FIRESTORE_COLLECTIONS } from '@/lib/firebase/collections';
+import { DEFAULT_MERCHANT_RESTAURANT_ID } from '@/lib/firebase/inventory-mapper';
 import type { FirestoreMenuItem } from '@/lib/firebase/types';
 
 function isFirestoreMenuItem(value: unknown): value is FirestoreMenuItem {
@@ -15,6 +16,13 @@ function isFirestoreMenuItem(value: unknown): value is FirestoreMenuItem {
     typeof item.inStock === 'boolean' &&
     typeof item.image === 'string'
   );
+}
+
+function belongsToThisApp(item: FirestoreMenuItem): boolean {
+  const merchantId =
+    typeof item.merchantId === 'string' ? item.merchantId : undefined;
+  // FreshCart only shows explicitly tagged grocery inventory.
+  return merchantId === DEFAULT_MERCHANT_RESTAURANT_ID;
 }
 
 export function subscribeToInventory(
@@ -34,7 +42,8 @@ export function subscribeToInventory(
           const candidate = { id: docSnap.id, ...docSnap.data() };
           return isFirestoreMenuItem(candidate) ? candidate : null;
         })
-        .filter((item): item is FirestoreMenuItem => item !== null);
+        .filter((item): item is FirestoreMenuItem => item !== null)
+        .filter(belongsToThisApp);
       callback(items);
     },
     (error) => {

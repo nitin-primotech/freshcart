@@ -2,7 +2,10 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAwareScrollView,
+  KeyboardController,
+} from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LOGIN_HERO } from '@/constants/brand-assets';
@@ -55,16 +58,19 @@ export function LoginScreen() {
         ? 56
         : spacing.md;
 
-  const navigateHome = () => {
+  const navigateHome = async () => {
+    await KeyboardController.dismiss({ animated: false });
     if (router.canGoBack()) {
       router.dismissAll();
     }
     router.replace('/(tabs)');
   };
 
-  function handleContinue() {
+  async function handleContinue() {
     if (!canContinue || busy) return;
     setError(null);
+    // Close login keyboard so OTP autofocus can open a fresh soft keyboard on Android.
+    await KeyboardController.dismiss({ animated: false });
     router.push({
       pathname: '/verify',
       params: {
@@ -82,7 +88,7 @@ export function LoginScreen() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      navigateHome();
+      await navigateHome();
     } catch (err) {
       if (err instanceof GoogleSignInCancelledError) {
         return;

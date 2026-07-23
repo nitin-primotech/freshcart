@@ -15,6 +15,7 @@ export type FirestoreOrderItem = {
 
 export type FirestoreOrder = {
   id: string;
+  merchantId?: string;
   customerId: string;
   customerName: string;
   customerPhone: string;
@@ -35,6 +36,7 @@ export type FirestoreOrder = {
 
 export type FirestoreMenuItem = {
   id: string;
+  merchantId?: string;
   name: string;
   description?: string;
   price: number;

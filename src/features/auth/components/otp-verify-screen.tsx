@@ -1,7 +1,7 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Keyboard,
+  InteractionManager,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContinueButton } from '@/features/auth/components/auth-continue-button';
@@ -39,6 +40,8 @@ import { fonts } from '@/theme/typography';
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
+/** Android needs extra settle time after login keyboard dismiss + push transition. */
+const OTP_FOCUS_DELAY_MS = process.env.EXPO_OS === 'android' ? 450 : 150;
 
 function formatCountdown(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -90,10 +93,22 @@ export function OtpVerifyScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      const timer = setTimeout(() => {
-        invisibleInputRef.current?.focus();
-      }, 350);
-      return () => clearTimeout(timer);
+      let cancelled = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+
+      const task = InteractionManager.runAfterInteractions(() => {
+        timer = setTimeout(() => {
+          if (cancelled) return;
+          invisibleInputRef.current?.focus();
+        }, OTP_FOCUS_DELAY_MS);
+      });
+
+      return () => {
+        cancelled = true;
+        task.cancel();
+        if (timer) clearTimeout(timer);
+        invisibleInputRef.current?.blur();
+      };
     }, []),
   );
 
@@ -102,6 +117,7 @@ export function OtpVerifyScreen() {
       verificationStatus.value = 'inProgress';
       setCode([]);
       invisibleInputRef.current?.clear();
+      invisibleInputRef.current?.focus();
     }, 900);
   }, [verificationStatus]);
 
@@ -113,7 +129,8 @@ export function OtpVerifyScreen() {
 
     try {
       await signInWithPhone(phone);
-      Keyboard.dismiss();
+      invisibleInputRef.current?.blur();
+      await KeyboardController.dismiss({ animated: false });
       if (router.canGoBack()) {
         router.dismissAll();
       }
@@ -215,19 +232,31 @@ export function OtpVerifyScreen() {
             </View>
           </View>
 
-          <Pressable
-            onPress={() => invisibleInputRef.current?.focus()}
-            accessibilityRole="button"
-            accessibilityLabel="OTP input"
-          >
-            <Animated.View style={[styles.codeWrap, rShakeStyle]}>
-              <VerificationCode
-                code={code}
-                maxLength={OTP_LENGTH}
-                status={verificationStatus}
-              />
-            </Animated.View>
-          </Pressable>
+          <Animated.View style={[styles.codeWrap, rShakeStyle]}>
+            <VerificationCode
+              code={code}
+              maxLength={OTP_LENGTH}
+              status={verificationStatus}
+            />
+            <TextInput
+              ref={invisibleInputRef}
+              value={codeString}
+              onChangeText={handleTextChange}
+              keyboardType="number-pad"
+              keyboardAppearance={keyboardAppearance}
+              maxLength={OTP_LENGTH}
+              textContentType="oneTimeCode"
+              autoComplete="one-time-code"
+              autoFocus
+              caretHidden
+              showSoftInputOnFocus
+              importantForAutofill="yes"
+              style={styles.overlayInput}
+              accessibilityLabel="OTP input"
+              blurOnSubmit={false}
+              {...formTextInputProps}
+            />
+          </Animated.View>
 
           <View style={styles.resendRow}>
             <Text style={styles.resendText}>
@@ -275,23 +304,6 @@ export function OtpVerifyScreen() {
           </View>
         </ScrollView>
       </AuthKeyboardWrapper>
-
-      <TextInput
-        ref={invisibleInputRef}
-        value={codeString}
-        onChangeText={handleTextChange}
-        keyboardType="number-pad"
-        keyboardAppearance={keyboardAppearance}
-        maxLength={OTP_LENGTH}
-        textContentType="oneTimeCode"
-        autoComplete="one-time-code"
-        caretHidden
-        showSoftInputOnFocus
-        style={styles.invisibleInput}
-        accessibilityLabel="OTP input"
-        blurOnSubmit={false}
-        {...formTextInputProps}
-      />
     </View>
   );
 }
@@ -359,7 +371,14 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   codeWrap: {
+    position: 'relative',
     paddingVertical: spacing.sm,
+  },
+  overlayInput: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.02,
+    color: 'transparent',
+    fontSize: 1,
   },
   resendRow: {
     flexDirection: 'row',
@@ -392,11 +411,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: colors.textSecondary,
-  },
-  invisibleInput: {
-    position: 'absolute',
-    opacity: 0,
-    width: 1,
-    height: 1,
   },
 });

@@ -14,15 +14,15 @@ export const DEFAULT_MERCHANT_RESTAURANT_ID = 'freshcart';
 
 const DEFAULT_RESTAURANT_PROFILE: Omit<Restaurant, 'categoryIds' | 'menu'> = {
   id: DEFAULT_MERCHANT_RESTAURANT_ID,
-  name: 'FoodRush Kitchen',
-  tagline: 'Fresh food, fast delivery',
-  cuisine: 'Punjabi · North Indian · Tandoor',
-  rating: 4.7,
-  reviewCount: 520,
-  deliveryTimeMin: 25,
-  deliveryTimeMax: 40,
-  deliveryFee: 29,
-  distanceKm: 2.1,
+  name: 'FreshCart',
+  tagline: 'Premium groceries delivered fast',
+  cuisine: 'Grocery',
+  rating: 4.8,
+  reviewCount: 12480,
+  deliveryTimeMin: 15,
+  deliveryTimeMax: 25,
+  deliveryFee: 2.99,
+  distanceKm: 0.8,
   isFreeDelivery: false,
   isPromoted: true,
   offerLabel: 'Free delivery on orders above $299',
@@ -53,7 +53,7 @@ function mapInventoryToCategoriesFromMap(
   return names.map((name) => ({
     id: `cat-${slugify(name)}`,
     name,
-    icon: '🍽️',
+    icon: '🛒',
     image: categoryImageByName.get(name) ?? '',
   }));
 }

@@ -1,3 +1,4 @@
+import { USE_MOCK_CATALOG } from '@/features/catalog/constants/catalog-source';
 import categoriesData from '@/features/catalog/mocks/categories.json';
 import promosData from '@/features/catalog/mocks/promos.json';
 import restaurantsData from '@/features/catalog/mocks/restaurants.json';
@@ -29,9 +30,6 @@ import {
 const categories = categoriesData as Category[];
 const restaurants = restaurantsData as Restaurant[];
 const promos = promosData as Promo[];
-
-/** FreshCart demo uses local grocery mocks instead of legacy Firebase food inventory. */
-const USE_MOCK_CATALOG = true;
 
 function usesLiveCatalog(): boolean {
   return isFirebaseConfigured() && !USE_MOCK_CATALOG;

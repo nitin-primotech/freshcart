@@ -29,7 +29,7 @@ export function subscribeToMerchant(
 
       callback({
         id: DEFAULT_MERCHANT_RESTAURANT_ID,
-        name: typeof data.name === 'string' ? data.name : 'FoodRush Kitchen',
+        name: typeof data.name === 'string' ? data.name : 'FreshCart',
         status: data.status === 'offline' ? 'offline' : 'online',
         updatedAt:
           typeof data.updatedAt === 'number' ? data.updatedAt : Date.now(),

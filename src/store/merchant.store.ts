@@ -12,7 +12,7 @@ type MerchantState = {
 const initialState: MerchantState = {
   ready: false,
   isOnline: true,
-  name: 'FoodRush Kitchen',
+  name: 'FreshCart',
 };
 
 export const useMerchantStore = create<MerchantState>(() => initialState);

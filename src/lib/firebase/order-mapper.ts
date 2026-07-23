@@ -64,7 +64,7 @@ function computeEstimatedDelivery(order: FirestoreOrder): string {
 
 export function mapFirestoreOrderToApp(
   order: FirestoreOrder,
-  restaurantName = 'FoodRush Kitchen',
+  restaurantName = 'FreshCart',
   restaurantLogo = DEFAULT_MERCHANT_RESTAURANT_ID,
 ): Order {
   const subtotal = order.items.reduce(
@@ -138,6 +138,7 @@ export function mapCartToFirestoreOrder(
   input: CreateFirestoreOrderInput,
 ): Omit<FirestoreOrder, 'id' | 'createdAt' | 'updatedAt'> {
   return {
+    merchantId: DEFAULT_MERCHANT_RESTAURANT_ID,
     customerId: input.customerId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
